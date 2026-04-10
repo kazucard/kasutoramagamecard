@@ -372,6 +372,11 @@ html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;heigh
       <div class="stat-box"><div class="stat-val" id="s-pct">0%</div><div class="stat-lbl">Complété</div></div>
     </div>
     <div id="points-bar">⏰ <span id="hs-display">0</span> points</div>
+    <div class="coll-tabs">
+      <div class="coll-tab active" onclick="filterColl('all',this)">Toutes</div>
+      <div class="coll-tab" onclick="filterColl('normal',this)">Cartes</div>
+      <div class="coll-tab" onclick="filterColl('terrain',this)">Terrains</div>
+    </div>
     <div class="coll-grid" id="coll-grid"></div>
     <div class="coll-pagination" id="coll-pagination" style="display:none">
       <button class="page-btn" id="page-prev" onclick="changePage(-1)">◀</button>
@@ -1013,6 +1018,8 @@ function filterColl(f,el){
   el.classList.add('active');
   renderColl();
 }
+
+function getLevel(n){let lv=1;for(let i=0;i<LEVELS.length;i++){if(n>=LEVELS[i])lv=i+1;}return lv;}
 
 // ── CLASSEMENT ────────────────────────────────────────────────────────────────
 async function renderClassement(){
