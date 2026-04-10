@@ -134,7 +134,7 @@ html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;heigh
 .stat-val{font-size:20px;font-weight:600;color:#fff}
 .stat-lbl{font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 #points-bar{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--gold);background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:4px 14px;margin-bottom:8px;align-self:center}
-.coll-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(85px,1fr));gap:8px;width:100%}
+.coll-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
 .cc{border-radius:10px;overflow:hidden;border:2px solid var(--bord);background:rgba(255,255,255,.04);display:flex;flex-direction:column;position:relative;cursor:pointer;transition:transform .15s}
 .cc:active{transform:scale(.95)}
 /* rarity borders */
@@ -151,8 +151,8 @@ html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;heigh
 .cc.r-superrarealt{animation:borderPulseP 2.5s ease-in-out infinite}
 @keyframes borderPulse{0%,100%{box-shadow:0 0 6px rgba(255,180,0,.2)}50%{box-shadow:0 0 18px rgba(255,180,0,.6),0 0 30px rgba(255,180,0,.2)}}
 @keyframes borderPulseP{0%,100%{box-shadow:0 0 6px rgba(180,100,255,.2)}50%{box-shadow:0 0 18px rgba(180,100,255,.6),0 0 30px rgba(180,100,255,.2)}}
-.cc img,.cc-ph{width:100%;height:70px;object-fit:cover;display:block}
-.cc-ph{display:flex;align-items:center;justify-content:center;font-size:22px;background:#111;height:70px}
+.cc img,.cc-ph{width:100%;height:140px;object-fit:cover;display:block}
+.cc-ph{display:flex;align-items:center;justify-content:center;font-size:32px;background:#111;height:140px}
 /* dead card overlay */
 .cc.dead::after{content:'💀';position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;font-size:28px;border-radius:8px;filter:grayscale(1)}
 .cc.dead{filter:grayscale(.8)}
@@ -274,6 +274,15 @@ html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;heigh
 .nav-btn img{width:24px;height:24px;object-fit:contain;mix-blend-mode:screen;opacity:0.45;transition:all .15s}
 .nav-btn.active img{opacity:1;filter:drop-shadow(0 0 4px rgba(201,168,76,.5))}
 
+
+/* PAGINATION */
+.coll-pagination{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;width:100%}
+.page-btn{padding:8px 14px;border-radius:8px;border:1px solid var(--bord);background:var(--surf);color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.page-btn:active{transform:scale(.96)}
+.page-btn.active{background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.4);color:var(--gold)}
+.page-btn:disabled{opacity:.3;cursor:not-allowed}
+.page-info{font-size:12px;color:rgba(255,255,255,.35)}
+
 </style>
 </head>
 <body>
@@ -364,6 +373,11 @@ html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;heigh
     </div>
     <div id="points-bar">⏰ <span id="hs-display">0</span> points</div>
     <div class="coll-grid" id="coll-grid"></div>
+    <div class="coll-pagination" id="coll-pagination" style="display:none">
+      <button class="page-btn" id="page-prev" onclick="changePage(-1)">◀</button>
+      <span class="page-info" id="page-info">Page 1 / 1</span>
+      <button class="page-btn" id="page-next" onclick="changePage(1)">▶</button>
+    </div>
   </div>
 
   <!-- CLASSEMENT -->
@@ -940,69 +954,58 @@ function buildDots(){const el=document.getElementById('reveal-dots');el.innerHTM
 function finishReveal(){document.getElementById('reveal-screen').classList.remove('active');document.getElementById('card-stage').className='';document.getElementById('reveal-screen').ontouchstart=null;document.getElementById('reveal-screen').ontouchend=null;}
 
 // ── COLLECTION ────────────────────────────────────────────────────────────────
+const CARDS_PER_PAGE=12;
+let collPage=0;
+let collFiltered=[];
+
 function renderColl(){
-  const grid=document.getElementById('coll-grid');grid.innerHTML='';
   const ids=Object.keys(coll).filter(id=>coll[id]>0);
   document.getElementById('s-unique').textContent=ids.length;
   const tot=ids.reduce((s,id)=>s+coll[id],0);
   document.getElementById('s-total').textContent=tot;
   document.getElementById('s-pct').textContent=(pool.length>0?Math.round(ids.length/pool.length*100):0)+'%';
   document.getElementById('hs-display').textContent=ME?(ME.heures_sup||0):0;
-  if(!ids.length){grid.innerHTML='<div class="empty-msg">Ouvre ton premier booster !<br>🛒</div>';return;}
-  ids.forEach(id=>{
+  collFiltered=ids;
+  if(collFilter==='normal')collFiltered=ids.filter(id=>{const c=pool.find(p=>p.id===id);return c&&c.card_type!=='terrain';});
+  if(collFilter==='terrain')collFiltered=ids.filter(id=>{const c=pool.find(p=>p.id===id);return c&&c.card_type==='terrain';});
+  collPage=0;
+  renderCollPage();
+}
+
+function renderCollPage(){
+  const grid=document.getElementById('coll-grid');grid.innerHTML='';
+  if(!collFiltered.length){grid.innerHTML='<div class="empty-msg">Aucune carte ici</div>';document.getElementById('coll-pagination').style.display='none';return;}
+  const totalPages=Math.ceil(collFiltered.length/CARDS_PER_PAGE);
+  const start=collPage*CARDS_PER_PAGE;
+  const pageIds=collFiltered.slice(start,start+CARDS_PER_PAGE);
+  pageIds.forEach(id=>{
     const c=pool.find(p=>p.id===id);if(!c)return;
     const isUrl=c.img_url&&(c.img_url.startsWith('http')||c.img_url.startsWith('data:'));
-    const isDead=ME&&ME.dead_cards&&ME.dead_cards.includes(id);
-    const d=document.createElement('div');
-    d.className='cc r-'+(c.rarity||'common')+(isDead?' dead':'');
+    const rar=c.card_type==='terrain'?'terrain':(c.rarity||'common');
+    const d=document.createElement('div');d.className='cc r-'+rar;
     d.innerHTML=(coll[id]>1?`<div class="cc-count">x${coll[id]}</div>`:'')+
       (isUrl?`<img src="${c.img_url}">`:`<div class="cc-ph">${c.img_url||'🛒'}</div>`)+
       `<div class="cc-name">${c.name}</div>`+
-      `<div class="cc-rar r-${c.rarity||'common'}">${RARITY_LABEL[c.rarity]||''}</div>`;
+      `<div class="cc-rar r-${rar}">${RARITY_LABEL[c.rarity]||''}</div>`;
     d.onclick=()=>openCardDetail(c);
     grid.appendChild(d);
   });
+  const pag=document.getElementById('coll-pagination');
+  if(totalPages>1){
+    pag.style.display='flex';
+    document.getElementById('page-info').textContent='Page '+(collPage+1)+' / '+totalPages;
+    document.getElementById('page-prev').disabled=collPage===0;
+    document.getElementById('page-next').disabled=collPage===totalPages-1;
+  }else{pag.style.display='none';}
 }
 
-// ── CLASSEMENT ────────────────────────────────────────────────────────────────
-async function renderClassement(){
-  const list=document.getElementById('rank-list');
-  list.innerHTML='<div class="empty-msg">Chargement...</div>';
-  try{
-    const users=await dbGet('users','select=*&order=opens.desc');
-    // For each user get unique cards count
-    const collAll=await dbGet('collections','select=user_id,card_id,count');
-    list.innerHTML='';
-    users.forEach((u,i)=>{
-      const userColl=collAll.filter(r=>r.user_id===u.id);
-      const unique=userColl.length;
-      const total=userColl.reduce((s,r)=>s+r.count,0);
-      const lv=getLevel(u.opens||0);
-      const team=teams.find(t=>t.id===u.team_id);
-      const isMe=ME&&u.id===ME.id;
-      const pos=i+1;
-      const posClass=pos===1?'gold':pos===2?'silver':pos===3?'bronze':'';
-      const d=document.createElement('div');
-      d.className='rank-row'+(isMe?' me-row':'');
-      d.innerHTML=`
-        <div class="rank-pos ${posClass}">${pos}</div>
-        <div class="rank-av">${u.avatar_url?`<img src="${u.avatar_url}">`:'👤'}</div>
-        <div class="rank-info">
-          <div class="rank-pseudo">${u.pseudo||'?'}${isMe?' (toi)':''}</div>
-          <div class="rank-sub">${unique} uniques · ${total} cartes · ${u.heures_sup||0} HS</div>
-          ${team?`<span class="rank-team">${team.name}</span>`:''}
-        </div>
-        <div class="rank-stats">
-          <div class="rank-lv">NIV.${lv}</div>
-          <div class="rank-pts">${u.opens||0} ouv.</div>
-        </div>`;
-      d.onclick=()=>openPlayerModal(u,userColl.filter(r=>r.user_id===u.id));
-      list.appendChild(d);
-    });
-    if(!users.length)list.innerHTML='<div class="empty-msg">Aucun joueur encore</div>';
-  }catch(e){list.innerHTML='<div class="empty-msg">Erreur de chargement</div>';}
+function changePage(dir){
+  const totalPages=Math.ceil(collFiltered.length/CARDS_PER_PAGE);
+  collPage=Math.max(0,Math.min(collPage+dir,totalPages-1));
+  renderCollPage();
+  document.getElementById('screen-collection').scrollTop=0;
 }
-function getLevel(n){let lv=1;for(let i=0;i<LEVELS.length;i++){if(n>=LEVELS[i])lv=i+1;}return lv;}
+
 
 // ── CARD DETAIL ───────────────────────────────────────────────────────────────
 function openCardDetail(c){
