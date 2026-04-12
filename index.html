@@ -1969,7 +1969,7 @@ function autoBattleTick(){
   const playerDmg=Math.max(1,Math.floor((selectedCard.atk||50)/80));
   enemyHP=Math.max(0,enemyHP-playerDmg);
   // Enemy auto-attacks player
-  const enemyDmg=Math.max(10,Math.floor(((enemy.atk||50)*0.9-Math.floor((selectedCard.def||0)*0.25))/2));
+  const enemyDmg=Math.max(20,Math.floor(((enemy.atk||50)*0.9-Math.floor((selectedCard.def||0)*0.25))/0.2));
   playerHP=Math.max(0,playerHP-enemyDmg);
   updateBattleUI();
   if(enemyHP<=0){clearInterval(battleInterval);battleInterval=null;enemyDefeated();}
@@ -2000,7 +2000,7 @@ function updateBattleUI(){
 
 async function enemyDefeated(){
   const enemy=battleEnemies[battleIdx];
-  const rewardHS=Math.max(1,Math.floor((enemy.reward_hs||20)/4));
+  const rewardHS=5;
   // Save current player HP
   saveCardHP(selectedCard.id,Math.max(0,playerHP));
   // Give HS reward
@@ -2026,7 +2026,8 @@ async function stageCleared(){
   const bs=document.getElementById('battle-screen');if(bs)bs.remove();
   clearInterval(battleInterval);battleInterval=null;
   const stage=currentBattleStage;
-  const rewardHS=Math.max(2,Math.floor((stage?stage.reward_hs:20)/4));
+  const stageIsLast=currentBattleStageNum>=currentBattleShop.stages;
+  const rewardHS=stageIsLast?20:5;
   // Update progress
   try{
     const newHS=(ME.heures_sup||0)+rewardHS;
