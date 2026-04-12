@@ -997,8 +997,13 @@ async function updateBoosterState(){
   if(!pool.length){bp.classList.add('locked');nc.style.display='block';cta.style.display='none';chip.style.display='none';return;}
   nc.style.display='none';
   const{ok,label}=await canOpen();
-  if(ok){bp.classList.remove('locked');bp.classList.add('can-open');cta.style.display='block';chip.style.display='none';}
-  else{bp.classList.add('locked');bp.classList.remove('can-open');cta.style.display='none';chip.style.display='block';chip.textContent=label;}
+  const extras=parseInt(localStorage.getItem('cc_extra_boosters')||'0');
+  if(ok||extras>0){
+    bp.classList.remove('locked');bp.classList.add('can-open');cta.style.display='block';chip.style.display='none';
+    cta.textContent=ok?'Ouvre ton booster une fois par semaine !':'Booster extra disponible ! ('+extras+' restant'+(extras>1?'s':'')+')';
+  } else {
+    bp.classList.add('locked');bp.classList.remove('can-open');cta.style.display='none';chip.style.display='block';chip.textContent=label;
+  }
   if(ME){
     const HS=ME.heures_sup||0;
     const shop=document.getElementById('shop-section');
@@ -1028,7 +1033,9 @@ async function packTap(){
   else if(tapCount>=2){
     document.getElementById('opening-screen').classList.remove('active');
     const now=new Date().toISOString();
-    try{
+    const usingExtra=localStorage.getItem('cc_using_extra')==='1';
+    localStorage.removeItem('cc_using_extra');
+    if(!usingExtra)try{
       const rows=await dbGet('booster_opens','user_id=eq.'+ME.id);
       if(rows.length)await dbPatch('booster_opens',{last_open:now},'user_id=eq.'+ME.id);
       else await dbPost('booster_opens',{user_id:ME.id,last_open:now});
@@ -1067,8 +1074,10 @@ async function buyBooster(){
     const newHS=hs-BOOSTER_COST;
     await dbPatch('users',{heures_sup:newHS},'id=eq.'+ME.id);
     ME.heures_sup=newHS;
-    await dbDel('booster_opens','user_id=eq.'+ME.id);
-    if(msg){msg.style.color='#6ddb9a';msg.textContent='✅ Booster débloqué !';setTimeout(()=>{if(msg)msg.textContent='';},3000);}
+    // Store extra booster in localStorage - doesn't affect weekly cooldown
+    const extras=(parseInt(localStorage.getItem('cc_extra_boosters')||'0'))+1;
+    localStorage.setItem('cc_extra_boosters',extras);
+    if(msg){msg.style.color='#6ddb9a';msg.textContent='✅ Booster extra ajouté !';setTimeout(()=>{if(msg)msg.textContent='';},3000);}
     updateBoosterState();
     // Update shop screen HS display if open
     const shopHS=document.getElementById('shop-screen-hs');
@@ -1960,7 +1969,7 @@ function autoBattleTick(){
   const playerDmg=Math.max(1,Math.floor((selectedCard.atk||50)/80));
   enemyHP=Math.max(0,enemyHP-playerDmg);
   // Enemy auto-attacks player
-  const enemyDmg=Math.max(8,Math.floor(((enemy.atk||50)*0.9-Math.floor((selectedCard.def||0)*0.3))/4));
+  const enemyDmg=Math.max(10,Math.floor(((enemy.atk||50)*0.9-Math.floor((selectedCard.def||0)*0.25))/2));
   playerHP=Math.max(0,playerHP-enemyDmg);
   updateBattleUI();
   if(enemyHP<=0){clearInterval(battleInterval);battleInterval=null;enemyDefeated();}
@@ -1991,7 +2000,7 @@ function updateBattleUI(){
 
 async function enemyDefeated(){
   const enemy=battleEnemies[battleIdx];
-  const rewardHS=enemy.reward_hs||20;
+  const rewardHS=Math.max(1,Math.floor((enemy.reward_hs||20)/4));
   // Save current player HP
   saveCardHP(selectedCard.id,Math.max(0,playerHP));
   // Give HS reward
@@ -2017,7 +2026,7 @@ async function stageCleared(){
   const bs=document.getElementById('battle-screen');if(bs)bs.remove();
   clearInterval(battleInterval);battleInterval=null;
   const stage=currentBattleStage;
-  const rewardHS=stage?stage.reward_hs:20;
+  const rewardHS=Math.max(2,Math.floor((stage?stage.reward_hs:20)/4));
   // Update progress
   try{
     const newHS=(ME.heures_sup||0)+rewardHS;
