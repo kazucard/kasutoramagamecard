@@ -213,8 +213,9 @@ html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;heigh
 #admin-lock{display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px 0;width:100%}
 
 /* NAV */
-.nav{display:flex;background:rgba(8,8,18,.97);border-top:1px solid var(--bord);flex-shrink:0}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0 14px;cursor:pointer;gap:3px;color:rgba(255,255,255,.3);font-size:8px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;transition:color .15s;border:none;background:transparent}
+.nav{display:flex;background:rgba(8,8,18,.97);border-top:1px solid var(--bord);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{flex:0 0 auto;min-width:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 6px 12px;cursor:pointer;gap:2px;color:rgba(255,255,255,.3);font-size:7px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;transition:color .15s;border:none;background:transparent;position:relative}
 .nav-btn.active{color:var(--gold)}
 .nav-icon{font-size:17px;line-height:1}
 
@@ -355,11 +356,8 @@ html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;heigh
       <div id="cta-msg">Ouvre ton booster une fois par semaine !</div>
       <div id="timer-chip"></div>
       <div id="no-cards-msg">Aucune carte dans le pool.<br>L'admin doit en ajouter !</div>
-      <div id="shop-section">
-        <div style="font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.5px">HEURES SUP</div>
-        <div id="shop-pts">0</div>
-        <button id="shop-btn" class="btn btn-gold" style="width:auto;padding:10px 24px" onclick="buyBooster()">🎁 Booster extra — 500 HS</button>
-        <div id="shop-msg" style="font-size:11px;text-align:center;min-height:16px"></div>
+      <div id="shop-section" style="display:none">
+        <div id="shop-msg"></div>
       </div>
     </div>
   </div>
@@ -1057,15 +1055,27 @@ function pickCard(){
   return pool[pool.length-1];
 }
 async function buyBooster(){
-  if(!ME)return;const HS=ME.heures_sup||0;const msg=document.getElementById('shop-msg');
-  if(HS<BOOSTER_COST){msg.style.color='#ff8888';msg.textContent='Pas assez de points !';return;}
+  if(!ME)return;
+  const hs=ME.heures_sup||0;
+  // Notif element - works from booster tab or shop tab
+  const msg=document.getElementById('booster-shop-msg')||document.getElementById('shop-msg');
+  if(hs<BOOSTER_COST){
+    if(msg){msg.style.color='#ff8888';msg.textContent='Pas assez de HS !';}
+    return;
+  }
   try{
-    const newHS=pts-BOOSTER_COST;
-    await dbPatch('users',{heures_sup:newPts},'id=eq.'+ME.id);ME.heures_sup=newPts;
+    const newHS=hs-BOOSTER_COST;
+    await dbPatch('users',{heures_sup:newHS},'id=eq.'+ME.id);
+    ME.heures_sup=newHS;
     await dbDel('booster_opens','user_id=eq.'+ME.id);
-    msg.style.color='#6ddb9a';msg.textContent='✅ Booster débloqué !';
-    setTimeout(()=>{msg.textContent='';},3000);updateBoosterState();
-  }catch(e){msg.style.color='#ff8888';msg.textContent='Erreur : '+e.message;}
+    if(msg){msg.style.color='#6ddb9a';msg.textContent='✅ Booster débloqué !';setTimeout(()=>{if(msg)msg.textContent='';},3000);}
+    updateBoosterState();
+    // Update shop screen HS display if open
+    const shopHS=document.getElementById('shop-screen-hs');
+    if(shopHS)shopHS.textContent=newHS+' HS';
+  }catch(e){
+    if(msg){msg.style.color='#ff8888';msg.textContent='Erreur : '+e.message;}
+  }
 }
 
 // ── REVEAL ────────────────────────────────────────────────────────────────────
@@ -1145,8 +1155,15 @@ function renderCollPage(){
     const isUrl=c.img_url&&(c.img_url.startsWith('http')||c.img_url.startsWith('data:'));
     const rar=c.card_type==='terrain'?'terrain':(c.rarity||'common');
     const d=document.createElement('div');d.className='cc r-'+rar;
+    const maxHP=getCardMaxHP(c);
+    const curHP=getCardCurrentHP(c);
+    const hpPct=Math.max(0,Math.round(curHP/maxHP*100));
+    const hpColor=hpPct>60?'#4caf50':hpPct>30?'#ff9800':'#f44336';
+    const isDead=curHP<=0;
     d.innerHTML=(coll[id]>1?`<div class="cc-count">x${coll[id]}</div>`:'')+
+      (isDead?'<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:2;display:flex;align-items:center;justify-content:center;font-size:24px;border-radius:8px">💀</div>':'')+
       (isUrl?`<img src="${c.img_url}">`:`<div class="cc-ph">${c.img_url||'🛒'}</div>`)+
+      `<div style="height:4px;background:rgba(255,255,255,.1);margin:0 4px 2px"><div style="height:100%;width:${hpPct}%;background:${hpColor};border-radius:2px;transition:width .3s"></div></div>`+
       `<div class="cc-name">${c.name}</div>`+
       `<div class="cc-rar r-${rar}">${RARITY_LABEL[c.rarity]||''}</div>`;
     d.onclick=()=>openCardDetail(c);
@@ -1943,7 +1960,7 @@ function autoBattleTick(){
   const playerDmg=Math.max(1,Math.floor((selectedCard.atk||50)/80));
   enemyHP=Math.max(0,enemyHP-playerDmg);
   // Enemy auto-attacks player
-  const enemyDmg=Math.max(5,Math.floor(((enemy.atk||50)*0.8-Math.floor((selectedCard.def||0)*0.4))/7));
+  const enemyDmg=Math.max(8,Math.floor(((enemy.atk||50)*0.9-Math.floor((selectedCard.def||0)*0.3))/4));
   playerHP=Math.max(0,playerHP-enemyDmg);
   updateBattleUI();
   if(enemyHP<=0){clearInterval(battleInterval);battleInterval=null;enemyDefeated();}
