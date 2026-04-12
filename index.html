@@ -8,7 +8,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--gold:#c9a84c;--gold2:#f0d080;--bg:#0d0d1a;--surf:rgba(255,255,255,.06);--bord:rgba(255,255,255,.1)}
-html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;height:100%;overflow:hidden}
+html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-attachment:fixed;color:#eee;font-family:'DM Sans',sans-serif;height:100%;overflow:hidden}
 #app{height:100dvh;display:flex;flex-direction:column;max-width:480px;margin:0 auto}
 
 /* SETUP */
@@ -283,6 +283,22 @@ html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;heigh
 .page-btn.active{background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.4);color:var(--gold)}
 .page-btn:disabled{opacity:.3;cursor:not-allowed}
 .page-info{font-size:12px;color:rgba(255,255,255,.35)}
+
+
+/* STAR WARS CRAWL */
+#sw-screen{position:fixed;inset:0;background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);z-index:800;display:none;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden}
+#sw-screen.active{display:flex}
+#sw-episode{width:100%;text-align:center;padding:60px 20px 0;flex-shrink:0}
+#sw-episode-num{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:6px;color:var(--gold);margin-bottom:6px;opacity:0;animation:swEpFade 4s ease forwards}
+#sw-episode-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:4px;color:var(--gold);text-shadow:0 0 30px rgba(201,168,76,.6);opacity:0;animation:swEpFade 4s ease 0.3s forwards}
+@keyframes swEpFade{0%{opacity:0}30%{opacity:1}70%{opacity:1}100%{opacity:0}}
+#sw-subtitle{font-size:13px;font-style:italic;color:rgba(255,255,255,.5);margin-top:12px;opacity:0;animation:swEpFade 4s ease 0.6s forwards}
+#sw-crawl-wrap{position:absolute;bottom:0;left:0;right:0;top:0;overflow:hidden;perspective:350px}
+#sw-crawl{position:absolute;bottom:-100%;left:8%;right:8%;transform:rotateX(22deg);transform-origin:bottom center;animation:swCrawl 32s linear forwards;animation-delay:5s;padding-bottom:40px}
+@keyframes swCrawl{0%{bottom:-100%}100%{bottom:220%}}
+#sw-crawl .sw-intro{font-size:14px;font-style:italic;color:rgba(255,255,255,.6);text-align:center;margin-bottom:24px;line-height:1.8}
+#sw-crawl p{font-size:13px;line-height:2;color:var(--gold);text-align:justify;margin-bottom:14px;font-weight:500}
+#sw-skip{position:absolute;bottom:24px;right:20px;color:rgba(255,255,255,.3);font-size:12px;cursor:pointer;border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;z-index:10}
 
 </style>
 </head>
@@ -1823,6 +1839,15 @@ async function loadAdventureMap(){
 
 async function openShop(shop,stageReached){
   currentShop=shop;
+  // Show Star Wars crawl only on first visit (stage 0)
+  if(stageReached===0){
+    showStarWars('I','FERMETURE À MINUIT',()=>_openShopUI(shop,stageReached));
+    return;
+  }
+  _openShopUI(shop,stageReached);
+}
+
+async function _openShopUI(shop,stageReached){
   document.getElementById('adv-map').style.display='none';
   document.getElementById('adv-stage-view').style.display='block';
   document.getElementById('adv-shop-title').textContent=shop.name;
@@ -2460,6 +2485,37 @@ async function updateShopImg(){
   }catch(e){notif.className='notif err';notif.textContent='Erreur : '+e.message;}
 }
 
+
+// ── STAR WARS CRAWL ────────────────────────────────────────────────────────────
+let swCallback=null;
+
+function showStarWars(episodeNum, title, callback){
+  swCallback=callback;
+  document.getElementById('sw-episode-num').textContent='ÉPISODE '+episodeNum;
+  document.getElementById('sw-episode-title').textContent=title;
+  // Reset animation
+  const crawl=document.getElementById('sw-crawl');
+  const ep=document.getElementById('sw-episode');
+  crawl.style.animation='none';
+  ep.style.animation='none';
+  void crawl.offsetWidth; // reflow
+  crawl.style.animation='swCrawl 28s linear forwards';
+  crawl.style.animationDelay='3s';
+  ep.style.animation='swFadeIn 2s ease forwards';
+  document.getElementById('sw-screen').classList.add('active');
+  // Auto-finish after crawl
+  setTimeout(()=>finishStarWars(), 31000);
+}
+
+function skipStarWars(){
+  finishStarWars();
+}
+
+function finishStarWars(){
+  document.getElementById('sw-screen').classList.remove('active');
+  if(swCallback){swCallback();swCallback=null;}
+}
+
 init();
 </script>
 
@@ -2489,6 +2545,26 @@ init();
     <div id="pb-rar-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%"></div>
     <button style="padding:10px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%" onclick="closePlayerModal()">Fermer</button>
   </div>
+</div>
+
+
+<!-- STAR WARS CRAWL -->
+<div id="sw-screen">
+  <div id="sw-episode">
+    <div id="sw-episode-num">ÉPISODE I</div>
+    <div id="sw-episode-title">FERMETURE À MINUIT</div>
+  </div>
+  <div id="sw-crawl-wrap">
+    <div id="sw-crawl">
+      <div class="sw-intro">Il n'y a pas si longtemps,<br>dans un Castorama pas si lointain…</div>
+      <p>Leroy Merlin a décidé d'ouvrir le dimanche de 7h à minuit espérant ainsi détruire une bonne fois pour toute son concurrent de toujours.</p>
+      <p>Mais Castorama suivit le mouvement et décida à son tour de fermer à minuit.</p>
+      <p>La lutte dura trop longtemps pour les employés de Castorama qui décidèrent après une réflexion de 5 secondes de s'attaquer à l'ensemble des Leroy Merlin de France.</p>
+      <p>C'est ainsi qu'une multitude de fourgonnettes Casto prirent la route afin de mettre fin — ce fabuleux trésor… le One… ah non c'est pas le bon univers..</p>
+      <p>Prirent la route pour venir à bout des Leroy Merlin une bonne fois pour toutes !</p>
+    </div>
+  </div>
+  <div id="sw-skip" onclick="skipStarWars()">Passer ▶</div>
 </div>
 
 </body>
