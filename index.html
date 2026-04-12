@@ -285,20 +285,21 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 .page-info{font-size:12px;color:rgba(255,255,255,.35)}
 
 
-/* STAR WARS CRAWL */
-#sw-screen{position:fixed;inset:0;background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);z-index:800;display:none;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden}
+/* CINEMATIC INTRO */
+#sw-screen{position:fixed;inset:0;background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);z-index:800;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;gap:0}
 #sw-screen.active{display:flex}
-#sw-episode{width:100%;text-align:center;padding:60px 20px 0;flex-shrink:0}
-#sw-episode-num{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:6px;color:var(--gold);margin-bottom:6px;opacity:0;animation:swEpFade 4s ease forwards}
-#sw-episode-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:4px;color:var(--gold);text-shadow:0 0 30px rgba(201,168,76,.6);opacity:0;animation:swEpFade 4s ease 0.3s forwards}
-@keyframes swEpFade{0%{opacity:0}30%{opacity:1}70%{opacity:1}100%{opacity:0}}
-#sw-subtitle{font-size:13px;font-style:italic;color:rgba(255,255,255,.5);margin-top:12px;opacity:0;animation:swEpFade 4s ease 0.6s forwards}
-#sw-crawl-wrap{position:absolute;bottom:0;left:0;right:0;top:0;overflow:hidden;perspective:350px}
-#sw-crawl{position:absolute;bottom:-100%;left:8%;right:8%;transform:rotateX(22deg);transform-origin:bottom center;animation:swCrawl 32s linear forwards;animation-delay:5s;padding-bottom:40px}
-@keyframes swCrawl{0%{bottom:-100%}100%{bottom:220%}}
-#sw-crawl .sw-intro{font-size:14px;font-style:italic;color:rgba(255,255,255,.6);text-align:center;margin-bottom:24px;line-height:1.8}
-#sw-crawl p{font-size:13px;line-height:2;color:var(--gold);text-align:justify;margin-bottom:14px;font-weight:500}
-#sw-skip{position:absolute;bottom:24px;right:20px;color:rgba(255,255,255,.3);font-size:12px;cursor:pointer;border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;z-index:10}
+#sw-episode-num{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:6px;color:var(--gold);text-align:center;margin-bottom:6px}
+#sw-episode-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:4px;color:var(--gold);text-align:center;text-shadow:0 0 30px rgba(201,168,76,.5);margin-bottom:40px}
+#sw-msg-box{width:100%;max-width:360px;min-height:120px;display:flex;align-items:center;justify-content:center}
+#sw-msg-text{font-size:14px;line-height:1.9;color:rgba(255,255,255,.85);text-align:center;opacity:0;transition:opacity .6s}
+#sw-msg-text.visible{opacity:1}
+#sw-msg-text.italic{font-style:italic;color:rgba(255,255,255,.55);font-size:13px}
+#sw-progress{display:flex;gap:6px;margin-top:32px}
+.sw-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.15);transition:background .3s}
+.sw-dot.active{background:var(--gold)}
+#sw-next-btn{margin-top:32px;padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:20px;color:rgba(255,255,255,.5);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+#sw-next-btn:active{transform:scale(.96);background:rgba(255,255,255,.12)}
+#sw-skip{position:absolute;bottom:24px;right:20px;color:rgba(255,255,255,.25);font-size:11px;cursor:pointer}
 
 </style>
 </head>
@@ -2486,30 +2487,58 @@ async function updateShopImg(){
 }
 
 
-// ── STAR WARS CRAWL ────────────────────────────────────────────────────────────
+// ── CINEMATIC INTRO ────────────────────────────────────────────────────────────
 let swCallback=null;
+let swMessages=[];
+let swIdx=0;
 
-function showStarWars(episodeNum, title, callback){
-  swCallback=callback;
+const SW_MESSAGES=[
+  {text:"Il n’y a pas si longtemps,\ndans un Castorama pas si lointain…", italic:true},
+  {text:"Leroy Merlin a décidé d’ouvrir le dimanche de 7h à minuit, espérant ainsi détruire une bonne fois pour toutes son concurrent de toujours."},
+  {text:"Mais Castorama suivit le mouvement et décida à son tour de fermer à minuit."},
+  {text:"La lutte dura trop longtemps pour les employés de Castorama qui décidèrent, après une réflexion de 5 secondes, de s’attaquer à l’ensemble des Leroy Merlin de France."},
+  {text:"C’est ainsi qu’une multitude de fourgonnettes Casto prirent la route… le One… ah non c’est pas le bon univers.."},
+  {text:"Prirent la route pour venir à bout des Leroy Merlin une bonne fois pour toutes !"},
+];
+
+function showStarWars(episodeNum,title,callback){
+  swCallback=callback;swIdx=0;
   document.getElementById('sw-episode-num').textContent='ÉPISODE '+episodeNum;
   document.getElementById('sw-episode-title').textContent=title;
-  // Reset animation
-  const crawl=document.getElementById('sw-crawl');
-  const ep=document.getElementById('sw-episode');
-  crawl.style.animation='none';
-  ep.style.animation='none';
-  void crawl.offsetWidth; // reflow
-  crawl.style.animation='swCrawl 28s linear forwards';
-  crawl.style.animationDelay='3s';
-  ep.style.animation='swFadeIn 2s ease forwards';
+  // Build dots
+  const prog=document.getElementById('sw-progress');
+  prog.innerHTML=SW_MESSAGES.map((_,i)=>`<div class="sw-dot" id="sw-dot-${i}"></div>`).join('');
   document.getElementById('sw-screen').classList.add('active');
-  // Auto-finish after crawl
-  setTimeout(()=>finishStarWars(), 31000);
+  swShowMsg(0);
 }
 
-function skipStarWars(){
-  finishStarWars();
+function swShowMsg(idx){
+  swIdx=idx;
+  const msg=SW_MESSAGES[idx];
+  const el=document.getElementById('sw-msg-text');
+  el.classList.remove('visible','italic');
+  el.textContent='';
+  setTimeout(()=>{
+    el.textContent=msg.text;
+    if(msg.italic)el.classList.add('italic');
+    el.classList.add('visible');
+  },100);
+  // Update dots
+  SW_MESSAGES.forEach((_,i)=>{
+    const d=document.getElementById('sw-dot-'+i);
+    if(d)d.className='sw-dot'+(i===idx?' active':'');
+  });
+  // Update button
+  const btn=document.getElementById('sw-next-btn');
+  if(btn)btn.textContent=idx>=SW_MESSAGES.length-1?'Commencer !':'Suivant';
 }
+
+function swNext(){
+  if(swIdx>=SW_MESSAGES.length-1){finishStarWars();return;}
+  swShowMsg(swIdx+1);
+}
+
+function skipStarWars(){finishStarWars();}
 
 function finishStarWars(){
   document.getElementById('sw-screen').classList.remove('active');
@@ -2548,23 +2577,14 @@ init();
 </div>
 
 
-<!-- STAR WARS CRAWL -->
+<!-- CINEMATIC INTRO -->
 <div id="sw-screen">
-  <div id="sw-episode">
-    <div id="sw-episode-num">ÉPISODE I</div>
-    <div id="sw-episode-title">FERMETURE À MINUIT</div>
-  </div>
-  <div id="sw-crawl-wrap">
-    <div id="sw-crawl">
-      <div class="sw-intro">Il n'y a pas si longtemps,<br>dans un Castorama pas si lointain…</div>
-      <p>Leroy Merlin a décidé d'ouvrir le dimanche de 7h à minuit espérant ainsi détruire une bonne fois pour toute son concurrent de toujours.</p>
-      <p>Mais Castorama suivit le mouvement et décida à son tour de fermer à minuit.</p>
-      <p>La lutte dura trop longtemps pour les employés de Castorama qui décidèrent après une réflexion de 5 secondes de s'attaquer à l'ensemble des Leroy Merlin de France.</p>
-      <p>C'est ainsi qu'une multitude de fourgonnettes Casto prirent la route afin de mettre fin — ce fabuleux trésor… le One… ah non c'est pas le bon univers..</p>
-      <p>Prirent la route pour venir à bout des Leroy Merlin une bonne fois pour toutes !</p>
-    </div>
-  </div>
-  <div id="sw-skip" onclick="skipStarWars()">Passer ▶</div>
+  <div id="sw-episode-num">ÉPISODE I</div>
+  <div id="sw-episode-title">FERMETURE À MINUIT</div>
+  <div id="sw-msg-box"><div id="sw-msg-text"></div></div>
+  <div id="sw-progress"></div>
+  <button id="sw-next-btn" onclick="swNext()">Suivant</button>
+  <div id="sw-skip" onclick="skipStarWars()">Passer</div>
 </div>
 
 </body>
