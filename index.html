@@ -504,11 +504,38 @@ html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;heigh
         <div><label>Nom du magasin</label><input type="text" id="shop-name" placeholder="ex: LM Dardilly"></div>
         <div><label>Description</label><input type="text" id="shop-desc" placeholder="ex: Le plus grand de la région"></div>
         <div><label>Nb d'étapes</label><input type="number" id="shop-stages" placeholder="5" value="5"></div>
+        <div>
+          <label>Image du magasin (📷)</label>
+          <div class="img-row">
+            <input type="text" id="shop-img-url" placeholder="URL ou laisser vide">
+            <button class="cam-btn" onclick="document.getElementById('shop-img-file').click()">📷</button>
+          </div>
+          <input type="file" id="shop-img-file" accept="image/*" style="display:none" onchange="handleShopImg(event)">
+          <div id="shop-img-preview" style="display:none;margin-top:6px;text-align:center">
+            <img id="shop-img-prev-el" style="width:100%;height:80px;object-fit:cover;border-radius:8px;border:2px solid rgba(201,168,76,.4)">
+          </div>
+        </div>
         <div><label>Récompense finale (HS)</label><input type="number" id="shop-reward" placeholder="100" value="100"></div>
         <button class="btn btn-gold" onclick="addShop()">Ajouter le magasin</button>
         <div id="shop-notif" class="notif"></div>
       </div>
       <div id="shops-list" style="width:100%;display:flex;flex-direction:column;gap:5px;margin-top:6px;max-height:150px;overflow-y:auto"></div>
+      <div style="margin-top:8px" id="shop-img-update-section">
+        <label style="font-size:11px;color:rgba(255,255,255,.4);font-weight:500">Mettre à jour l'image d'un magasin existant</label>
+        <select id="shop-img-sel" style="width:100%;padding:10px 12px;border:1px solid var(--bord);border-radius:10px;background:var(--surf);color:#eee;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;-webkit-appearance:none;margin-top:6px">
+          <option value="">-- Choisir un magasin --</option>
+        </select>
+        <div class="img-row" style="margin-top:6px">
+          <input type="text" id="shop-img-update-url" placeholder="URL ou laisser vide" style="flex:1;padding:10px 12px;border:1px solid var(--bord);border-radius:10px;background:var(--surf);color:#eee;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+          <button class="cam-btn" onclick="document.getElementById('shop-img-update-file').click()">📷</button>
+        </div>
+        <input type="file" id="shop-img-update-file" accept="image/*" style="display:none" onchange="handleShopImgUpdate(event)">
+        <div id="shop-img-update-preview" style="display:none;margin-top:6px;text-align:center">
+          <img id="shop-img-update-prev-el" style="width:100%;height:80px;object-fit:cover;border-radius:8px;border:2px solid rgba(201,168,76,.4)">
+        </div>
+        <button class="btn btn-gold" style="margin-top:6px" onclick="updateShopImg()">Mettre à jour l'image</button>
+        <div id="shop-img-update-notif" class="notif"></div>
+      </div>
 
       <div class="sec-title">⚔️ Cartes Ennemies</div>
       <div class="adm-form">
@@ -1944,11 +1971,13 @@ async function addShop(){
   const desc=document.getElementById('shop-desc').value.trim();
   const stages=parseInt(document.getElementById('shop-stages').value)||5;
   const reward=parseInt(document.getElementById('shop-reward').value)||100;
+  const img_url=pendingShopImg||document.getElementById('shop-img-url').value.trim()||null;
   const notif=document.getElementById('shop-notif');
   if(!name){notif.className='notif err';notif.textContent='Donne un nom !';return;}
   try{
-    await dbPost('shops',{id:'sh'+Date.now(),name,description:desc||null,stages,reward_hs:reward,position:Date.now()});
+    await dbPost('shops',{id:'sh'+Date.now(),name,description:desc||null,img_url,stages,reward_hs:reward,position:Date.now()});
     document.getElementById('shop-name').value='';document.getElementById('shop-desc').value='';
+    pendingShopImg=null;document.getElementById('shop-img-preview').style.display='none';
     notif.className='notif ok';notif.textContent='✅ Magasin ajouté !';
     setTimeout(()=>{notif.className='notif';},2500);
     await loadShopsAdmin();
@@ -1964,12 +1993,14 @@ async function loadShopsAdmin(){
     d.innerHTML=`<span>🏪</span><span class="pi-name">${s.name}</span><span class="pi-r">${s.stages} étapes</span><button class="del-btn" onclick="delShop('${s.id}')">✕</button>`;
     list.appendChild(d);
   });
-  // Populate enemy shop select
-  const sel=document.getElementById('enemy-shop-sel');
-  if(sel){
-    sel.innerHTML='<option value="">-- Magasin --</option>';
-    shops.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});
-  }
+  // Populate selects
+  ['enemy-shop-sel','shop-img-sel'].forEach(selId=>{
+    const sel=document.getElementById(selId);
+    if(sel){
+      sel.innerHTML='<option value="">-- Magasin --</option>';
+      shops.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});
+    }
+  });
 }
 async function delShop(id){
   await dbDel('shops','id=eq.'+id);await loadShopsAdmin();
@@ -2029,6 +2060,44 @@ async function addEnemy(){
     document.getElementById('enemy-name').value='';document.getElementById('enemy-atk').value='';document.getElementById('enemy-def').value='';document.getElementById('enemy-hp').value='';
     pendingEnemyImg=null;document.getElementById('enemy-img-preview').style.display='none';
     notif.className='notif ok';notif.textContent='✅ Ennemi ajouté !';
+    setTimeout(()=>{notif.className='notif';},2500);
+  }catch(e){notif.className='notif err';notif.textContent='Erreur : '+e.message;}
+}
+
+
+let pendingShopImg = null;
+let pendingShopImgUpdate = null;
+
+function handleShopImg(e){
+  const file=e.target.files[0];if(!file)return;
+  compressImg(file,b64=>{
+    pendingShopImg=b64;
+    document.getElementById('shop-img-prev-el').src=b64;
+    document.getElementById('shop-img-preview').style.display='block';
+    document.getElementById('shop-img-url').value='';
+  });e.target.value='';
+}
+function handleShopImgUpdate(e){
+  const file=e.target.files[0];if(!file)return;
+  compressImg(file,b64=>{
+    pendingShopImgUpdate=b64;
+    document.getElementById('shop-img-update-prev-el').src=b64;
+    document.getElementById('shop-img-update-preview').style.display='block';
+    document.getElementById('shop-img-update-url').value='';
+  });e.target.value='';
+}
+async function updateShopImg(){
+  const shopId=document.getElementById('shop-img-sel').value;
+  const notif=document.getElementById('shop-img-update-notif');
+  if(!shopId){notif.className='notif err';notif.textContent='Choisis un magasin !';return;}
+  const img=pendingShopImgUpdate||document.getElementById('shop-img-update-url').value.trim();
+  if(!img){notif.className='notif err';notif.textContent='Ajoute une image !';return;}
+  try{
+    await dbPatch('shops',{img_url:img},'id=eq.'+shopId);
+    notif.className='notif ok';notif.textContent='✅ Image mise à jour !';
+    pendingShopImgUpdate=null;
+    document.getElementById('shop-img-update-preview').style.display='none';
+    document.getElementById('shop-img-update-url').value='';
     setTimeout(()=>{notif.className='notif';},2500);
   }catch(e){notif.className='notif err';notif.textContent='Erreur : '+e.message;}
 }
