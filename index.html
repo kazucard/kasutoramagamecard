@@ -1730,9 +1730,11 @@ function backToMap(){
 }
 
 async function startBattle(shop,stageNum,stage){
-  // Load enemies for this stage
   try{
-    const enemies=await dbGet('enemy_cards','shop_id=eq.'+shop.id+'&stage_id=eq.'+(stage?stage.id:'null')+'&select=*&order=position.asc');
+    // Build stage_id from pattern if stage exists
+    const stageId=stage?stage.id:('st_'+shop.id.replace('sh_','')+'_'+stageNum);
+    const enemies=await dbGet('enemy_cards','stage_id=eq.'+stageId+'&select=*&order=position.asc');
+    console.log('Loading enemies for stage_id:',stageId,'found:',enemies.length);
     if(!enemies.length){alert('Aucun ennemi configuré pour cette étape !');return;}
     openBattleScreen(shop,stageNum,stage,enemies);
   }catch(e){alert('Erreur : '+e.message);}
