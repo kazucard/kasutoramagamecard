@@ -1863,10 +1863,10 @@ function startBattleUI(){
 function autoBattleTick(){
   const enemy=battleEnemies[battleIdx];
   // Player auto-attacks
-  const playerDmg=Math.max(1,Math.floor((selectedCard.atk||50)/4));
+  const playerDmg=Math.max(1,Math.floor((selectedCard.atk||50)/50));
   enemyHP=Math.max(0,enemyHP-playerDmg);
   // Enemy auto-attacks player
-  const enemyDmg=Math.max(1,Math.floor(((enemy.atk||50)-Math.floor((selectedCard.def||0)*0.3))/4));
+  const enemyDmg=Math.max(1,Math.floor(((enemy.atk||50)-Math.floor((selectedCard.def||0)*0.3))/50));
   playerHP=Math.max(0,playerHP-enemyDmg);
   updateBattleUI();
   if(enemyHP<=0){clearInterval(battleInterval);battleInterval=null;enemyDefeated();}
@@ -1876,7 +1876,7 @@ function autoBattleTick(){
 function tapAttack(){
   if(!battleInterval&&enemyHP>0)return;
   const enemy=battleEnemies[battleIdx];
-  const tapDmg=Math.max(1,Math.floor((selectedCard.atk||50)/2));
+  const tapDmg=Math.max(1,Math.floor((selectedCard.atk||50)/15));
   enemyHP=Math.max(0,enemyHP-tapDmg);
   const log=document.getElementById('battle-log');
   if(log){log.textContent='⚔️ +'+tapDmg+' dégâts !';setTimeout(()=>{if(log)log.textContent='Tape sur ta carte pour attaquer !';},600);}
