@@ -475,7 +475,12 @@ html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;heigh
   <!-- AVENTURE -->
   <div class="screen" id="screen-aventure">
     <div id="adv-map" style="width:100%;padding-top:10px">
-      <div style="font-size:11px;color:rgba(255,255,255,.35);text-align:center;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Choisis un magasin</div>
+      <!-- LORE -->
+      <div style="background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(201,168,76,.03));border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:14px 16px;margin-bottom:16px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px">⚔️ L'Assaut Historique</div>
+        <p style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.7;margin:0">Leroy Merlin a décidé d'ouvrir son magasin le dimanche de 7h à minuit. Pour lutter, Castorama a suivi le mouvement... mais les employés ont décidé de ne pas se laisser faire et lancent à présent un assaut historique sur l'ensemble des Leroy Merlin de France.<br><br><strong style="color:rgba(255,255,255,.85)">Munissez-vous de votre meilleur chariot et allez-y !</strong></p>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,.35);text-align:center;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Choisis ton objectif</div>
       <div id="adv-shops-list" style="display:flex;flex-direction:column;gap:10px;width:100%"></div>
     </div>
     <!-- STAGE VIEW -->
@@ -1938,7 +1943,7 @@ function autoBattleTick(){
   const playerDmg=Math.max(1,Math.floor((selectedCard.atk||50)/80));
   enemyHP=Math.max(0,enemyHP-playerDmg);
   // Enemy auto-attacks player
-  const enemyDmg=Math.max(3,Math.floor(((enemy.atk||50)*0.8-Math.floor((selectedCard.def||0)*0.4))/20));
+  const enemyDmg=Math.max(5,Math.floor(((enemy.atk||50)*0.8-Math.floor((selectedCard.def||0)*0.4))/7));
   playerHP=Math.max(0,playerHP-enemyDmg);
   updateBattleUI();
   if(enemyHP<=0){clearInterval(battleInterval);battleInterval=null;enemyDefeated();}
