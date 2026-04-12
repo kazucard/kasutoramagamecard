@@ -340,7 +340,8 @@ html,body{background:var(--bg);color:#eee;font-family:'DM Sans',sans-serif;heigh
         <span id="xp-lbl">0/3</span>
       </div>
     </div>
-    <div id="notif-bell" onclick="openModal('notif-modal')">
+    <div id="pa-display" style="font-size:10px;color:var(--gold);background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:3px 10px;cursor:default">⚡ 20/20 PA</div>
+    <div id="notif-bell"  onclick="openModal('notif-modal')">
       🔔<span id="notif-badge">0</span>
     </div>
   </div>
@@ -847,7 +848,7 @@ async function startApp(uid){
     document.getElementById('setup-screen').style.display='none';
     document.getElementById('app').style.display='flex';
     loadCardHPs();
-    renderProfile();updateLevel();updateBoosterState();
+    renderProfile();updateLevel();updateBoosterState();updatePADisplay();
     checkPendingTrades();
     checkUnreadMessages();
     await checkDailyReward();
@@ -1782,7 +1783,7 @@ async function loadAdventureMap(){
           <div style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden">
             <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--gold),#e0b840);border-radius:2px;transition:width .4s"></div>
           </div>
-          <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px">Récompense finale : ${shop.reward_hs} HS</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px">Récompense boss : 20 HS</div>
         </div>`;
       d.onclick=()=>openShop(shop,stageReached);
       d.onmousedown=()=>{d.style.transform='scale(.97)';};
@@ -1812,7 +1813,7 @@ async function openShop(shop,stageReached){
         <div style="width:40px;height:40px;border-radius:50%;background:${done?'rgba(40,160,80,.3)':unlocked?'rgba(201,168,76,.15)':'rgba(255,255,255,.05)'};border:2px solid ${done?'rgba(40,160,80,.5)':'rgba(201,168,76,.3)'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${done?'✅':unlocked?'⚔️':'🔒'}</div>
         <div style="flex:1">
           <div style="font-weight:600;font-size:13px;color:${done?'#6ddb9a':unlocked?'#fff':'rgba(255,255,255,.3)'}">Étape ${i}${stage&&stage.name?' — '+stage.name:''}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px">Récompense : ${stage?stage.reward_hs:20} HS</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px">Récompense : ${i>=currentBattleShop?.stages?20:5} HS</div>
         </div>
         ${done?'<div style="font-size:11px;color:#6ddb9a;font-weight:600">Terminé</div>':''}`;
       if(unlocked&&!done) d.onclick=()=>startBattle(shop,i,stage);
@@ -1873,6 +1874,7 @@ function showCardSelectModal(myCards,shop,stageNum,stage,enemies){
           <div style="padding:4px;font-size:9px;text-align:center;color:rgba(255,255,255,.6)">${c.name}</div>
           <div style="padding:0 4px 4px;display:flex;justify-content:space-between;font-size:8px">
             <span style="color:#ff8877">⚔️${c.atk||0}</span>
+            <span style="color:var(--gold)">⚡${c.pa||1}PA</span>
             <span style="color:#77aaff">🛡️${c.def||0}</span>
           </div>
         </div>`;
@@ -1895,9 +1897,16 @@ function selectBattleCard(cardId){
 }
 
 function launchBattle(){
-  const sel=document.getElementById('battle-card-select');
-  if(sel) sel.remove();
   if(!selectedCard){alert('S\'lectionne une carte !');return;}
+  const paCost=selectedCard.pa||1;
+  const curPA=getCurrentPA();
+  if(curPA<paCost){
+    alert('Pas assez de PA ! ('+curPA+'/'+paCost+' requis)\nTu regagnes 1 PA toutes les 5 minutes.');
+    const sel=document.getElementById('battle-card-select');if(sel)sel.remove();
+    return;
+  }
+  spendPA(paCost);
+  const sel=document.getElementById('battle-card-select');if(sel)sel.remove();
   startBattleUI();
 }
 
@@ -1969,7 +1978,7 @@ function autoBattleTick(){
   const playerDmg=Math.max(1,Math.floor((selectedCard.atk||50)/80));
   enemyHP=Math.max(0,enemyHP-playerDmg);
   // Enemy auto-attacks player
-  const enemyDmg=Math.max(20,Math.floor(((enemy.atk||50)*0.9-Math.floor((selectedCard.def||0)*0.25))/0.2));
+  const enemyDmg=Math.max(50,Math.floor(((enemy.atk||50)*0.9-Math.floor((selectedCard.def||0)*0.25))));
   playerHP=Math.max(0,playerHP-enemyDmg);
   updateBattleUI();
   if(enemyHP<=0){clearInterval(battleInterval);battleInterval=null;enemyDefeated();}
@@ -2338,6 +2347,53 @@ function getBattlePlayerHP(card){
   return curHP;
 }
 
+
+// ── PA SYSTEM ──────────────────────────────────────────────────────────────────
+const PA_MAX=20;
+const PA_REGEN_MS=5*60*1000; // 5 minutes
+
+function getCurrentPA(){
+  const saved=parseInt(localStorage.getItem('cc_pa')||PA_MAX);
+  const lastTime=parseInt(localStorage.getItem('cc_pa_time')||Date.now());
+  const elapsed=Date.now()-lastTime;
+  const regen=Math.floor(elapsed/PA_REGEN_MS);
+  return Math.min(PA_MAX,saved+regen);
+}
+
+function savePA(pa){
+  localStorage.setItem('cc_pa',pa);
+  localStorage.setItem('cc_pa_time',Date.now());
+}
+
+function getTimeToNextPA(){
+  const saved=parseInt(localStorage.getItem('cc_pa')||PA_MAX);
+  if(saved>=PA_MAX)return null;
+  const lastTime=parseInt(localStorage.getItem('cc_pa_time')||Date.now());
+  const elapsed=Date.now()-lastTime;
+  const msToNext=PA_REGEN_MS-(elapsed%PA_REGEN_MS);
+  const m=Math.floor(msToNext/60000);
+  const s=Math.floor((msToNext%60000)/1000);
+  return m+'m '+s+'s';
+}
+
+function updatePADisplay(){
+  const pa=getCurrentPA();
+  const el=document.getElementById('pa-display');
+  if(el){
+    const next=getTimeToNextPA();
+    el.textContent='⚡ '+pa+'/'+PA_MAX+' PA'+(next&&pa<PA_MAX?' (+1 dans '+next+')':'');
+  }
+}
+
+function spendPA(amount){
+  const cur=getCurrentPA();
+  if(cur<amount)return false;
+  savePA(cur-amount);
+  updatePADisplay();
+  return true;
+}
+
+setInterval(updatePADisplay,10000);
 init();
 </script>
 
