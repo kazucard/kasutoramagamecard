@@ -326,6 +326,25 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 #vb-attacker.attack-anim{transform:rotateY(-15deg) translateX(30px) scale(1.05)}
 #vb-defender.hit-anim{transform:rotateY(15deg) translateX(-10px) scale(.95)}
 
+
+/* 3D ARENA CARDS */
+.arena-card-3d{width:80px;height:115px;perspective:400px;cursor:pointer;flex-shrink:0}
+.arena-card-3d-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;animation:cardSpin 6s ease-in-out infinite}
+@keyframes cardSpin{
+  0%{transform:rotateY(-15deg)}
+  50%{transform:rotateY(15deg)}
+  100%{transform:rotateY(-15deg)}
+}
+.arena-card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;overflow:hidden;border:2px solid rgba(201,168,76,.4);box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.arena-card-face img{width:100%;height:75%;object-fit:cover;display:block}
+.arena-card-face-ph{width:100%;height:75%;display:flex;align-items:center;justify-content:center;font-size:26px;background:linear-gradient(145deg,#1a1a2e,#0d0d20)}
+.arena-card-info{padding:3px 4px;background:rgba(0,0,0,.85)}
+.arena-card-name{font-size:7px;color:rgba(255,255,255,.8);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.arena-card-owner{font-size:6px;text-align:center;margin-top:1px}
+.arena-card-hp{height:3px;background:rgba(255,255,255,.1);margin:2px 3px 0}
+.arena-card-hp-fill{height:100%;border-radius:2px;transition:width .3s}
+.arena-slot-empty{width:80px;height:115px;border-radius:10px;border:1px dashed rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.12);font-size:11px;flex-shrink:0}
+
 </style>
 </head>
 <body>
@@ -2851,28 +2870,43 @@ async function openArena(arenaId) {
     teamBadge.textContent = ownerTeam ? ownerTeam.name : 'Neutre';
     teamBadge.style.cssText = `background:${col}22;border:1px solid ${col};color:${col};font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600`;
 
-    // Render defense slots
+    // Render defense slots - 3D cards
     slots.innerHTML = '';
+    slots.style.cssText = 'display:flex;gap:12px;margin-bottom:16px;justify-content:center;align-items:flex-end';
     for (let i = 0; i < 3; i++) {
       const dc = defCards[i];
-      const d = document.createElement('div');
-      d.style.cssText = 'flex:1;border-radius:10px;overflow:hidden;border:1px solid var(--bord);background:rgba(255,255,255,.03);min-height:90px;position:relative;cursor:pointer';
       if (dc) {
         const c = pool.find(p => p.id === dc.card_id);
         const isUrl = c && c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
-        const hpPct = Math.round(dc.hp / Math.max(100, (c?.def || 100) * 2) * 100);
+        const maxHP = Math.max(100, (c?.def || 100) * 2);
+        const hpPct = Math.max(0, Math.round(dc.hp / maxHP * 100));
         const hpCol = hpPct > 60 ? '#4caf50' : hpPct > 30 ? '#ff9800' : '#f44336';
-        d.innerHTML = `${isUrl ? `<img src="${c.img_url}" style="width:100%;height:70px;object-fit:cover;display:block">` : `<div style="height:70px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#111">${c?.img_url || '🛒'}</div>`}
-          <div style="height:3px;background:rgba(255,255,255,.1)"><div style="height:100%;width:${hpPct}%;background:${hpCol}"></div></div>
-          <div style="font-size:8px;text-align:center;padding:3px;color:rgba(255,255,255,.5)">${c?.name || '?'}</div>`;
+        const ownerUser = allUsers.find(u => u.id === dc.user_id);
+        const ownerPseudo = ownerUser ? ownerUser.pseudo : '?';
+        const isMe = dc.user_id === ME.id;
+        const delay = i * 2; // stagger animation
+        const d = document.createElement('div');
+        d.className = 'arena-card-3d';
+        d.innerHTML = `<div class="arena-card-3d-inner" style="animation-delay:-${delay}s">
+          <div class="arena-card-face">
+            ${isUrl ? `<img src="${c.img_url}">` : `<div class="arena-card-face-ph">${c?.img_url || '🛒'}</div>`}
+            <div class="arena-card-info">
+              <div class="arena-card-name">${c?.name || '?'}</div>
+              <div class="arena-card-owner" style="color:${isMe ? 'var(--gold)' : 'rgba(255,255,255,.35)'}">${isMe ? '⭐ Toi' : '👤 ' + ownerPseudo}</div>
+              <div class="arena-card-hp"><div class="arena-card-hp-fill" style="width:${hpPct}%;background:${hpCol}"></div></div>
+            </div>
+          </div>
+        </div>`;
         d.dataset.slotId = dc.id;
         d.dataset.cardId = dc.card_id;
-        d.dataset.hp = dc.hp;
+        slots.appendChild(d);
       } else {
-        d.innerHTML = '<div style="height:90px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.15);font-size:11px">Vide</div>';
+        const d = document.createElement('div');
+        d.className = 'arena-slot-empty';
+        d.innerHTML = '+';
         d.dataset.empty = '1';
+        slots.appendChild(d);
       }
-      slots.appendChild(d);
     }
 
     // Actions based on phase and team
