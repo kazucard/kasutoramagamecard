@@ -3639,17 +3639,18 @@ async function applyItemToCard(card) {
       const curHP = getCardCurrentHP(card);
       const newHP = Math.min(maxHP, Math.floor(curHP + maxHP * RTT_HEAL_PCT));
       saveCardHP(card.id, newHP);
-      // Deduct from inventory
+      // Deduct from inventory - use item.id for precise targeting
       const newQty = item.quantity - 1;
       if (newQty <= 0) {
-        await dbDel('inventory', 'user_id=eq.' + ME.id + '&item_type=eq.rtt');
-        myInventory = myInventory.filter(i => i.item_type !== 'rtt');
+        await dbDel('inventory', 'id=eq.' + item.id);
+        myInventory = myInventory.filter(i => i.id !== item.id);
       } else {
-        await dbPatch('inventory', { quantity: newQty }, 'user_id=eq.' + ME.id + '&item_type=eq.rtt');
+        await dbPatch('inventory', { quantity: newQty }, 'id=eq.' + item.id);
         item.quantity = newQty;
       }
       await loadInventory();
-      alert('🩹 ' + card.name + ' soignée ! (' + Math.ceil(curHP) + ' → ' + Math.ceil(newHP) + ' PV)');
+      renderColl(); // Refresh collection to show updated HP bars
+      alert('🩹 ' + card.name + ' soignée ! +' + Math.round(maxHP * RTT_HEAL_PCT) + ' PV');
     }
   } catch(e) { alert('Erreur : ' + e.message); }
 }
@@ -3665,9 +3666,9 @@ async function buyRTTInventory() {
     await dbPatch('users', { heures_sup: newHS }, 'id=eq.' + ME.id);
     ME.heures_sup = newHS;
     // Add RTT to inventory
-    const existing = (await dbGet('inventory', 'user_id=eq.' + ME.id + '&item_type=eq.rtt'))[0];
+    const existing = (await dbGet('inventory', 'user_id=eq.' + ME.id + '&item_type=eq.rtt&select=*'))[0];
     if (existing) {
-      await dbPatch('inventory', { quantity: existing.quantity + 1 }, 'user_id=eq.' + ME.id + '&item_type=eq.rtt');
+      await dbPatch('inventory', { quantity: existing.quantity + 1 }, 'id=eq.' + existing.id);
     } else {
       await dbPost('inventory', { id: 'inv' + Date.now(), user_id: ME.id, item_type: 'rtt', quantity: 1 });
     }
