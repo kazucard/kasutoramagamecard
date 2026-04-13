@@ -410,7 +410,18 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 
   <!-- BOOSTER -->
   <div class="screen active" id="screen-booster">
-    <div id="booster-section">
+    
+    <!-- VERSUS COUNTDOWN + SCORE -->
+    <div id="home-versus-bar" style="width:100%;background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.2);border-radius:12px;padding:10px 14px;margin-top:10px;display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:11px;font-weight:700;color:#ff8877;letter-spacing:.5px">🏟️ VERSUS — RESET DANS</div>
+        <div id="home-vs-countdown" style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:#ff8877;letter-spacing:1px">--:--:--</div>
+      </div>
+      <div id="home-vs-scores" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+
+    <!-- BOOSTER -->
+    <div id="booster-section" style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;margin-top:12px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--gold)">Castor Hebdo</div>
       <div id="booster-pack" onclick="onBoosterClick()">
         <img id="booster-img" src="" alt=""><div class="shimmer"></div>
@@ -418,8 +429,14 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
       <div id="cta-msg">Ouvre ton booster une fois par semaine !</div>
       <div id="timer-chip"></div>
       <div id="no-cards-msg">Aucune carte dans le pool.<br>L'admin doit en ajouter !</div>
-      <div id="shop-section" style="display:none">
-        <div id="shop-msg"></div>
+      <div id="shop-section" style="display:none"><div id="shop-msg"></div></div>
+    </div>
+
+    <!-- NEWS FEED -->
+    <div style="width:100%;margin-top:14px">
+      <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">📰 Actualités</div>
+      <div id="home-news-feed" style="display:flex;flex-direction:column;gap:8px">
+        <div style="text-align:center;color:rgba(255,255,255,.2);font-size:12px;padding:20px 0">Chargement...</div>
       </div>
     </div>
   </div>
@@ -491,7 +508,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
           </div>
           <div style="text-align:right">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gold)">50 HS</div>
-            <button onclick="buyRTT()" class="btn btn-gold" style="padding:8px 16px;width:auto;margin-top:6px;font-size:12px">Acheter</button>
+            <button onclick="buyRTTInventory()" class="btn btn-gold" style="padding:8px 16px;width:auto;margin-top:6px;font-size:12px">Acheter</button>
           </div>
         </div>
         <div id="rtt-status" style="margin-top:10px;font-size:11px;color:rgba(255,255,255,.35);text-align:center"></div>
@@ -844,6 +861,13 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
         <div id="enemy-notif" class="notif"></div>
       </div>
 
+      <div class="sec-title">📰 Poster une annonce</div>
+      <div class="adm-form">
+        <textarea id="news-content" placeholder="Ton annonce..." style="width:100%;padding:10px 12px;border:1px solid var(--bord);border-radius:10px;background:var(--surf);color:#eee;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:none;height:70px"></textarea>
+        <button class="btn btn-gold" onclick="postNews()">📢 Publier</button>
+        <div id="news-notif" class="notif"></div>
+      </div>
+
       <div class="sec-title" style="color:rgba(255,80,80,.5);margin-top:20px">⚠️ Zone dangereuse</div>
       <button class="btn" onclick="doReset()" style="border-color:rgba(255,80,80,.4);color:rgba(255,100,100,.9);background:rgba(255,0,0,.07)">🗑️ RESET TOTAL</button>
       <div id="reset-msg" style="font-size:12px;text-align:center;margin-top:8px;min-height:18px"></div>
@@ -862,6 +886,11 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
     <button class="nav-btn" id="nav-messages"   onclick="showTab('messages')" style="position:relative"><img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAwADADASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAYIBwEC/8QAMxAAAAUBBAcFCQEAAAAAAAAAAAECAwQFBgcRIQgSEyIxUZQXGCNVVhRBYXFyg6HS07H/xAAaAQABBQEAAAAAAAAAAAAAAAAEAgMFBgcB/8QAKhEAAQMCAwcEAwAAAAAAAAAAAQACAwQRBRJhBhMUFSFRUlNiktGBkbH/2gAMAwEAAhEDEQA/AIyAAOVgbsLcW8gyZtlKIqotRnSacPbtt7xljlrqIjwLDH6iCJJWRNzPIA16LoaXGwSaAat3db5fRbnXxf6g7ut8votzr4v9QNzGk9VvyH2l7p/iVlIA8W4umvBsTSSqtp7Orp8I1k2TpymXN4+BYIWZ/gI4IiljlbmjcCNDdILS3oQgWJoSJX2VVN2O5s5DdcdNJ8/AYyP4COxXWhZI2V2dTTjmdZcPD7LIr21cpiw8uHcI3DmZ5raKkqXWkzEKQrw5DeTjZ8SPn8h6qVYagsa61Gpaj1W2y4rPkQVJaFOPJksO7GSngsveXI+ZDkdtZyTly3ttI4JPDAkFyIhl3FMve/4U/wAOs00wzeduZfky1az7k+PulwQWJ5EIoFm6Xsja3PuIM8/b2P8ATEZDTtkZd7QF3uP8CgsSZkmtogN1ibx7WWNpzsCgT24zDrxvLSplK8VGRFjvEeGSSCiAWKeniqGZJWhw7EXCCZI6M5mGxWm9u95fnTHRtfqDt3vL86Y6Nr9RmQADyTDfQZ8R9J7jKjzP7TpbG8+2VraQdKrlRakRDWlzVTHQg9YuGZFiEsAAbT00NMzJC0NHYCyZkkfIbvNyv//Z" style="width:24px;height:24px;object-fit:contain">Messages<span id="msg-nav-dot" style="position:absolute;top:6px;right:calc(50% - 14px);width:7px;height:7px;border-radius:50%;background:#ff4444;display:none"></span></button>
     <button class="nav-btn" id="nav-admin" onclick="showTab('admin')"><img src="data:image/png;base64,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" style="width:24px;height:24px;object-fit:contain">Admin</button>
   </nav>
+  <!-- FLOATING INVENTORY BUTTON -->
+  <div id="inventory-fab" onclick="openInventory()" style="position:fixed;bottom:80px;right:16px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#e0b840);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,.4);z-index:300;transition:transform .15s;display:none" id="inventory-fab">
+    🎒
+    <div id="inventory-fab-badge" style="position:absolute;top:-2px;right:-2px;background:#ff4444;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;display:none;align-items:center;justify-content:center"></div>
+  </div>
 </div>
 
 <!-- OPENING -->
@@ -1053,6 +1082,8 @@ async function startApp(uid){
     document.getElementById('app').style.display='flex';
     loadCardHPs();
     await syncArenaCards();
+    await loadInventory();
+    loadHomeScreen();
     renderProfile();updateLevel();updateBoosterState();updatePADisplay();
     checkPendingTrades();
     checkUnreadMessages();
@@ -1165,6 +1196,7 @@ function showTab(name){
   if(name==='classement')renderClassement();
   if(name==='messages'){loadInbox();setTimeout(()=>loadMsgUserSelect(),100);}
   if(name==='aventure')loadAdventureMap();
+  if(name==='booster')loadHomeScreen();
   if(name==='versus')loadVersusMap();
   if(name==='shop')loadShopScreen();
   if(name==='admin'){adminUnlocked=false;document.getElementById('admin-lock').style.display='flex';document.getElementById('admin-content').style.display='none';}
@@ -3298,6 +3330,353 @@ function isCardInArena(cardId) {
   return !!inArena[cardId];
 }
 
+// ── HOME SCREEN ────────────────────────────────────────────────────────────────
+async function loadHomeScreen() {
+  loadVersusCountdown();
+  loadHomeVersusScore();
+  loadNewsFeed();
+}
+
+function getNextMonday() {
+  const now = new Date();
+  const day = now.getDay();
+  const daysToMon = day === 0 ? 1 : 8 - day;
+  const next = new Date(now);
+  next.setDate(now.getDate() + daysToMon);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
+
+let countdownInterval = null;
+function loadVersusCountdown() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  const bar = document.getElementById('home-versus-bar');
+  if (bar) bar.style.display = 'block';
+  function tick() {
+    const now = new Date();
+    const next = getNextMonday();
+    const diff = next - now;
+    if (diff <= 0) {
+      document.getElementById('home-vs-countdown').textContent = 'RESET !';
+      handleVersusReset();
+      return;
+    }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    const el = document.getElementById('home-vs-countdown');
+    if (el) el.textContent = (d > 0 ? d + 'j ' : '') + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+  tick();
+  countdownInterval = setInterval(tick, 1000);
+}
+
+async function loadHomeVersusScore() {
+  try {
+    const arenaRows = await dbGet('arenas', 'select=team_id');
+    const allTeams = await dbGet('teams', 'select=*');
+    const palette = ['#4488ff','#ff4444','#44cc44','#ff8800','#aa44ff','#00ccaa'];
+    const teamColorMap = {};
+    allTeams.forEach((t, i) => { teamColorMap[t.id] = palette[i % palette.length]; });
+    const counts = {};
+    arenaRows.forEach(a => { if (a.team_id) counts[a.team_id] = (counts[a.team_id] || 0) + 1; });
+    const scoresEl = document.getElementById('home-vs-scores');
+    if (!scoresEl) return;
+    scoresEl.innerHTML = '';
+    if (!Object.keys(counts).length) {
+      scoresEl.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,.3)">Aucune arène capturée</div>';
+      return;
+    }
+    // Sort by count desc
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    sorted.forEach(([teamId, count]) => {
+      const team = allTeams.find(t => t.id === teamId);
+      const col = teamColorMap[teamId] || '#888';
+      const isMe = ME && ME.team_id === teamId;
+      const d = document.createElement('div');
+      d.style.cssText = `display:flex;align-items:center;gap:6px;background:${col}18;border:1px solid ${col}44;border-radius:8px;padding:4px 10px;${isMe?'border-color:'+col+';':''}`; 
+      d.innerHTML = `<div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div><span style="font-size:11px;color:rgba(255,255,255,.7);font-weight:${isMe?700:400}">${team?.name || '?'}</span><span style="font-size:11px;font-weight:700;color:${col};margin-left:auto">${count}/10</span>`;
+      scoresEl.appendChild(d);
+    });
+  } catch(e) {}
+}
+
+async function loadNewsFeed() {
+  const feed = document.getElementById('home-news-feed');
+  if (!feed) return;
+  feed.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.2);font-size:12px;padding:20px 0">Chargement...</div>';
+  try {
+    // Load manual news + auto news (rare drops)
+    const news = await dbGet('news', 'select=*&order=created_at.desc&limit=20');
+    feed.innerHTML = '';
+    if (!news.length) {
+      feed.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.2);font-size:12px;padding:12px 0">Aucune actualité pour le moment</div>';
+      return;
+    }
+    news.forEach(n => {
+      const d = document.createElement('div');
+      const isAuto = n.type === 'auto';
+      const isAlert = n.type === 'alert';
+      const bg = isAlert ? 'rgba(255,68,68,.08)' : isAuto ? 'rgba(201,168,76,.06)' : 'var(--surf)';
+      const border = isAlert ? 'rgba(255,68,68,.25)' : isAuto ? 'rgba(201,168,76,.2)' : 'var(--bord)';
+      const icon = isAlert ? '🚨' : isAuto ? '⭐' : '📢';
+      const timeAgo = getTimeAgo(new Date(n.created_at));
+      d.style.cssText = `background:${bg};border:1px solid ${border};border-radius:10px;padding:10px 12px`;
+      d.innerHTML = `<div style="display:flex;align-items:flex-start;gap:8px">
+        <span style="font-size:16px;flex-shrink:0">${icon}</span>
+        <div style="flex:1">
+          <div style="font-size:13px;color:rgba(255,255,255,.85);line-height:1.5">${n.content}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:4px">${timeAgo}</div>
+        </div>
+      </div>`;
+      feed.appendChild(d);
+    });
+  } catch(e) {
+    feed.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.2);font-size:12px;padding:12px 0">Erreur de chargement</div>';
+  }
+}
+
+function getTimeAgo(date) {
+  const diff = Date.now() - date.getTime();
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(diff / 3600000);
+  const d = Math.floor(diff / 86400000);
+  if (m < 1) return "à l'instant";
+  if (m < 60) return "il y a " + m + " min";
+  if (h < 24) return "il y a " + h + "h";
+  return "il y a " + d + " jour" + (d > 1 ? 's' : '');
+}
+
+async function postNews() {
+  const content = document.getElementById('news-content').value.trim();
+  const notif = document.getElementById('news-notif');
+  if (!content) { notif.className = 'notif err'; notif.textContent = 'Écris une annonce !'; return; }
+  try {
+    await dbPost('news', { id: 'n' + Date.now(), content, type: 'manual', created_at: new Date().toISOString() });
+    document.getElementById('news-content').value = '';
+    notif.className = 'notif ok'; notif.textContent = '✅ Annonce publiée !';
+    setTimeout(() => { notif.className = 'notif'; }, 2500);
+  } catch(e) { notif.className = 'notif err'; notif.textContent = 'Erreur : ' + e.message; }
+}
+
+async function postAutoNews(content) {
+  try {
+    await dbPost('news', { id: 'n' + Date.now(), content, type: 'auto', created_at: new Date().toISOString() });
+  } catch(e) {}
+}
+
+// Auto-news on SEC/SuperRare/SuperRareAlt/SECAlt drops
+const RARE_NEWS_RARITIES = ['sec', 'secalt', 'superrare', 'superrarealt'];
+function checkAutoNews(card) {
+  if (RARE_NEWS_RARITIES.includes(card.rarity)) {
+    postAutoNews(ME.pseudo + ' vient d\'obtenir ' + card.name + ' (' + (RARITY_LABEL[card.rarity] || card.rarity) + ') ! 🎉');
+  }
+}
+
+// ── VERSUS RESET (lundi 00h00) ─────────────────────────────────────────────────
+async function handleVersusReset() {
+  const lastReset = localStorage.getItem('cc_last_vs_reset');
+  const thisMonday = getNextMonday().getTime() - 7 * 24 * 3600000; // last monday
+  if (lastReset && parseInt(lastReset) >= thisMonday) return; // Already reset this week
+  localStorage.setItem('cc_last_vs_reset', Date.now());
+  
+  // Only owner triggers the reset
+  if (!OWNER_ID || ME.id !== OWNER_ID) return;
+  
+  try {
+    // Calculate winners
+    const arenaRows = await dbGet('arenas', 'select=team_id');
+    const counts = {};
+    arenaRows.forEach(a => { if (a.team_id) counts[a.team_id] = (counts[a.team_id] || 0) + 1; });
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    
+    if (sorted.length) {
+      const winnerId = sorted[0][0];
+      const winnerTeam = (await dbGet('teams', 'id=eq.' + winnerId + '&select=name'))[0];
+      
+      // Give 300 HS to all members of winning team
+      const winners = await dbGet('users', 'team_id=eq.' + winnerId + '&select=id,heures_sup,pseudo');
+      for (const u of winners) {
+        await dbPatch('users', { heures_sup: (u.heures_sup || 0) + 300 }, 'id=eq.' + u.id);
+      }
+      
+      // Post news
+      await postAutoNews('🏆 ' + (winnerTeam?.name || '?') + ' remporte le Versus cette semaine avec ' + sorted[0][1] + ' zones ! (+300 HS pour tous les membres)');
+    }
+    
+    // Reset all arenas to neutral
+    await dbPatch('arenas', { team_id: null }, 'team_id=not.is.null');
+    // Remove all arena cards
+    await dbDel('arena_cards', 'id=not.is.null');
+    
+    // Clear local arena tracking
+    localStorage.removeItem('cc_in_arena');
+    localStorage.removeItem('cc_in_arena_prev');
+    
+    await postAutoNews('🔄 Le Versus a été réinitialisé ! Toutes les arènes sont neutres. Bonne chance à tous !');
+    
+    // Reload
+    loadVersusMap();
+    loadNewsFeed();
+    alert('🏆 Reset Versus effectué ! Les récompenses ont été distribuées.');
+  } catch(e) { console.error('Versus reset error:', e); }
+}
+
+// ── INVENTORY ──────────────────────────────────────────────────────────────────
+let myInventory = [];
+let currentItemType = null;
+
+async function loadInventory() {
+  try {
+    const rows = await dbGet('inventory', 'user_id=eq.' + ME.id + '&select=*');
+    myInventory = rows;
+    // Update FAB badge
+    const total = rows.reduce((s, r) => s + r.quantity, 0);
+    const badge = document.getElementById('inventory-fab-badge');
+    if (badge) {
+      if (total > 0) { badge.style.display = 'flex'; badge.textContent = total; }
+      else { badge.style.display = 'none'; }
+    }
+    // Show FAB
+    const fab = document.getElementById('inventory-fab');
+    if (fab) fab.style.display = 'flex';
+  } catch(e) {}
+}
+
+function openInventory() {
+  const popup = document.getElementById('inventory-popup');
+  const box = document.getElementById('inventory-box');
+  popup.style.display = 'flex';
+  setTimeout(() => { box.style.transform = 'translateY(0)'; }, 10);
+  renderInventoryItems();
+}
+
+function closeInventory() {
+  const box = document.getElementById('inventory-box');
+  box.style.transform = 'translateY(100%)';
+  setTimeout(() => { document.getElementById('inventory-popup').style.display = 'none'; }, 250);
+}
+
+const ITEM_DEFS = {
+  rtt: { icon: '🩹', name: 'RTT', desc: 'Soigne une carte de 15% PV max', color: '#4caf50' },
+};
+
+function renderInventoryItems() {
+  const el = document.getElementById('inventory-items');
+  if (!el) return;
+  if (!myInventory.length) {
+    el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.3);font-size:13px;padding:30px 0;line-height:2">Ton inventaire est vide.<br>Achète des objets dans le Shop !</div>';
+    return;
+  }
+  el.innerHTML = '';
+  myInventory.forEach(item => {
+    if (!item.quantity) return;
+    const def = ITEM_DEFS[item.item_type] || { icon: '📦', name: item.item_type, desc: '', color: 'var(--gold)' };
+    const d = document.createElement('div');
+    d.style.cssText = 'display:flex;align-items:center;gap:12px;background:var(--surf);border:1px solid var(--bord);border-radius:12px;padding:12px';
+    d.innerHTML = `
+      <div style="width:48px;height:48px;border-radius:12px;background:${def.color}18;border:1px solid ${def.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${def.icon}</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:14px;color:#fff">${def.name} <span style="color:${def.color};font-size:12px">x${item.quantity}</span></div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px">${def.desc}</div>
+      </div>
+      <button onclick="useItem('${item.item_type}')" style="padding:10px 16px;background:linear-gradient(135deg,${def.color},${def.color}cc);color:#fff;font-weight:700;font-size:12px;border-radius:10px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0">Utiliser</button>`;
+    el.appendChild(d);
+  });
+}
+
+function useItem(itemType) {
+  currentItemType = itemType;
+  closeInventory();
+  // Show card picker
+  const myCards = Object.keys(coll).filter(id => coll[id] > 0)
+    .map(id => pool.find(p => p.id === id)).filter(Boolean)
+    .filter(c => !isCardInArena(c.id)); // Exclude arena cards
+  if (!myCards.length) { alert('Aucune carte disponible !'); return; }
+  openCardPicker(myCards, itemType);
+}
+
+function openCardPicker(cards, itemType) {
+  const def = ITEM_DEFS[itemType] || { icon: '📦', name: itemType };
+  document.getElementById('item-card-picker-title').textContent = def.icon + ' Sur quelle carte ?';
+  const grid = document.getElementById('item-card-picker-grid');
+  grid.innerHTML = '';
+  cards.forEach(c => {
+    const isUrl = c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
+    const curHP = getCardCurrentHP(c);
+    const maxHP = getCardMaxHP(c);
+    const hpPct = Math.max(0, Math.round(curHP / maxHP * 100));
+    const hpCol = hpPct > 60 ? '#4caf50' : hpPct > 30 ? '#ff9800' : '#f44336';
+    const d = document.createElement('div');
+    d.style.cssText = 'border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:pointer;background:rgba(255,255,255,.04);transition:border-color .15s';
+    d.innerHTML = `${isUrl ? `<img src="${c.img_url}" style="width:100%;height:80px;object-fit:cover;display:block">` : `<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">${c.img_url || '🛒'}</div>`}
+      <div style="height:3px;background:rgba(255,255,255,.1)"><div style="height:100%;width:${hpPct}%;background:${hpCol}"></div></div>
+      <div style="font-size:9px;padding:3px 4px;text-align:center;color:rgba(255,255,255,.6);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+      <div style="font-size:8px;text-align:center;padding:0 4px 4px;color:rgba(255,255,255,.3)">❤️ ${Math.ceil(curHP)}/${maxHP}</div>`;
+    d.onclick = () => applyItemToCard(c);
+    d.onmouseenter = () => { d.style.borderColor = 'var(--gold)'; };
+    d.onmouseleave = () => { d.style.borderColor = 'var(--bord)'; };
+    grid.appendChild(d);
+  });
+  document.getElementById('item-card-picker').style.display = 'flex';
+}
+
+function closeCardPicker() {
+  document.getElementById('item-card-picker').style.display = 'none';
+  currentItemType = null;
+}
+
+async function applyItemToCard(card) {
+  closeCardPicker();
+  if (!currentItemType || !ME) return;
+  const item = myInventory.find(i => i.item_type === currentItemType);
+  if (!item || item.quantity <= 0) { alert('Plus d\'objets !'); return; }
+  
+  try {
+    if (currentItemType === 'rtt') {
+      const maxHP = getCardMaxHP(card);
+      const curHP = getCardCurrentHP(card);
+      const newHP = Math.min(maxHP, Math.floor(curHP + maxHP * RTT_HEAL_PCT));
+      saveCardHP(card.id, newHP);
+      // Deduct from inventory
+      const newQty = item.quantity - 1;
+      if (newQty <= 0) {
+        await dbDel('inventory', 'user_id=eq.' + ME.id + '&item_type=eq.rtt');
+        myInventory = myInventory.filter(i => i.item_type !== 'rtt');
+      } else {
+        await dbPatch('inventory', { quantity: newQty }, 'user_id=eq.' + ME.id + '&item_type=eq.rtt');
+        item.quantity = newQty;
+      }
+      await loadInventory();
+      alert('🩹 ' + card.name + ' soignée ! (' + Math.ceil(curHP) + ' → ' + Math.ceil(newHP) + ' PV)');
+    }
+  } catch(e) { alert('Erreur : ' + e.message); }
+}
+
+// Update buyRTT to add to inventory instead of instant heal
+async function buyRTTInventory() {
+  if (!ME) return;
+  const hs = ME.heures_sup || 0;
+  const notif = document.getElementById('shop-notif-screen');
+  if (hs < RTT_COST) { if(notif){notif.style.color='#ff8888';notif.textContent='Pas assez de HS !';} return; }
+  try {
+    const newHS = hs - RTT_COST;
+    await dbPatch('users', { heures_sup: newHS }, 'id=eq.' + ME.id);
+    ME.heures_sup = newHS;
+    // Add RTT to inventory
+    const existing = (await dbGet('inventory', 'user_id=eq.' + ME.id + '&item_type=eq.rtt'))[0];
+    if (existing) {
+      await dbPatch('inventory', { quantity: existing.quantity + 1 }, 'user_id=eq.' + ME.id + '&item_type=eq.rtt');
+    } else {
+      await dbPost('inventory', { id: 'inv' + Date.now(), user_id: ME.id, item_type: 'rtt', quantity: 1 });
+    }
+    if(notif){notif.style.color='#6ddb9a';notif.textContent='🩹 RTT ajouté à ton inventaire !';setTimeout(()=>{if(notif)notif.textContent='';},3000);}
+    document.getElementById('shop-screen-hs').textContent = newHS + ' HS';
+    await loadInventory();
+  } catch(e) { if(notif){notif.style.color='#ff8888';notif.textContent='Erreur : '+e.message;} }
+}
+
 init();
 </script>
 
@@ -3400,6 +3779,27 @@ init();
 
   <div id="vb-log" style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;min-height:18px"></div>
   <button onclick="surrenderVsBattle()" style="padding:8px 20px;background:rgba(255,255,255,.06);border:1px solid var(--bord);border-radius:8px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Abandonner</button>
+</div>
+
+
+<!-- INVENTORY POPUP -->
+<div id="inventory-popup" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:800;display:none;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeInventory()">
+  <div style="background:linear-gradient(145deg,#13132a,#1a1a3e);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;border-top:1px solid var(--bord);max-height:70vh;overflow-y:auto;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)" id="inventory-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--gold)">🎒 Inventaire</div>
+      <button onclick="closeInventory()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div id="inventory-items" style="display:flex;flex-direction:column;gap:10px">
+      <div style="text-align:center;color:rgba(255,255,255,.3);font-size:13px;padding:20px 0">Chargement...</div>
+    </div>
+  </div>
+</div>
+
+<!-- CARD PICKER (for using items) -->
+<div id="item-card-picker" style="position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:900;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:14px">
+  <div id="item-card-picker-title" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)">Sur quelle carte ?</div>
+  <div id="item-card-picker-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-height:55vh;overflow-y:auto"></div>
+  <button onclick="closeCardPicker()" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Annuler</button>
 </div>
 
 </body>
