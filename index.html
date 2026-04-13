@@ -1250,7 +1250,17 @@ setInterval(updateBoosterState,1000);
 
 async function onBoosterClick(){
   if(!pool.length)return;
-  const{ok}=await canOpen();if(!ok)return;
+  const extras=parseInt(localStorage.getItem('cc_extra_boosters')||'0');
+  const{ok}=await canOpen();
+  // Allow if weekly ok OR has extras
+  if(!ok&&extras<=0)return;
+  // If using extra (weekly not available)
+  if(!ok&&extras>0){
+    localStorage.setItem('cc_extra_boosters', extras-1);
+    localStorage.setItem('cc_using_extra','1');
+  } else {
+    localStorage.removeItem('cc_using_extra');
+  }
   tapCount=0;
   document.getElementById('opening-screen').classList.add('active');
   document.getElementById('opening-rays').classList.remove('show');
