@@ -3630,29 +3630,44 @@ function closeCardPicker() {
 async function applyItemToCard(card) {
   closeCardPicker();
   if (!currentItemType || !ME) return;
-  const item = myInventory.find(i => i.item_type === currentItemType);
-  if (!item || item.quantity <= 0) { alert('Plus d\'objets !'); return; }
-  
+  // Show feedback overlay
+  const fb = document.createElement('div');
+  fb.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:#fff;padding:14px 20px;border-radius:12px;font-size:13px;z-index:9999;border:1px solid var(--gold);max-width:280px;text-align:center;transition:opacity .3s';
+  fb.textContent = 'Application en cours...';
+  document.body.appendChild(fb);
+  const showFb = (msg, col) => { fb.textContent = msg; fb.style.borderColor = col || 'var(--gold)'; setTimeout(() => fb.remove(), 3000); };
+
   try {
+    // Fresh load from DB
+    const rows = await dbGet('inventory', 'user_id=eq.' + ME.id + '&select=*');
+    myInventory = rows;
+    const item = rows.find(i => i.item_type === currentItemType);
+    
+    if (!item || item.quantity <= 0) {
+      showFb('❌ Inventaire vide !', '#ff4444');
+      return;
+    }
+    
     if (currentItemType === 'rtt') {
       const maxHP = getCardMaxHP(card);
       const curHP = getCardCurrentHP(card);
-      const newHP = Math.min(maxHP, Math.floor(curHP + maxHP * RTT_HEAL_PCT));
+      const healAmt = Math.floor(maxHP * RTT_HEAL_PCT);
+      const newHP = Math.min(maxHP, curHP + healAmt);
       saveCardHP(card.id, newHP);
-      // Deduct from inventory - use item.id for precise targeting
+      
       const newQty = item.quantity - 1;
       if (newQty <= 0) {
         await dbDel('inventory', 'id=eq.' + item.id);
-        myInventory = myInventory.filter(i => i.id !== item.id);
       } else {
         await dbPatch('inventory', { quantity: newQty }, 'id=eq.' + item.id);
-        item.quantity = newQty;
       }
       await loadInventory();
-      renderColl(); // Refresh collection to show updated HP bars
-      alert('🩹 ' + card.name + ' soignée ! +' + Math.round(maxHP * RTT_HEAL_PCT) + ' PV');
+      renderColl();
+      showFb('🩹 ' + card.name + ' +' + healAmt + ' PV !', '#4caf50');
     }
-  } catch(e) { alert('Erreur : ' + e.message); }
+  } catch(e) {
+    showFb('❌ Erreur: ' + e.message, '#ff4444');
+  }
 }
 
 // Update buyRTT to add to inventory instead of instant heal
