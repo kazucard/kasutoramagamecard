@@ -1243,13 +1243,8 @@ async function updateBoosterState(){
   } else {
     bp.classList.add('locked');bp.classList.remove('can-open');cta.style.display='none';chip.style.display='block';chip.textContent=label;
   }
-  if(ME){
-    const HS=ME.heures_sup||0;
-    const shop=document.getElementById('shop-section');
-    shop.style.display='flex';
-    document.getElementById('shop-pts').textContent=HS+' HS';
-    document.getElementById('shop-btn').disabled=HS<BOOSTER_COST;
-  }
+  // Shop section moved to Shop tab
+  // ── Boutique comment──────────────────────────────────────────────────────
 }
 setInterval(updateBoosterState,1000);
 
