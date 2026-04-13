@@ -1236,10 +1236,11 @@ async function updateBoosterState(){
   if(!pool.length){bp.classList.add('locked');nc.style.display='block';cta.style.display='none';chip.style.display='none';return;}
   nc.style.display='none';
   const{ok,label}=await canOpen();
-  const extras=parseInt(localStorage.getItem('cc_extra_boosters')||'0');
+  const extraItem=myInventory.find(i=>i.item_type==='booster');
+  const extras=extraItem?extraItem.quantity:0;
   if(ok||extras>0){
     bp.classList.remove('locked');bp.classList.add('can-open');cta.style.display='block';chip.style.display='none';
-    cta.textContent=ok?'Ouvre ton booster une fois par semaine !':'Booster extra disponible ! ('+extras+' restant'+(extras>1?'s':'')+')';
+    cta.textContent=ok?'Ouvre ton booster une fois par semaine !':`Booster extra disponible ! (${extras} restant${extras>1?'s':''})`;
   } else {
     bp.classList.add('locked');bp.classList.remove('can-open');cta.style.display='none';chip.style.display='block';chip.textContent=label;
   }
@@ -1250,13 +1251,21 @@ setInterval(updateBoosterState,1000);
 
 async function onBoosterClick(){
   if(!pool.length)return;
-  const extras=parseInt(localStorage.getItem('cc_extra_boosters')||'0');
   const{ok}=await canOpen();
-  // Allow if weekly ok OR has extras
+  // Check DB inventory for extra boosters
+  const extraItem=myInventory.find(i=>i.item_type==='booster');
+  const extras=extraItem?extraItem.quantity:0;
   if(!ok&&extras<=0)return;
-  // If using extra (weekly not available)
   if(!ok&&extras>0){
-    localStorage.setItem('cc_extra_boosters', extras-1);
+    // Deduct from DB inventory
+    try{
+      if(extras-1<=0){
+        await dbDel('inventory','id=eq.'+extraItem.id);
+      } else {
+        await dbPatch('inventory',{quantity:extras-1},'id=eq.'+extraItem.id);
+      }
+      await loadInventory();
+    }catch(e){console.error(e);}
     localStorage.setItem('cc_using_extra','1');
   } else {
     localStorage.removeItem('cc_using_extra');
@@ -1308,7 +1317,6 @@ function pickCard(){
 async function buyBooster(){
   if(!ME)return;
   const hs=ME.heures_sup||0;
-  // Notif element - works from booster tab or shop tab
   const msg=document.getElementById('booster-shop-msg')||document.getElementById('shop-msg');
   if(hs<BOOSTER_COST){
     if(msg){msg.style.color='#ff8888';msg.textContent='Pas assez de HS !';}
@@ -1318,14 +1326,18 @@ async function buyBooster(){
     const newHS=hs-BOOSTER_COST;
     await dbPatch('users',{heures_sup:newHS},'id=eq.'+ME.id);
     ME.heures_sup=newHS;
-    // Store extra booster in localStorage - doesn't affect weekly cooldown
-    const extras=(parseInt(localStorage.getItem('cc_extra_boosters')||'0'))+1;
-    localStorage.setItem('cc_extra_boosters',extras);
-    if(msg){msg.style.color='#6ddb9a';msg.textContent='✅ Booster extra ajouté !';setTimeout(()=>{if(msg)msg.textContent='';},3000);}
-    updateBoosterState();
-    // Update shop screen HS display if open
+    // Store extra booster in DB inventory (not localStorage)
+    const existing=(await dbGet('inventory','user_id=eq.'+ME.id+'&item_type=eq.booster&select=*'))[0];
+    if(existing){
+      await dbPatch('inventory',{quantity:existing.quantity+1},'id=eq.'+existing.id);
+    } else {
+      await dbPost('inventory',{id:'inv'+Date.now(),user_id:ME.id,item_type:'booster',quantity:1});
+    }
+    if(msg){msg.style.color='#6ddb9a';msg.textContent='✅ Booster extra ajouté à ton inventaire !';setTimeout(()=>{if(msg)msg.textContent='';},3000);}
     const shopHS=document.getElementById('shop-screen-hs');
     if(shopHS)shopHS.textContent=newHS+' HS';
+    await loadInventory();
+    updateBoosterState();
   }catch(e){
     if(msg){msg.style.color='#ff8888';msg.textContent='Erreur : '+e.message;}
   }
@@ -3567,6 +3579,7 @@ function closeInventory() {
 
 const ITEM_DEFS = {
   rtt: { icon: '🩹', name: 'RTT', desc: 'Soigne une carte de 15% PV max', color: '#4caf50' },
+  booster: { icon: '🎁', name: 'Booster Extra', desc: 'Ouvre un booster supplémentaire', color: '#c9a84c' },
 };
 
 function renderInventoryItems() {
@@ -3596,6 +3609,12 @@ function renderInventoryItems() {
 function useItem(itemType) {
   currentItemType = itemType;
   closeInventory();
+  if(itemType==='booster'){
+    // Go to vestiaire and open booster
+    showTab('booster');
+    setTimeout(()=>onBoosterClick(), 400);
+    return;
+  }
   showCardPickerForItem(itemType);
 }
 
