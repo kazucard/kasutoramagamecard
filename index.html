@@ -1052,6 +1052,7 @@ async function startApp(uid){
     document.getElementById('setup-screen').style.display='none';
     document.getElementById('app').style.display='flex';
     loadCardHPs();
+    await syncArenaCards();
     renderProfile();updateLevel();updateBoosterState();updatePADisplay();
     checkPendingTrades();
     checkUnreadMessages();
@@ -1375,8 +1376,11 @@ function renderCollPage(){
     const hpPct=Math.max(0,Math.round(curHP/maxHP*100));
     const hpColor=hpPct>60?'#4caf50':hpPct>30?'#ff9800':'#f44336';
     const isDead=curHP<=0;
+    const inArena=isCardInArena(c.id);
+    d.style.opacity=isDead||inArena?'0.45':'1';
     d.innerHTML=(coll[id]>1?`<div class="cc-count">x${coll[id]}</div>`:'')+
-      (isDead?'<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:2;display:flex;align-items:center;justify-content:center;font-size:24px;border-radius:8px">💀</div>':'')+
+      (isDead?'<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:2;display:flex;align-items:center;justify-content:center;font-size:24px;border-radius:8px;flex-direction:column;gap:4px"><span>💀</span></div>':'')+
+      (inArena&&!isDead?'<div style="position:absolute;inset:0;background:rgba(68,136,255,.15);z-index:2;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#88aaff;border-radius:8px;flex-direction:column;gap:2px"><span>🏟️</span><span>En arène</span></div>':'')+
       (isUrl?`<img src="${c.img_url}">`:`<div class="cc-ph">${c.img_url||'🛒'}</div>`)+
       `<div style="height:4px;background:rgba(255,255,255,.1);margin:0 4px 2px"><div style="height:100%;width:${hpPct}%;background:${hpColor};border-radius:2px;transition:width .3s"></div></div>`+
       `<div class="cc-name">${c.name}</div>`+
@@ -2899,13 +2903,8 @@ async function openArena(arenaId) {
         </div>`;
         d.dataset.slotId = dc.id;
         d.dataset.cardId = dc.card_id;
-        // Long press to show stats
-        let pressTimer;
-        d.addEventListener('touchstart', () => {
-          pressTimer = setTimeout(() => showArenaCardStats(dc, c, ownerPseudo, isMe), 600);
-        }, {passive:true});
-        d.addEventListener('touchend', () => clearTimeout(pressTimer));
-        d.addEventListener('touchmove', () => clearTimeout(pressTimer));
+        // Simple tap to show stats
+        d.onclick = () => showArenaCardStats(dc, c, ownerPseudo, isMe);
         slots.appendChild(d);
       } else {
         const d = document.createElement('div');
@@ -3006,6 +3005,10 @@ async function selectPlaceCard(cardId, arenaId) {
   try {
     const maxHP = getCardMaxHP(card);
     await dbPost('arena_cards', { id: 'ac' + Date.now(), arena_id: arenaId, user_id: ME.id, card_id: cardId, hp: maxHP });
+    // Mark card as in arena (localStorage)
+    const inArena = JSON.parse(localStorage.getItem('cc_in_arena') || '{}');
+    inArena[cardId] = arenaId;
+    localStorage.setItem('cc_in_arena', JSON.stringify(inArena));
     // Set arena team to my team if neutral
     const arena = (await dbGet('arenas', 'id=eq.' + arenaId))[0];
     if (!arena.team_id && ME.team_id) {
@@ -3024,6 +3027,10 @@ async function removeMyCard(arenaId) {
     const myCard = (await dbGet('arena_cards', 'arena_id=eq.' + arenaId + '&user_id=eq.' + ME.id))[0];
     if (!myCard) return;
     await dbDel('arena_cards', 'id=eq.' + myCard.id);
+    // Unmark card from arena
+    const inArena = JSON.parse(localStorage.getItem('cc_in_arena') || '{}');
+    delete inArena[myCard.card_id];
+    localStorage.setItem('cc_in_arena', JSON.stringify(inArena));
     // If no more cards, arena becomes neutral
     const remaining = await dbGet('arena_cards', 'arena_id=eq.' + arenaId);
     if (!remaining.length) await dbPatch('arenas', { team_id: null }, 'id=eq.' + arenaId);
@@ -3070,8 +3077,8 @@ function showVsCardSelect(myCards, slot, defCard, arenaId) {
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-height:50vh;overflow-y:auto">
       ${myCards.map(c => {
         const isUrl = c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
-        const curHP = getCardCurrentHP(c); const dead = curHP <= 0;
-        return `<div onclick="${dead ? '' : "launchVsBattle('" + c.id + "','" + slot.id + "','" + arenaId + "')"}" style="border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:${dead ? 'not-allowed' : 'pointer'};opacity:${dead ? .4 : 1};background:rgba(255,255,255,.04)">
+        const curHP = getCardCurrentHP(c); const dead = curHP <= 0; const inAr = isCardInArena(c.id);
+        return `<div onclick="${(dead||inAr) ? '' : "launchVsBattle('" + c.id + "','" + slot.id + "','" + arenaId + "')"}" style="border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:${(dead||inAr) ? 'not-allowed' : 'pointer'};opacity:${(dead||inAr) ? .4 : 1};background:rgba(255,255,255,.04)">
           ${isUrl ? `<img src="${c.img_url}" style="width:100%;height:70px;object-fit:cover;display:block">` : `<div style="height:70px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#111">${c.img_url || '🛒'}</div>`}
           <div style="padding:3px;font-size:8px;text-align:center;color:rgba(255,255,255,.6)">${c.name}</div>
           <div style="font-size:8px;text-align:center;padding-bottom:3px;color:rgba(255,255,255,.35)">❤️${Math.round(curHP)}/${getCardMaxHP(c)}</div>
@@ -3162,8 +3169,13 @@ async function vbEnemyDefeated() {
   try {
     // Update defender slot HP to 0 (defeated)
     await dbPatch('arena_cards', { hp: 0 }, 'id=eq.' + vbDefenderSlot.id);
-    // Remove defeated card from arena
+    // Remove defeated card from arena + return dead to owner
     await dbDel('arena_cards', 'id=eq.' + vbDefenderSlot.id);
+    // Mark defender's card as dead HP=0 in localStorage (best effort, owner's device)
+    // We can't write to their localStorage but we can save the info server-side via a note
+    // For now: the card will return with 0HP when owner loads the app
+    // Sync: check arena_cards on load and update local HP
+    await syncArenaCards();
     // Check if arena is now empty - if so, player can capture
     const remaining = await dbGet('arena_cards', 'arena_id=eq.' + currentArenaId);
     if (!remaining.length) {
@@ -3180,6 +3192,10 @@ async function vbEnemyDefeated() {
 async function vbPlayerDefeated() {
   document.getElementById('versus-battle').classList.remove('active');
   saveCardHP(vbAttackerCard.id, 0); // Card is dead
+  // Unmark from arena (attacker card returns dead)
+  const inArena = JSON.parse(localStorage.getItem('cc_in_arena') || '{}');
+  delete inArena[vbAttackerCard.id];
+  localStorage.setItem('cc_in_arena', JSON.stringify(inArena));
   showVbResult('💀 Défaite !', vbAttackerCard.name + ' a été vaincue. Ressuscite-la dans le Shop.', false);
 }
 
@@ -3244,6 +3260,36 @@ function showArenaCardStats(slot, card, ownerPseudo, isMe) {
     </div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+}
+
+
+// ── SYNC ARENA CARDS ──────────────────────────────────────────────────────────
+async function syncArenaCards() {
+  if (!ME) return;
+  try {
+    // Check if any of my cards are still in arenas
+    const myArenaCards = await dbGet('arena_cards', 'user_id=eq.' + ME.id + '&select=*');
+    const inArena = {};
+    myArenaCards.forEach(ac => { inArena[ac.card_id] = ac.arena_id; });
+    localStorage.setItem('cc_in_arena', JSON.stringify(inArena));
+
+    // Check cards that WERE in arena but are no longer (defeated)
+    const prevInArena = JSON.parse(localStorage.getItem('cc_in_arena_prev') || '{}');
+    Object.keys(prevInArena).forEach(cardId => {
+      if (!inArena[cardId]) {
+        // Card was removed from arena - mark as dead if not already tracked
+        if (cardHPs[cardId] === undefined || cardHPs[cardId] > 0) {
+          saveCardHP(cardId, 0);
+        }
+      }
+    });
+    localStorage.setItem('cc_in_arena_prev', JSON.stringify(inArena));
+  } catch(e) {}
+}
+
+function isCardInArena(cardId) {
+  const inArena = JSON.parse(localStorage.getItem('cc_in_arena') || '{}');
+  return !!inArena[cardId];
 }
 
 init();
