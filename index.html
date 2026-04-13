@@ -2072,8 +2072,14 @@ function openBattleScreen(shop,stageNum,stage,enemies){
   // Pick player card - use highest ATK card in collection
   const myCards=Object.keys(coll).filter(id=>coll[id]>0).map(id=>pool.find(p=>p.id===id)).filter(Boolean);
   if(!myCards.length){alert('Tu n\'as aucune carte dans ta collection !');return;}
-  selectedCard=myCards.sort((a,b)=>(b.atk||0)-(a.atk||0))[0];
-  showCardSelectModal(myCards,shop,stageNum,stage,enemies);
+  // Filter out cards in arena or dead
+  const availableCards=myCards.filter(c=>!isCardInArena(c.id)&&getCardCurrentHP(c)>0);
+  if(!availableCards.length){
+    alert('Toutes tes cartes sont en arène ou mortes ! Récupère-les ou ressuscite-les dans le Shop.');
+    return;
+  }
+  selectedCard=availableCards.sort((a,b)=>(b.atk||0)-(a.atk||0))[0];
+  showCardSelectModal(availableCards,shop,stageNum,stage,enemies);
 }
 
 function showCardSelectModal(myCards,shop,stageNum,stage,enemies){
