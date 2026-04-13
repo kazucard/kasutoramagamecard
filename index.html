@@ -1309,10 +1309,19 @@ async function packTap(){
   }
 }
 function pickCard(){
-  const total=pool.reduce((s,c)=>s+(RARITY_W[c.rarity]||50),0);
-  let r=Math.random()*total;
-  for(const c of pool){r-=(RARITY_W[c.rarity]||50);if(r<=0)return c;}
-  return pool[pool.length-1];
+  // Step 1: pick rarity based on weights
+  const availableRarities=[...new Set(pool.map(c=>c.rarity||'common'))];
+  const totalW=availableRarities.reduce((s,r)=>s+(RARITY_W[r]||50),0);
+  let rand=Math.random()*totalW;
+  let pickedRarity='common';
+  for(const r of availableRarities){
+    rand-=(RARITY_W[r]||50);
+    if(rand<=0){pickedRarity=r;break;}
+  }
+  // Step 2: pick random card of that rarity
+  const rarityCards=pool.filter(c=>(c.rarity||'common')===pickedRarity);
+  if(!rarityCards.length)return pool[Math.floor(Math.random()*pool.length)];
+  return rarityCards[Math.floor(Math.random()*rarityCards.length)];
 }
 async function buyBooster(){
   if(!ME)return;
