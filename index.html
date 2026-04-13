@@ -301,6 +301,31 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 #sw-next-btn:active{transform:scale(.96);background:rgba(255,255,255,.12)}
 #sw-skip{position:absolute;bottom:24px;right:20px;color:rgba(255,255,255,.25);font-size:11px;cursor:pointer}
 
+
+/* VERSUS */
+.arena-node circle{transition:fill .3s,stroke .3s}
+.arena-node:active circle{opacity:.7}
+
+/* ARENA MODAL */
+#arena-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:600;display:none;align-items:flex-end;justify-content:center}
+#arena-modal.open{display:flex}
+#arena-box{background:linear-gradient(145deg,#13132a,#1a1a3e);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;border-top:1px solid var(--bord);max-height:85vh;overflow-y:auto;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+#arena-modal.open #arena-box{transform:translateY(0)}
+
+/* 3D BATTLE */
+#versus-battle{position:fixed;inset:0;background:linear-gradient(180deg,#0d0d1a 0%,#001830 100%);z-index:700;display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:16px}
+#versus-battle.active{display:flex}
+.vb-card{width:100px;height:145px;border-radius:14px;overflow:hidden;border:2px solid rgba(201,168,76,.5);position:relative;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+.vb-card img{width:100%;height:100%;object-fit:cover;display:block}
+.vb-card-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;background:linear-gradient(145deg,#1a1a2e,#0d0d20)}
+#vb-arena{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px}
+#vb-vs{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:6px;color:rgba(255,255,255,.15)}
+#vb-cards-row{width:100%;display:flex;align-items:center;justify-content:center;gap:20px;perspective:600px}
+#vb-attacker{transform:rotateY(-15deg);transition:transform .3s}
+#vb-defender{transform:rotateY(15deg);transition:transform .3s}
+#vb-attacker.attack-anim{transform:rotateY(-15deg) translateX(30px) scale(1.05)}
+#vb-defender.hit-anim{transform:rotateY(15deg) translateX(-10px) scale(.95)}
+
 </style>
 </head>
 <body>
@@ -509,6 +534,120 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
     </div>
   </div>
 
+  <!-- VERSUS -->
+  <div class="screen" id="screen-versus">
+    <div id="versus-phase-banner" style="width:100%;padding:8px 14px;border-radius:10px;text-align:center;font-size:12px;font-weight:600;margin:10px 0;display:none"></div>
+    
+    <!-- MAP -->
+    <div id="versus-map-wrap" style="width:100%;position:relative;margin-bottom:12px">
+      <svg id="versus-map" viewBox="0 0 320 480" style="width:100%;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--bord)">
+        <!-- Background grid -->
+        <defs>
+          <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect width="320" height="480" fill="url(#grid)"/>
+        
+        <!-- Arenas - positioned on map -->
+        <!-- Each arena: circle + label, clickable -->
+        <g id="arena-1" class="arena-node" onclick="openArena('arena_1')" style="cursor:pointer">
+          <circle cx="80" cy="60" r="28" fill="rgba(100,100,120,.3)" stroke="rgba(255,255,255,.2)" stroke-width="2"/>
+          <text x="80" y="55" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Réserve</text>
+          <text x="80" y="67" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Carrelage</text>
+          <text x="80" y="79" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="DM Sans" id="arena-1-count">0/3</text>
+        </g>
+
+        <g id="arena-2" class="arena-node" onclick="openArena('arena_2')" style="cursor:pointer">
+          <circle cx="240" cy="60" r="28" fill="rgba(100,100,120,.3)" stroke="rgba(255,255,255,.2)" stroke-width="2"/>
+          <text x="240" y="55" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Couloir</text>
+          <text x="240" y="67" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">de la mort</text>
+          <text x="240" y="79" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="DM Sans" id="arena-2-count">0/3</text>
+        </g>
+
+        <g id="arena-3" class="arena-node" onclick="openArena('arena_3')" style="cursor:pointer">
+          <circle cx="160" cy="120" r="28" fill="rgba(100,100,120,.3)" stroke="rgba(255,255,255,.2)" stroke-width="2"/>
+          <text x="160" y="118" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="10" font-family="DM Sans">ZRM</text>
+          <text x="160" y="132" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="DM Sans" id="arena-3-count">0/3</text>
+        </g>
+
+        <g id="arena-4" class="arena-node" onclick="openArena('arena_4')" style="cursor:pointer">
+          <circle cx="60" cy="200" r="28" fill="rgba(100,100,120,.3)" stroke="rgba(255,255,255,.2)" stroke-width="2"/>
+          <text x="60" y="198" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Réception</text>
+          <text x="60" y="212" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="DM Sans" id="arena-4-count">0/3</text>
+        </g>
+
+        <g id="arena-5" class="arena-node" onclick="openArena('arena_5')" style="cursor:pointer">
+          <circle cx="260" cy="180" r="28" fill="rgba(100,100,120,.3)" stroke="rgba(255,255,255,.2)" stroke-width="2"/>
+          <text x="260" y="178" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Les Caisses</text>
+          <text x="260" y="192" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="DM Sans" id="arena-5-count">0/3</text>
+        </g>
+
+        <g id="arena-6" class="arena-node" onclick="openArena('arena_6')" style="cursor:pointer">
+          <circle cx="160" cy="240" r="28" fill="rgba(100,100,120,.3)" stroke="rgba(255,255,255,.2)" stroke-width="2"/>
+          <text x="160" y="238" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Sanitaire</text>
+          <text x="160" y="252" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="DM Sans" id="arena-6-count">0/3</text>
+        </g>
+
+        <g id="arena-7" class="arena-node" onclick="openArena('arena_7')" style="cursor:pointer">
+          <circle cx="60" cy="330" r="28" fill="rgba(100,100,120,.3)" stroke="rgba(255,255,255,.2)" stroke-width="2"/>
+          <text x="60" y="325" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Chapiteau</text>
+          <text x="60" y="337" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Jardin</text>
+          <text x="60" y="349" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="DM Sans" id="arena-7-count">0/3</text>
+        </g>
+
+        <g id="arena-8" class="arena-node" onclick="openArena('arena_8')" style="cursor:pointer">
+          <circle cx="260" cy="310" r="28" fill="rgba(100,100,120,.3)" stroke="rgba(255,255,255,.2)" stroke-width="2"/>
+          <text x="260" y="305" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Bureaux</text>
+          <text x="260" y="317" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Admins</text>
+          <text x="260" y="329" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="DM Sans" id="arena-8-count">0/3</text>
+        </g>
+
+        <g id="arena-9" class="arena-node" onclick="openArena('arena_9')" style="cursor:pointer">
+          <circle cx="110" cy="420" r="28" fill="rgba(100,100,120,.3)" stroke="rgba(255,255,255,.2)" stroke-width="2"/>
+          <text x="110" y="418" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Rangement</text>
+          <text x="110" y="432" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="DM Sans" id="arena-9-count">0/3</text>
+        </g>
+
+        <g id="arena-10" class="arena-node" onclick="openArena('arena_10')" style="cursor:pointer">
+          <circle cx="220" cy="420" r="28" fill="rgba(100,100,120,.3)" stroke="rgba(255,255,255,.2)" stroke-width="2"/>
+          <text x="220" y="418" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="9" font-family="DM Sans">Peinture</text>
+          <text x="220" y="432" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="DM Sans" id="arena-10-count">0/3</text>
+        </g>
+
+        <!-- Connection lines -->
+        <line x1="80" y1="88" x2="130" y2="100" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+        <line x1="240" y1="88" x2="190" y2="100" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+        <line x1="160" y1="148" x2="80" y2="174" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+        <line x1="160" y1="148" x2="240" y2="155" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+        <line x1="80" y1="226" x2="140" y2="218" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+        <line x1="240" y1="206" x2="190" y2="218" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+        <line x1="160" y1="268" x2="80" y2="305" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+        <line x1="160" y1="268" x2="240" y2="285" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+        <line x1="80" y1="358" x2="100" y2="394" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+        <line x1="240" y1="338" x2="215" y2="394" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+      </svg>
+
+      <!-- Legend -->
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(255,255,255,.4)"><div style="width:10px;height:10px;border-radius:50%;background:rgba(100,100,120,.5);border:1px solid rgba(255,255,255,.2)"></div>Neutre</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(255,255,255,.4)"><div id="legend-my-team" style="width:10px;height:10px;border-radius:50%;background:#4488ff"></div>Ton équipe</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(255,255,255,.4)"><div style="width:10px;height:10px;border-radius:50%;background:#ff4444"></div>Ennemis</div>
+      </div>
+    </div>
+
+    <!-- Score bar -->
+    <div id="versus-score" style="width:100%;background:var(--surf);border:1px solid var(--bord);border-radius:12px;padding:10px 14px;margin-bottom:10px;display:none">
+      <div style="font-size:10px;color:rgba(255,255,255,.35);text-align:center;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase">Contrôle de territoire</div>
+      <div id="versus-score-bars" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+
+    <!-- Phase info -->
+    <div id="versus-phase-info" style="font-size:11px;color:rgba(255,255,255,.35);text-align:center;margin-bottom:8px"></div>
+  </div>
+
+  <!-- ADMIN -->
+
   <!-- ADMIN -->
   <div class="screen" id="screen-admin">
     <div id="admin-lock">
@@ -700,7 +839,8 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
     <button class="nav-btn" id="nav-classement" onclick="showTab('classement')"><img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAwADADASIAAhEBAxEB/8QAGgABAQACAwAAAAAAAAAAAAAAAAYCBAUHCP/EACgQAAEDAwQBAwUBAAAAAAAAAAECAwQAESEFBgcSQRMxcQgiMlFhkf/EABgBAQADAQAAAAAAAAAAAAAAAAABAwQC/8QAJxEAAQIEBAYDAAAAAAAAAAAAABESAQITMQMEFCEiQVFhgcGRsdH/2gAMAwEAAhEDEQA/APGVKUoBSlKAUpSgNiBDkTpKY0VAcdV+KSoJJ+LnJ/lXXIXEu6NmaFpWq6jFs1JYJlq9RPWM96i+rZN/KAg/JUPFde1f8hcr7o35pz0HcLjCmRJEiKhhsoSx4KMH7h5uvsQRg5xgzOsr4dFGbuW/ZPvx4LpKbZnX5GjxJtCHvneUHbr+rKgOylrtZgr7JS2pZsb2vZJwbeK5T6gNmaZsnfkrT9O1QSkvH10sWJXHSrIStROT5GMg1AwZkuBIEmDJejPhKkhxlZQoBQIUARkXBIP7BI81nMnypcaKxJeW6mKgtslaieiL36jNgAb/AO/Fk2XzEc3DFhicCI1IX6r8fpEJ5KbU36lbxzxhuffQluaK1HLEVkrcdU6kjt0KkIsLnsogC3i9zUlqunzNLmuQp7JYktmzjZIKkH9G3sf5VLx7yLuXYUeajbMhqM5OcaVIccaS52S326pAULAHuq59zi1rZmNRdZfnPPsIdQhxXfq4vuoE5IKvOb5Oa6wdXqJ6iU9mpfuvr0JqbINvzNelKVtKhSlKAUpSgP/Z" style="width:24px;height:24px;object-fit:contain">Classement</button>
     <button class="nav-btn" id="nav-shop" onclick="showTab('shop')"><span class="nav-icon" style="font-size:17px">🛒</span>Shop</button>
     <button class="nav-btn" id="nav-aventure"  onclick="showTab('aventure')"><span class="nav-icon" style="font-size:17px">⚔️</span>Aventure</button>
-    <button class="nav-btn" id="nav-messages"  onclick="showTab('messages')" style="position:relative"><img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAwADADASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAYIBwEC/8QAMxAAAAUBBAcFCQEAAAAAAAAAAAECAwQFBgcRIQgSEyIxUZQXGCNVVhRBYXFyg6HS07H/xAAaAQABBQEAAAAAAAAAAAAAAAAEAgMFBgcB/8QAKhEAAQMCAwcEAwAAAAAAAAAAAQACAwQRBRJhBhMUFSFRUlNiktGBkbH/2gAMAwEAAhEDEQA/AIyAAOVgbsLcW8gyZtlKIqotRnSacPbtt7xljlrqIjwLDH6iCJJWRNzPIA16LoaXGwSaAat3db5fRbnXxf6g7ut8votzr4v9QNzGk9VvyH2l7p/iVlIA8W4umvBsTSSqtp7Orp8I1k2TpymXN4+BYIWZ/gI4IiljlbmjcCNDdILS3oQgWJoSJX2VVN2O5s5DdcdNJ8/AYyP4COxXWhZI2V2dTTjmdZcPD7LIr21cpiw8uHcI3DmZ5raKkqXWkzEKQrw5DeTjZ8SPn8h6qVYagsa61Gpaj1W2y4rPkQVJaFOPJksO7GSngsveXI+ZDkdtZyTly3ttI4JPDAkFyIhl3FMve/4U/wAOs00wzeduZfky1az7k+PulwQWJ5EIoFm6Xsja3PuIM8/b2P8ATEZDTtkZd7QF3uP8CgsSZkmtogN1ibx7WWNpzsCgT24zDrxvLSplK8VGRFjvEeGSSCiAWKeniqGZJWhw7EXCCZI6M5mGxWm9u95fnTHRtfqDt3vL86Y6Nr9RmQADyTDfQZ8R9J7jKjzP7TpbG8+2VraQdKrlRakRDWlzVTHQg9YuGZFiEsAAbT00NMzJC0NHYCyZkkfIbvNyv//Z" style="width:24px;height:24px;object-fit:contain">Messages<span id="msg-nav-dot" style="position:absolute;top:6px;right:calc(50% - 14px);width:7px;height:7px;border-radius:50%;background:#ff4444;display:none"></span></button>
+    <button class="nav-btn" id="nav-versus" onclick="showTab('versus')"><span class="nav-icon" style="font-size:17px">🏟️</span>Versus</button>
+    <button class="nav-btn" id="nav-messages"   onclick="showTab('messages')" style="position:relative"><img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAwADADASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAYIBwEC/8QAMxAAAAUBBAcFCQEAAAAAAAAAAAECAwQFBgcRIQgSEyIxUZQXGCNVVhRBYXFyg6HS07H/xAAaAQABBQEAAAAAAAAAAAAAAAAEAgMFBgcB/8QAKhEAAQMCAwcEAwAAAAAAAAAAAQACAwQRBRJhBhMUFSFRUlNiktGBkbH/2gAMAwEAAhEDEQA/AIyAAOVgbsLcW8gyZtlKIqotRnSacPbtt7xljlrqIjwLDH6iCJJWRNzPIA16LoaXGwSaAat3db5fRbnXxf6g7ut8votzr4v9QNzGk9VvyH2l7p/iVlIA8W4umvBsTSSqtp7Orp8I1k2TpymXN4+BYIWZ/gI4IiljlbmjcCNDdILS3oQgWJoSJX2VVN2O5s5DdcdNJ8/AYyP4COxXWhZI2V2dTTjmdZcPD7LIr21cpiw8uHcI3DmZ5raKkqXWkzEKQrw5DeTjZ8SPn8h6qVYagsa61Gpaj1W2y4rPkQVJaFOPJksO7GSngsveXI+ZDkdtZyTly3ttI4JPDAkFyIhl3FMve/4U/wAOs00wzeduZfky1az7k+PulwQWJ5EIoFm6Xsja3PuIM8/b2P8ATEZDTtkZd7QF3uP8CgsSZkmtogN1ibx7WWNpzsCgT24zDrxvLSplK8VGRFjvEeGSSCiAWKeniqGZJWhw7EXCCZI6M5mGxWm9u95fnTHRtfqDt3vL86Y6Nr9RmQADyTDfQZ8R9J7jKjzP7TpbG8+2VraQdKrlRakRDWlzVTHQg9YuGZFiEsAAbT00NMzJC0NHYCyZkkfIbvNyv//Z" style="width:24px;height:24px;object-fit:contain">Messages<span id="msg-nav-dot" style="position:absolute;top:6px;right:calc(50% - 14px);width:7px;height:7px;border-radius:50%;background:#ff4444;display:none"></span></button>
     <button class="nav-btn" id="nav-admin" onclick="showTab('admin')"><img src="data:image/png;base64,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" style="width:24px;height:24px;object-fit:contain">Admin</button>
   </nav>
 </div>
@@ -1005,6 +1145,7 @@ function showTab(name){
   if(name==='classement')renderClassement();
   if(name==='messages'){loadInbox();setTimeout(()=>loadMsgUserSelect(),100);}
   if(name==='aventure')loadAdventureMap();
+  if(name==='versus')loadVersusMap();
   if(name==='shop')loadShopScreen();
   if(name==='admin'){adminUnlocked=false;document.getElementById('admin-lock').style.display='flex';document.getElementById('admin-content').style.display='none';}
 }
@@ -2545,6 +2686,471 @@ function finishStarWars(){
   if(swCallback){swCallback();swCallback=null;}
 }
 
+// ── VERSUS SYSTEM ──────────────────────────────────────────────────────────────
+const ARENA_IDS = ['arena_1','arena_2','arena_3','arena_4','arena_5','arena_6','arena_7','arena_8','arena_9','arena_10'];
+const ARENA_NAMES = {
+  arena_1:'Réserve Carrelage', arena_2:'Le Couloir de la Mort',
+  arena_3:'ZRM', arena_4:'Réception',
+  arena_5:'Les Caisses', arena_6:'Sanitaire',
+  arena_7:'Chapiteau Jardin', arena_8:'Bureaux Admins',
+  arena_9:'Rangement', arena_10:'Peinture'
+};
+const TEAM_COLORS = {};
+const VS_REWARD = 300;
+
+let arenas = {};
+let currentArenaId = null;
+let vbInterval = null;
+let vbPlayerHP = 0, vbPlayerMaxHP = 0;
+let vbEnemyHP = 0, vbEnemyMaxHP = 0;
+let vbAttackerCard = null, vbDefenderCard = null;
+let vbDefenderSlot = null;
+
+// Phase detection
+function getVersusPhase() {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+  if (day === 1 || day === 2) return 'defense'; // Mon-Tue
+  if (day >= 3 || day === 0) return 'attack';   // Wed-Sun
+  return 'attack';
+}
+
+function getPhaseLabel() {
+  const phase = getVersusPhase();
+  const days = ['dim','lun','mar','mer','jeu','ven','sam'];
+  const now = new Date();
+  if (phase === 'defense') return '🛡️ Phase Défense (Lun-Mar) — Pose tes cartes';
+  return '⚔️ Phase Attaque (Mer-Dim) — Conquiers des zones';
+}
+
+async function loadVersusMap() {
+  if (!ME) return;
+  // Load all arenas
+  try {
+    const rows = await dbGet('arenas', 'select=*');
+    arenas = {};
+    rows.forEach(a => { arenas[a.id] = a; });
+    
+    // If arenas don't exist yet, create them
+    if (!rows.length) await initArenas();
+    
+    // Load arena cards
+    const cards = await dbGet('arena_cards', 'select=*');
+    const cardsByArena = {};
+    cards.forEach(c => {
+      if (!cardsByArena[c.arena_id]) cardsByArena[c.arena_id] = [];
+      cardsByArena[c.arena_id].push(c);
+    });
+
+    // Load all teams for colors
+    const allTeams = await dbGet('teams', 'select=*');
+    const teamColorMap = {};
+    const palette = ['#4488ff','#ff4444','#44cc44','#ff8800','#aa44ff','#00ccaa'];
+    allTeams.forEach((t, i) => { teamColorMap[t.id] = palette[i % palette.length]; });
+
+    // Update SVG arena circles
+    for (let i = 1; i <= 10; i++) {
+      const aid = 'arena_' + i;
+      const arena = rows.find(r => r.id === aid);
+      const slotCards = cardsByArena[aid] || [];
+      const count = slotCards.length;
+      
+      // Update count text
+      const countEl = document.getElementById('arena-' + i + '-count');
+      if (countEl) countEl.textContent = count + '/3';
+
+      // Color the circle based on team
+      const circleEl = document.querySelector('#arena-' + i + ' circle');
+      if (circleEl) {
+        if (!arena || !arena.team_id) {
+          circleEl.setAttribute('fill', 'rgba(100,100,120,.3)');
+          circleEl.setAttribute('stroke', 'rgba(255,255,255,.2)');
+        } else {
+          const col = teamColorMap[arena.team_id] || '#888';
+          const isMyTeam = ME && arena.team_id === ME.team_id;
+          circleEl.setAttribute('fill', col + '44');
+          circleEl.setAttribute('stroke', col);
+          circleEl.setAttribute('stroke-width', isMyTeam ? '3' : '2');
+        }
+      }
+    }
+
+    // Phase banner
+    const banner = document.getElementById('versus-phase-banner');
+    if (banner) {
+      const phase = getVersusPhase();
+      banner.style.display = 'block';
+      banner.style.background = phase === 'defense' ? 'rgba(68,136,255,.15)' : 'rgba(255,68,68,.12)';
+      banner.style.border = '1px solid ' + (phase === 'defense' ? 'rgba(68,136,255,.3)' : 'rgba(255,68,68,.3)');
+      banner.style.color = phase === 'defense' ? '#88aaff' : '#ff8888';
+      banner.textContent = getPhaseLabel();
+    }
+
+    // Score
+    updateVersusScore(rows, teamColorMap, allTeams);
+
+  } catch(e) { console.error('loadVersusMap:', e); }
+}
+
+async function initArenas() {
+  for (let i = 1; i <= 10; i++) {
+    try {
+      await dbPost('arenas', { id: 'arena_' + i, name: ARENA_NAMES['arena_' + i], position_x: i, position_y: 0, team_id: null });
+    } catch(e) {}
+  }
+  arenas = {};
+  for (let i = 1; i <= 10; i++) arenas['arena_' + i] = { id: 'arena_' + i, team_id: null };
+}
+
+function updateVersusScore(arenaRows, teamColorMap, allTeams) {
+  const scoreEl = document.getElementById('versus-score');
+  const barsEl = document.getElementById('versus-score-bars');
+  if (!scoreEl || !barsEl) return;
+  const counts = {};
+  arenaRows.forEach(a => {
+    if (a.team_id) counts[a.team_id] = (counts[a.team_id] || 0) + 1;
+  });
+  if (!Object.keys(counts).length) { scoreEl.style.display = 'none'; return; }
+  scoreEl.style.display = 'block';
+  barsEl.innerHTML = '';
+  allTeams.forEach(t => {
+    const c = counts[t.id] || 0;
+    if (!c) return;
+    const col = teamColorMap[t.id] || '#888';
+    const d = document.createElement('div');
+    d.style.cssText = 'display:flex;align-items:center;gap:8px';
+    d.innerHTML = `<div style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0"></div>
+      <div style="flex:1;font-size:11px;color:rgba(255,255,255,.7)">${t.name}</div>
+      <div style="font-size:11px;font-weight:700;color:${col}">${c}/10</div>`;
+    barsEl.appendChild(d);
+  });
+}
+
+async function openArena(arenaId) {
+  currentArenaId = arenaId;
+  const modal = document.getElementById('arena-modal');
+  const title = document.getElementById('arena-modal-title');
+  const teamBadge = document.getElementById('arena-modal-team');
+  const slots = document.getElementById('arena-defense-slots');
+  const actions = document.getElementById('arena-actions');
+
+  title.textContent = ARENA_NAMES[arenaId] || arenaId;
+  modal.classList.add('open');
+
+  try {
+    const arena = (await dbGet('arenas', 'id=eq.' + arenaId))[0];
+    const defCards = await dbGet('arena_cards', 'arena_id=eq.' + arenaId + '&select=*');
+    const allTeams = await dbGet('teams', 'select=*');
+    const palette = ['#4488ff','#ff4444','#44cc44','#ff8800','#aa44ff','#00ccaa'];
+    const teamColorMap = {};
+    allTeams.forEach((t, i) => { teamColorMap[t.id] = palette[i % palette.length]; });
+
+    const ownerTeam = arena && arena.team_id ? allTeams.find(t => t.id === arena.team_id) : null;
+    const col = ownerTeam ? (teamColorMap[ownerTeam.id] || '#888') : 'rgba(255,255,255,.2)';
+    
+    teamBadge.textContent = ownerTeam ? ownerTeam.name : 'Neutre';
+    teamBadge.style.cssText = `background:${col}22;border:1px solid ${col};color:${col};font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600`;
+
+    // Render defense slots
+    slots.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const dc = defCards[i];
+      const d = document.createElement('div');
+      d.style.cssText = 'flex:1;border-radius:10px;overflow:hidden;border:1px solid var(--bord);background:rgba(255,255,255,.03);min-height:90px;position:relative;cursor:pointer';
+      if (dc) {
+        const c = pool.find(p => p.id === dc.card_id);
+        const isUrl = c && c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
+        const hpPct = Math.round(dc.hp / Math.max(100, (c?.def || 100) * 2) * 100);
+        const hpCol = hpPct > 60 ? '#4caf50' : hpPct > 30 ? '#ff9800' : '#f44336';
+        d.innerHTML = `${isUrl ? `<img src="${c.img_url}" style="width:100%;height:70px;object-fit:cover;display:block">` : `<div style="height:70px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#111">${c?.img_url || '🛒'}</div>`}
+          <div style="height:3px;background:rgba(255,255,255,.1)"><div style="height:100%;width:${hpPct}%;background:${hpCol}"></div></div>
+          <div style="font-size:8px;text-align:center;padding:3px;color:rgba(255,255,255,.5)">${c?.name || '?'}</div>`;
+        d.dataset.slotId = dc.id;
+        d.dataset.cardId = dc.card_id;
+        d.dataset.hp = dc.hp;
+      } else {
+        d.innerHTML = '<div style="height:90px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.15);font-size:11px">Vide</div>';
+        d.dataset.empty = '1';
+      }
+      slots.appendChild(d);
+    }
+
+    // Actions based on phase and team
+    actions.innerHTML = '';
+    const phase = getVersusPhase();
+    const isMyTeam = ME && arena && arena.team_id === ME.team_id;
+    const isNeutral = !arena || !arena.team_id;
+    const isEnemy = !isMyTeam && !isNeutral;
+    const myCards = defCards.filter(c => c.user_id === ME.id);
+
+    if (phase === 'defense') {
+      // Can place card if: neutral or my team, and < 3 cards
+      if ((isNeutral || isMyTeam) && defCards.length < 3) {
+        actions.innerHTML = `<button class="btn btn-gold" onclick="openPlaceCardModal('${arenaId}')">🛡️ Placer une carte en défense</button>`;
+      } else if (defCards.length >= 3) {
+        actions.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;padding:8px">Arène complète (3/3 cartes)</div>';
+      } else if (isEnemy) {
+        actions.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;padding:8px">Phase attaque à partir de mercredi</div>';
+      }
+      // Remove own card
+      if (myCards.length) {
+        actions.innerHTML += `<button class="btn" onclick="removeMyCard('${arenaId}')" style="margin-top:8px;border-color:rgba(255,80,80,.3);color:rgba(255,100,100,.8)">🗑️ Retirer ma carte</button>`;
+      }
+    } else {
+      // Attack phase
+      if (isEnemy || isNeutral) {
+        if (!defCards.length) {
+          // No defenders - capture directly
+          actions.innerHTML = `<button class="btn btn-gold" onclick="captureArena('${arenaId}')">🏳️ Capturer (zone libre !)</button>`;
+        } else {
+          // Attack first defender
+          const nextDefender = defCards[0];
+          const defCard = pool.find(p => p.id === nextDefender.card_id);
+          actions.innerHTML = `<div style="font-size:12px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:10px">Prochain défenseur : <strong>${defCard?.name || '?'}</strong></div>
+            <button class="btn btn-gold" onclick="startVsBattle('${arenaId}','${nextDefender.id}')">⚔️ Attaquer !</button>`;
+        }
+      } else if (isMyTeam) {
+        actions.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;padding:8px">C\'est votre zone — défendez-la !</div>';
+        if (defCards.length < 3) {
+          actions.innerHTML += `<button class="btn btn-gold" onclick="openPlaceCardModal('${arenaId}')" style="margin-top:8px">🛡️ Renforcer</button>`;
+        }
+      }
+    }
+  } catch(e) { actions.innerHTML = '<div style="color:#ff8888;font-size:12px">Erreur : ' + e.message + '</div>'; }
+}
+
+function closeArenaModal() { document.getElementById('arena-modal').classList.remove('open'); }
+
+async function openPlaceCardModal(arenaId) {
+  const myCards = Object.keys(coll).filter(id => coll[id] > 0).map(id => pool.find(p => p.id === id)).filter(Boolean);
+  if (!myCards.length) { alert('Tu n\u2019as aucune carte !'); return; }
+  
+  const ov = document.createElement('div');
+  ov.id = 'place-card-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:14px';
+  ov.innerHTML = `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)">Choisir une carte à défendre</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-height:55vh;overflow-y:auto">
+      ${myCards.map(c => {
+        const isUrl = c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
+        const curHP = getCardCurrentHP(c);
+        const maxHP = getCardMaxHP(c);
+        const dead = curHP <= 0;
+        return `<div onclick="${dead ? '' : "selectPlaceCard('" + c.id + "','" + arenaId + "')"}" style="border-radius:10px;overflow:hidden;border:2px solid ${dead ? '#ff444444' : 'var(--bord)'};cursor:${dead ? 'not-allowed' : 'pointer'};background:rgba(255,255,255,.04);opacity:${dead ? .4 : 1}" id="pcs-${c.id}">
+          ${isUrl ? `<img src="${c.img_url}" style="width:100%;height:80px;object-fit:cover;display:block">` : `<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">${c.img_url || '🛒'}</div>`}
+          <div style="padding:3px 4px;font-size:8px;text-align:center;color:rgba(255,255,255,.6)">${c.name}</div>
+          <div style="padding:0 4px 4px;font-size:8px;color:var(--gold);text-align:center">⚡${c.pa || 1} PA</div>
+          ${dead ? '<div style="font-size:8px;color:#ff4444;text-align:center;padding-bottom:3px">💀 Morte</div>' : ''}
+        </div>`;
+      }).join('')}
+    </div>
+    <button onclick="document.getElementById('place-card-ov').remove()" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Annuler</button>`;
+  document.body.appendChild(ov);
+}
+
+async function selectPlaceCard(cardId, arenaId) {
+  const card = pool.find(p => p.id === cardId);
+  if (!card) return;
+  const paCost = card.pa || 1;
+  const curPA = getCurrentPA();
+  if (curPA < paCost) { alert('Pas assez de PA ! (' + curPA + '/' + paCost + ' requis)'); return; }
+  
+  try {
+    const maxHP = getCardMaxHP(card);
+    await dbPost('arena_cards', { id: 'ac' + Date.now(), arena_id: arenaId, user_id: ME.id, card_id: cardId, hp: maxHP });
+    // Set arena team to my team if neutral
+    const arena = (await dbGet('arenas', 'id=eq.' + arenaId))[0];
+    if (!arena.team_id && ME.team_id) {
+      await dbPatch('arenas', { team_id: ME.team_id }, 'id=eq.' + arenaId);
+    }
+    spendPA(paCost);
+    document.getElementById('place-card-ov')?.remove();
+    closeArenaModal();
+    alert('✅ Carte placée en défense !');
+    loadVersusMap();
+  } catch(e) { alert('Erreur : ' + e.message); }
+}
+
+async function removeMyCard(arenaId) {
+  try {
+    const myCard = (await dbGet('arena_cards', 'arena_id=eq.' + arenaId + '&user_id=eq.' + ME.id))[0];
+    if (!myCard) return;
+    await dbDel('arena_cards', 'id=eq.' + myCard.id);
+    // If no more cards, arena becomes neutral
+    const remaining = await dbGet('arena_cards', 'arena_id=eq.' + arenaId);
+    if (!remaining.length) await dbPatch('arenas', { team_id: null }, 'id=eq.' + arenaId);
+    closeArenaModal();
+    loadVersusMap();
+  } catch(e) { alert('Erreur : ' + e.message); }
+}
+
+async function captureArena(arenaId) {
+  if (!ME || !ME.team_id) { alert('Tu dois être dans une équipe !'); return; }
+  const paCost = 1;
+  if (getCurrentPA() < paCost) { alert('Pas assez de PA !'); return; }
+  try {
+    await dbPatch('arenas', { team_id: ME.team_id }, 'id=eq.' + arenaId);
+    spendPA(paCost);
+    closeArenaModal();
+    alert('🏳️ Zone capturée !');
+    loadVersusMap();
+  } catch(e) { alert('Erreur : ' + e.message); }
+}
+
+// ── VS BATTLE ─────────────────────────────────────────────────────────────────
+async function startVsBattle(arenaId, defenderSlotId) {
+  const myCards = Object.keys(coll).filter(id => coll[id] > 0).map(id => pool.find(p => p.id === id)).filter(Boolean);
+  if (!myCards.length) { alert('Tu n\u2019as aucune carte !'); return; }
+  currentArenaId = arenaId;
+  vbDefenderSlot = defenderSlotId;
+  
+  // Pick card
+  const slot = (await dbGet('arena_cards', 'id=eq.' + defenderSlotId))[0];
+  if (!slot) { alert("Carte introuvable !"); return; }
+  const defCard = pool.find(p => p.id === slot.card_id);
+  
+  closeArenaModal();
+  showVsCardSelect(myCards, slot, defCard, arenaId);
+}
+
+function showVsCardSelect(myCards, slot, defCard, arenaId) {
+  const ov = document.createElement('div');
+  ov.id = 'vs-card-sel';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:12px';
+  ov.innerHTML = `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)">Choisir ta carte</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4)">Tu affrontes : <strong style="color:#ff8877">${defCard?.name || '?'}</strong> (ATK:${defCard?.atk || 0} DEF:${defCard?.def || 0})</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-height:50vh;overflow-y:auto">
+      ${myCards.map(c => {
+        const isUrl = c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
+        const curHP = getCardCurrentHP(c); const dead = curHP <= 0;
+        return `<div onclick="${dead ? '' : "launchVsBattle('" + c.id + "','" + slot.id + "','" + arenaId + "')"}" style="border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:${dead ? 'not-allowed' : 'pointer'};opacity:${dead ? .4 : 1};background:rgba(255,255,255,.04)">
+          ${isUrl ? `<img src="${c.img_url}" style="width:100%;height:70px;object-fit:cover;display:block">` : `<div style="height:70px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#111">${c.img_url || '🛒'}</div>`}
+          <div style="padding:3px;font-size:8px;text-align:center;color:rgba(255,255,255,.6)">${c.name}</div>
+          <div style="font-size:8px;text-align:center;padding-bottom:3px;color:rgba(255,255,255,.35)">❤️${Math.round(curHP)}/${getCardMaxHP(c)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <button onclick="document.getElementById('vs-card-sel').remove();openArena(currentArenaId)" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Annuler</button>`;
+  document.body.appendChild(ov);
+}
+
+async function launchVsBattle(attackerCardId, defenderSlotId, arenaId) {
+  document.getElementById('vs-card-sel')?.remove();
+  const attCard = pool.find(p => p.id === attackerCardId);
+  if (!attCard) return;
+  const paCost = attCard.pa || 1;
+  if (getCurrentPA() < paCost) { alert('Pas assez de PA !'); return; }
+  
+  const slot = (await dbGet('arena_cards', 'id=eq.' + defenderSlotId))[0];
+  if (!slot) { alert("Carte introuvable !"); return; }
+  const defCard = pool.find(p => p.id === slot.card_id);
+  
+  spendPA(paCost);
+  vbAttackerCard = attCard;
+  vbDefenderCard = defCard;
+  vbDefenderSlot = slot;
+  currentArenaId = arenaId;
+  
+  vbPlayerMaxHP = getCardMaxHP(attCard);
+  vbPlayerHP = getCardCurrentHP(attCard);
+  if (vbPlayerHP <= 0) { alert(attCard.name + ' est morte ! Va dans le Shop.'); return; }
+  vbEnemyMaxHP = slot.hp || getCardMaxHP(defCard);
+  vbEnemyHP = vbEnemyMaxHP;
+  
+  // Build battle UI
+  const isAttUrl = attCard.img_url && (attCard.img_url.startsWith('http') || attCard.img_url.startsWith('data:'));
+  const isDefUrl = defCard?.img_url && (defCard.img_url.startsWith('http') || defCard.img_url.startsWith('data:'));
+  
+  document.getElementById('vb-arena-name').textContent = ARENA_NAMES[arenaId] || arenaId;
+  document.getElementById('vb-enemy-name').textContent = defCard?.name || '?';
+  document.getElementById('vb-enemy-name-hp').textContent = defCard?.name || '?';
+  document.getElementById('vb-player-name').textContent = attCard.name;
+  
+  document.getElementById('vb-attacker-inner').innerHTML = isAttUrl ? `<img src="${attCard.img_url}" style="width:100%;height:100%;object-fit:cover;display:block">` : `<div class="vb-card-ph">${attCard.img_url || '🛒'}</div>`;
+  document.getElementById('vb-defender-inner').innerHTML = isDefUrl ? `<img src="${defCard.img_url}" style="width:100%;height:100%;object-fit:cover;display:block">` : `<div class="vb-card-ph">${defCard?.img_url || '👺'}</div>`;
+  
+  updateVbUI();
+  document.getElementById('versus-battle').classList.add('active');
+  vbInterval = setInterval(vbAutoTick, 2000);
+}
+
+function vbAutoTick() {
+  const defCard = vbDefenderCard;
+  const playerDmg = Math.max(1, Math.floor((vbAttackerCard.atk || 50) / 80));
+  const enemyDmg = Math.max(20, Math.floor(((defCard?.atk || 50) * 0.9 - Math.floor((vbAttackerCard.def || 0) * 0.25))));
+  vbEnemyHP = Math.max(0, vbEnemyHP - playerDmg);
+  vbPlayerHP = Math.max(0, vbPlayerHP - enemyDmg);
+  updateVbUI();
+  if (vbEnemyHP <= 0) { clearInterval(vbInterval); vbInterval = null; vbEnemyDefeated(); }
+  else if (vbPlayerHP <= 0) { clearInterval(vbInterval); vbInterval = null; vbPlayerDefeated(); }
+}
+
+function vbTapAttack() {
+  const tapDmg = Math.max(1, Math.floor((vbAttackerCard.atk || 50) / 20));
+  vbEnemyHP = Math.max(0, vbEnemyHP - tapDmg);
+  const att = document.getElementById('vb-attacker');
+  att.classList.add('attack-anim');
+  const def = document.getElementById('vb-defender');
+  def.classList.add('hit-anim');
+  setTimeout(() => { att.classList.remove('attack-anim'); def.classList.remove('hit-anim'); }, 300);
+  const log = document.getElementById('vb-log');
+  if (log) { log.textContent = '⚔️ +' + tapDmg + ' dégâts !'; setTimeout(() => { if(log) log.textContent = ''; }, 500); }
+  updateVbUI();
+  if (vbEnemyHP <= 0) { clearInterval(vbInterval); vbInterval = null; vbEnemyDefeated(); }
+}
+
+function updateVbUI() {
+  const ep = Math.max(0, Math.round(vbEnemyHP / vbEnemyMaxHP * 100));
+  const pp = Math.max(0, Math.round(vbPlayerHP / vbPlayerMaxHP * 100));
+  document.getElementById('vb-enemy-hp-bar').style.width = ep + '%';
+  document.getElementById('vb-player-hp-bar').style.width = pp + '%';
+  document.getElementById('vb-enemy-hp-txt').textContent = Math.ceil(vbEnemyHP) + '/' + vbEnemyMaxHP;
+  document.getElementById('vb-player-hp-txt').textContent = Math.ceil(vbPlayerHP) + '/' + vbPlayerMaxHP;
+}
+
+async function vbEnemyDefeated() {
+  document.getElementById('versus-battle').classList.remove('active');
+  saveCardHP(vbAttackerCard.id, Math.max(0, vbPlayerHP));
+  try {
+    // Update defender slot HP to 0 (defeated)
+    await dbPatch('arena_cards', { hp: 0 }, 'id=eq.' + vbDefenderSlot.id);
+    // Remove defeated card from arena
+    await dbDel('arena_cards', 'id=eq.' + vbDefenderSlot.id);
+    // Check if arena is now empty - if so, player can capture
+    const remaining = await dbGet('arena_cards', 'arena_id=eq.' + currentArenaId);
+    if (!remaining.length) {
+      // Capture arena for attacker's team
+      if (ME.team_id) await dbPatch('arenas', { team_id: ME.team_id }, 'id=eq.' + currentArenaId);
+      showVbResult('⭐ Zone capturée !', "Tu as vaincu tous les défenseurs et capturé la zone !", true);
+    } else {
+      showVbResult('✅ Carte vaincue !', remaining.length + ' défenseur(s) restant(s). Continue l\'attaque !', false);
+    }
+    loadVersusMap();
+  } catch(e) { alert('Erreur : ' + e.message); }
+}
+
+async function vbPlayerDefeated() {
+  document.getElementById('versus-battle').classList.remove('active');
+  saveCardHP(vbAttackerCard.id, 0); // Card is dead
+  showVbResult('💀 Défaite !', vbAttackerCard.name + ' a été vaincue. Ressuscite-la dans le Shop.', false);
+}
+
+function showVbResult(title, msg, captured) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px';
+  ov.innerHTML = `<div style="font-size:56px">${captured ? '🏆' : title.includes('💀') ? '💀' : '⚔️'}</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold);text-align:center">${title}</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.6);text-align:center;line-height:1.6">${msg}</div>
+    <button onclick="this.closest('div').remove();loadVersusMap()" style="padding:13px 36px;background:linear-gradient(135deg,var(--gold),#e0b840);color:#1a1209;font-weight:700;font-size:14px;border-radius:12px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">OK</button>`;
+  document.body.appendChild(ov);
+}
+
+function surrenderVsBattle() {
+  clearInterval(vbInterval); vbInterval = null;
+  saveCardHP(vbAttackerCard?.id, Math.max(0, vbPlayerHP));
+  document.getElementById('versus-battle').classList.remove('active');
+  loadVersusMap();
+}
+
 init();
 </script>
 
@@ -2585,6 +3191,65 @@ init();
   <div id="sw-progress"></div>
   <button id="sw-next-btn" onclick="swNext()">Suivant</button>
   <div id="sw-skip" onclick="skipStarWars()">Passer</div>
+</div>
+
+
+<!-- ARENA MODAL -->
+<div id="arena-modal" onclick="if(event.target===this)closeArenaModal()">
+  <div id="arena-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div id="arena-modal-title" style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--gold)"></div>
+      <div id="arena-modal-team" style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600"></div>
+    </div>
+    <!-- Defense slots -->
+    <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Cartes en défense (max 3)</div>
+    <div id="arena-defense-slots" style="display:flex;gap:8px;margin-bottom:16px"></div>
+    <!-- Actions -->
+    <div id="arena-actions"></div>
+    <button style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid var(--bord);border-radius:10px;color:rgba(255,255,255,.5);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:10px" onclick="closeArenaModal()">Fermer</button>
+  </div>
+</div>
+
+<!-- VERSUS BATTLE -->
+<div id="versus-battle">
+  <div id="vb-arena" style="text-align:center">
+    <div id="vb-arena-name" style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;color:var(--gold)"></div>
+    <div id="vb-enemy-name" style="font-size:12px;color:#ff8877;font-weight:600;margin-top:2px"></div>
+  </div>
+  
+  <!-- Enemy HP -->
+  <div style="width:100%;max-width:280px">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:3px">
+      <span id="vb-enemy-name-hp"></span><span id="vb-enemy-hp-txt"></span>
+    </div>
+    <div style="height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden">
+      <div id="vb-enemy-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#ff4444,#ff8877);border-radius:4px;transition:width .3s"></div>
+    </div>
+  </div>
+
+  <!-- 3D Cards -->
+  <div id="vb-cards-row">
+    <div id="vb-attacker" class="vb-card" onclick="vbTapAttack()">
+      <div id="vb-attacker-inner"></div>
+    </div>
+    <div id="vb-vs">VS</div>
+    <div id="vb-defender" class="vb-card">
+      <div id="vb-defender-inner"></div>
+    </div>
+  </div>
+
+  <!-- Player HP -->
+  <div style="width:100%;max-width:280px">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:3px">
+      <span id="vb-player-name"></span><span id="vb-player-hp-txt"></span>
+    </div>
+    <div style="height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden">
+      <div id="vb-player-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,var(--gold),#e0b840);border-radius:4px;transition:width .3s"></div>
+    </div>
+  </div>
+
+  <div id="vb-log" style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;min-height:18px"></div>
+  <button onclick="surrenderVsBattle()" style="padding:8px 20px;background:rgba(255,255,255,.06);border:1px solid var(--bord);border-radius:8px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Abandonner</button>
 </div>
 
 </body>
