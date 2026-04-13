@@ -2899,6 +2899,13 @@ async function openArena(arenaId) {
         </div>`;
         d.dataset.slotId = dc.id;
         d.dataset.cardId = dc.card_id;
+        // Long press to show stats
+        let pressTimer;
+        d.addEventListener('touchstart', () => {
+          pressTimer = setTimeout(() => showArenaCardStats(dc, c, ownerPseudo, isMe), 600);
+        }, {passive:true});
+        d.addEventListener('touchend', () => clearTimeout(pressTimer));
+        d.addEventListener('touchmove', () => clearTimeout(pressTimer));
         slots.appendChild(d);
       } else {
         const d = document.createElement('div');
@@ -2907,6 +2914,14 @@ async function openArena(arenaId) {
         d.dataset.empty = '1';
         slots.appendChild(d);
       }
+    }
+    // Show total HP
+    const totalHP = defCards.reduce((s, dc) => s + (dc.hp || 0), 0);
+    const hpEl = document.getElementById('arena-total-hp');
+    const hpVal = document.getElementById('arena-total-hp-val');
+    if (hpEl && hpVal) {
+      if (totalHP > 0) { hpEl.style.display = 'flex'; hpVal.textContent = totalHP; }
+      else { hpEl.style.display = 'none'; }
     }
 
     // Actions based on phase and team
@@ -3185,6 +3200,52 @@ function surrenderVsBattle() {
   loadVersusMap();
 }
 
+
+function showArenaCardStats(slot, card, ownerPseudo, isMe) {
+  const isUrl = card && card.img_url && (card.img_url.startsWith('http') || card.img_url.startsWith('data:'));
+  const maxHP = Math.max(100, (card?.def || 100) * 2);
+  const hpPct = Math.max(0, Math.round(slot.hp / maxHP * 100));
+  const hpCol = hpPct > 60 ? '#4caf50' : hpPct > 30 ? '#ff9800' : '#f44336';
+
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.innerHTML = `
+    <div style="background:linear-gradient(145deg,#13132a,#1a1a3e);border-radius:20px;padding:20px;width:100%;max-width:300px;display:flex;flex-direction:column;align-items:center;gap:10px;border:1px solid rgba(201,168,76,.3)">
+      <div style="width:120px;height:170px;border-radius:12px;overflow:hidden;border:2px solid rgba(201,168,76,.5);box-shadow:0 8px 30px rgba(0,0,0,.6)">
+        ${isUrl ? `<img src="${card.img_url}" style="width:100%;height:100%;object-fit:cover;display:block">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;background:linear-gradient(145deg,#1a1a2e,#0d0d20)">${card?.img_url || '🛒'}</div>`}
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:#fff">${card?.name || '?'}</div>
+      <div style="font-size:11px;color:${isMe ? 'var(--gold)' : 'rgba(255,255,255,.4)'};">${isMe ? '⭐ Ta carte' : '👤 ' + ownerPseudo}</div>
+      <!-- Stats -->
+      <div style="display:flex;gap:8px;width:100%">
+        <div style="flex:1;background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.2);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:#ff8877">${card?.atk || 0}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-top:2px">ATK</div>
+        </div>
+        <div style="flex:1;background:rgba(68,136,255,.1);border:1px solid rgba(68,136,255,.2);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:#77aaff">${card?.def || 0}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-top:2px">DEF</div>
+        </div>
+        <div style="flex:1;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.15);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:#ff8877">${slot.hp}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-top:2px">HP</div>
+        </div>
+      </div>
+      <!-- HP bar -->
+      <div style="width:100%">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.35);margin-bottom:4px">
+          <span>Points de vie</span><span>${hpPct}%</span>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${hpPct}%;background:${hpCol};border-radius:3px"></div>
+        </div>
+      </div>
+      <button onclick="this.closest('div').parentElement.remove()" style="width:100%;padding:11px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px">Fermer</button>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+}
+
 init();
 </script>
 
@@ -3231,9 +3292,12 @@ init();
 <!-- ARENA MODAL -->
 <div id="arena-modal" onclick="if(event.target===this)closeArenaModal()">
   <div id="arena-box">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
       <div id="arena-modal-title" style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--gold)"></div>
       <div id="arena-modal-team" style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600"></div>
+    </div>
+    <div id="arena-total-hp" style="display:none;align-items:center;gap:6px;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.2);border-radius:8px;padding:6px 12px;margin-bottom:12px;font-size:13px;font-weight:700;color:#ff8877">
+      ❤️ <span id="arena-total-hp-val">0</span> PV défense totaux
     </div>
     <!-- Defense slots -->
     <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Cartes en défense (max 3)</div>
