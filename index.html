@@ -3544,11 +3544,13 @@ async function loadInventory() {
   } catch(e) {}
 }
 
-function openInventory() {
+async function openInventory() {
   const popup = document.getElementById('inventory-popup');
   const box = document.getElementById('inventory-box');
   popup.style.display = 'flex';
   setTimeout(() => { box.style.transform = 'translateY(0)'; }, 10);
+  // Always reload fresh from DB when opening
+  await loadInventory();
   renderInventoryItems();
 }
 
@@ -3593,7 +3595,14 @@ function useItem(itemType) {
   const myCards = Object.keys(coll).filter(id => coll[id] > 0)
     .map(id => pool.find(p => p.id === id)).filter(Boolean)
     .filter(c => !isCardInArena(c.id)); // Exclude arena cards
-  if (!myCards.length) { alert('Aucune carte disponible !'); return; }
+  if (!myCards.length) {
+    const fb = document.createElement('div');
+    fb.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:#ff8888;padding:14px 20px;border-radius:12px;font-size:13px;z-index:9999;border:1px solid #ff4444';
+    fb.textContent = '❌ Toutes tes cartes sont en arène ou mortes !';
+    document.body.appendChild(fb);
+    setTimeout(() => fb.remove(), 3000);
+    return;
+  }
   openCardPicker(myCards, itemType);
 }
 
@@ -3619,6 +3628,14 @@ function openCardPicker(cards, itemType) {
     d.onmouseleave = () => { d.style.borderColor = 'var(--bord)'; };
     grid.appendChild(d);
   });
+  if (!cards.length) {
+    const fb = document.createElement('div');
+    fb.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:#ff8888;padding:14px 20px;border-radius:12px;font-size:13px;z-index:9999;border:1px solid #ff4444';
+    fb.textContent = '❌ Aucune carte disponible';
+    document.body.appendChild(fb);
+    setTimeout(() => fb.remove(), 3000);
+    return;
+  }
   document.getElementById('item-card-picker').style.display = 'flex';
 }
 
