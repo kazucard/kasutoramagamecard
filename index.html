@@ -3591,101 +3591,113 @@ function renderInventoryItems() {
 function useItem(itemType) {
   currentItemType = itemType;
   closeInventory();
-  // Show card picker
-  const myCards = Object.keys(coll).filter(id => coll[id] > 0)
-    .map(id => pool.find(p => p.id === id)).filter(Boolean)
-    .filter(c => !isCardInArena(c.id)); // Exclude arena cards
-  if (!myCards.length) {
-    const fb = document.createElement('div');
-    fb.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:#ff8888;padding:14px 20px;border-radius:12px;font-size:13px;z-index:9999;border:1px solid #ff4444';
-    fb.textContent = '❌ Toutes tes cartes sont en arène ou mortes !';
-    document.body.appendChild(fb);
-    setTimeout(() => fb.remove(), 3000);
-    return;
-  }
-  openCardPicker(myCards, itemType);
+  showCardPickerForItem(itemType);
 }
 
-function openCardPicker(cards, itemType) {
-  const def = ITEM_DEFS[itemType] || { icon: '📦', name: itemType };
-  document.getElementById('item-card-picker-title').textContent = def.icon + ' Sur quelle carte ?';
+function showCardPickerForItem(itemType) {
+  // Get available cards (not in arena, not dead)
+  const myCards = Object.keys(coll)
+    .filter(id => coll[id] > 0)
+    .map(id => pool.find(p => p.id === id))
+    .filter(c => c && !isCardInArena(c.id));
+
+  const picker = document.getElementById('item-card-picker');
   const grid = document.getElementById('item-card-picker-grid');
+  const title = document.getElementById('item-card-picker-title');
+  
+  if (!picker || !grid) return;
+  
+  title.textContent = '🩹 Sur quelle carte ?';
   grid.innerHTML = '';
-  cards.forEach(c => {
-    const isUrl = c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
-    const curHP = getCardCurrentHP(c);
-    const maxHP = getCardMaxHP(c);
-    const hpPct = Math.max(0, Math.round(curHP / maxHP * 100));
-    const hpCol = hpPct > 60 ? '#4caf50' : hpPct > 30 ? '#ff9800' : '#f44336';
-    const d = document.createElement('div');
-    d.style.cssText = 'border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:pointer;background:rgba(255,255,255,.04);transition:border-color .15s';
-    d.innerHTML = `${isUrl ? `<img src="${c.img_url}" style="width:100%;height:80px;object-fit:cover;display:block">` : `<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">${c.img_url || '🛒'}</div>`}
-      <div style="height:3px;background:rgba(255,255,255,.1)"><div style="height:100%;width:${hpPct}%;background:${hpCol}"></div></div>
-      <div style="font-size:9px;padding:3px 4px;text-align:center;color:rgba(255,255,255,.6);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
-      <div style="font-size:8px;text-align:center;padding:0 4px 4px;color:rgba(255,255,255,.3)">❤️ ${Math.ceil(curHP)}/${maxHP}</div>`;
-    d.onclick = () => applyItemToCard(c);
-    d.onmouseenter = () => { d.style.borderColor = 'var(--gold)'; };
-    d.onmouseleave = () => { d.style.borderColor = 'var(--bord)'; };
-    grid.appendChild(d);
-  });
-  if (!cards.length) {
-    const fb = document.createElement('div');
-    fb.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:#ff8888;padding:14px 20px;border-radius:12px;font-size:13px;z-index:9999;border:1px solid #ff4444';
-    fb.textContent = '❌ Aucune carte disponible';
-    document.body.appendChild(fb);
-    setTimeout(() => fb.remove(), 3000);
-    return;
+  
+  if (!myCards.length) {
+    grid.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:13px;text-align:center;padding:20px;grid-column:1/-1">Aucune carte disponible</div>';
+  } else {
+    myCards.forEach(c => {
+      const isUrl = c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
+      const curHP = getCardCurrentHP(c);
+      const maxHP = getCardMaxHP(c);
+      const hpPct = Math.max(0, Math.round(curHP / maxHP * 100));
+      const hpCol = hpPct > 60 ? '#4caf50' : hpPct > 30 ? '#ff9800' : '#f44336';
+      const full = curHP >= maxHP;
+      
+      const d = document.createElement('div');
+      d.style.cssText = 'border-radius:10px;overflow:hidden;border:2px solid var(--bord);background:rgba(255,255,255,.04);cursor:' + (full ? 'not-allowed' : 'pointer') + ';opacity:' + (full ? '0.5' : '1');
+      d.innerHTML = (isUrl ? `<img src="${c.img_url}" style="width:100%;height:80px;object-fit:cover;display:block">` : `<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">${c.img_url || '🛒'}</div>`) +
+        `<div style="height:3px;background:rgba(255,255,255,.1)"><div style="height:100%;width:${hpPct}%;background:${hpCol}"></div></div>
+        <div style="font-size:9px;padding:3px 4px;text-align:center;color:rgba(255,255,255,.6);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</div>
+        <div style="font-size:8px;text-align:center;padding:0 4px 4px;color:${hpCol}">❤️${Math.ceil(curHP)}/${maxHP}${full ? ' ✅' : ''}</div>`;
+      
+      if (!full) {
+        d.onclick = () => doApplyRTT(c);
+      }
+      grid.appendChild(d);
+    });
   }
-  document.getElementById('item-card-picker').style.display = 'flex';
+  
+  picker.style.display = 'flex';
 }
 
 function closeCardPicker() {
-  document.getElementById('item-card-picker').style.display = 'none';
+  const picker = document.getElementById('item-card-picker');
+  if (picker) picker.style.display = 'none';
   currentItemType = null;
 }
 
-async function applyItemToCard(card) {
-  closeCardPicker();
-  if (!currentItemType || !ME) return;
-  // Show feedback overlay
-  const fb = document.createElement('div');
-  fb.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:#fff;padding:14px 20px;border-radius:12px;font-size:13px;z-index:9999;border:1px solid var(--gold);max-width:280px;text-align:center;transition:opacity .3s';
-  fb.textContent = 'Application en cours...';
-  document.body.appendChild(fb);
-  const showFb = (msg, col) => { fb.textContent = msg; fb.style.borderColor = col || 'var(--gold)'; setTimeout(() => fb.remove(), 3000); };
-
+async function doApplyRTT(card) {
+  // Close picker immediately
+  document.getElementById('item-card-picker').style.display = 'none';
+  
+  // Show toast
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.95);color:#fff;padding:20px 28px;border-radius:16px;font-size:14px;z-index:9999;border:1px solid var(--gold);text-align:center;min-width:200px';
+  toast.innerHTML = '⏳ Application du RTT...';
+  document.body.appendChild(toast);
+  
   try {
-    // Fresh load from DB
+    // Reload inventory from DB
     const rows = await dbGet('inventory', 'user_id=eq.' + ME.id + '&select=*');
-    myInventory = rows;
-    const item = rows.find(i => i.item_type === currentItemType);
+    const item = rows.find(i => i.item_type === 'rtt');
     
     if (!item || item.quantity <= 0) {
-      showFb('❌ Inventaire vide !', '#ff4444');
+      toast.innerHTML = '❌ Plus de RTT !';
+      toast.style.borderColor = '#ff4444';
+      setTimeout(() => toast.remove(), 2000);
       return;
     }
     
-    if (currentItemType === 'rtt') {
-      const maxHP = getCardMaxHP(card);
-      const curHP = getCardCurrentHP(card);
-      const healAmt = Math.floor(maxHP * RTT_HEAL_PCT);
-      const newHP = Math.min(maxHP, curHP + healAmt);
-      saveCardHP(card.id, newHP);
-      
-      const newQty = item.quantity - 1;
-      if (newQty <= 0) {
-        await dbDel('inventory', 'id=eq.' + item.id);
-      } else {
-        await dbPatch('inventory', { quantity: newQty }, 'id=eq.' + item.id);
-      }
-      await loadInventory();
-      renderColl();
-      showFb('🩹 ' + card.name + ' +' + healAmt + ' PV !', '#4caf50');
+    // Apply heal
+    const maxHP = getCardMaxHP(card);
+    const curHP = getCardCurrentHP(card);
+    const healAmt = Math.floor(maxHP * RTT_HEAL_PCT);
+    const newHP = Math.min(maxHP, curHP + healAmt);
+    saveCardHP(card.id, newHP);
+    
+    // Update inventory in DB
+    const newQty = item.quantity - 1;
+    if (newQty <= 0) {
+      await dbDel('inventory', 'id=eq.' + item.id);
+    } else {
+      await dbPatch('inventory', { quantity: newQty }, 'id=eq.' + item.id);
     }
+    
+    // Refresh
+    await loadInventory();
+    renderColl();
+    
+    toast.innerHTML = '🩹 ' + card.name + '<br>+' + healAmt + ' PV !';
+    toast.style.borderColor = '#4caf50';
+    setTimeout(() => toast.remove(), 2500);
+    
   } catch(e) {
-    showFb('❌ Erreur: ' + e.message, '#ff4444');
+    toast.innerHTML = '❌ ' + e.message;
+    toast.style.borderColor = '#ff4444';
+    setTimeout(() => toast.remove(), 3000);
   }
+  
+  currentItemType = null;
 }
+
 
 // Update buyRTT to add to inventory instead of instant heal
 async function buyRTTInventory() {
