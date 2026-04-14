@@ -2826,7 +2826,9 @@ function getPhaseLabel() {
 
 async function loadVersusMap() {
   if (!ME) return;
-  // Load all arenas
+  // Calculate and display points
+  await calcAndSaveVersusPoints();
+  await loadVersusPointsDisplay();
   try {
     const rows = await dbGet('arenas', 'select=*');
     arenas = {};
@@ -3090,7 +3092,7 @@ async function selectPlaceCard(cardId, arenaId) {
     // Set arena team to my team if neutral
     const arena = (await dbGet('arenas', 'id=eq.' + arenaId))[0];
     if (!arena.team_id && ME.team_id) {
-      await dbPatch('arenas', { team_id: ME.team_id }, 'id=eq.' + arenaId);
+      await dbPatch('arenas', { team_id: ME.team_id, captured_at: new Date().toISOString() }, 'id=eq.' + arenaId);
     }
     spendPA(paCost);
     document.getElementById('place-card-ov')?.remove();
@@ -3122,7 +3124,7 @@ async function captureArena(arenaId) {
   const paCost = 1;
   if (getCurrentPA() < paCost) { alert('Pas assez de PA !'); return; }
   try {
-    await dbPatch('arenas', { team_id: ME.team_id }, 'id=eq.' + arenaId);
+    await dbPatch('arenas', { team_id: ME.team_id, captured_at: new Date().toISOString() }, 'id=eq.' + arenaId);
     spendPA(paCost);
     closeArenaModal();
     alert('🏳️ Zone capturée !');
@@ -3258,7 +3260,7 @@ async function vbEnemyDefeated() {
     const remaining = await dbGet('arena_cards', 'arena_id=eq.' + currentArenaId);
     if (!remaining.length) {
       // Capture arena for attacker's team
-      if (ME.team_id) await dbPatch('arenas', { team_id: ME.team_id }, 'id=eq.' + currentArenaId);
+      if (ME.team_id) await dbPatch('arenas', { team_id: ME.team_id, captured_at: new Date().toISOString() }, 'id=eq.' + currentArenaId);
       showVbResult('⭐ Zone capturée !', "Tu as vaincu tous les défenseurs et capturé la zone !", true);
     } else {
       showVbResult('✅ Carte vaincue !', remaining.length + ' défenseur(s) restant(s). Continue l\'attaque !', false);
@@ -3373,8 +3375,8 @@ function isCardInArena(cardId) {
 // ── HOME SCREEN ────────────────────────────────────────────────────────────────
 async function loadHomeScreen() {
   loadVersusCountdown();
-  loadHomeVersusScore();
   loadNewsFeed();
+  await loadVersusPointsDisplay();
 }
 
 function getNextMonday() {
@@ -3546,7 +3548,9 @@ async function handleVersusReset() {
     }
     
     // Reset all arenas to neutral
-    await dbPatch('arenas', { team_id: null }, 'team_id=not.is.null');
+    await dbPatch('arenas', { team_id: null, captured_at: null }, 'team_id=not.is.null');
+    // Archive old points (keep for history)
+    // New week starts fresh
     // Remove all arena cards
     await dbDel('arena_cards', 'id=not.is.null');
     
@@ -3767,6 +3771,177 @@ async function buyRTTInventory() {
     document.getElementById('shop-screen-hs').textContent = newHS + ' HS';
     await loadInventory();
   } catch(e) { if(notif){notif.style.color='#ff8888';notif.textContent='Erreur : '+e.message;} }
+}
+
+
+// ── AUTO UPDATE ────────────────────────────────────────────────────────────────
+const APP_VERSION = '202604141737';
+
+// Force reload if new version detected
+async function checkForUpdate() {
+  try {
+    const resp = await fetch(window.location.href + '?v=' + Date.now(), {cache:'no-store'});
+    const html = await resp.text();
+    const match = html.match(/APP_VERSION = '([^']+)'/);
+    if (match && match[1] !== APP_VERSION) {
+      console.log('New version detected, reloading...');
+      window.location.reload(true);
+    }
+  } catch(e) {}
+}
+
+// Reload data (not full page) when user comes back to the app
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && ME) {
+    // Refresh key data silently
+    try {
+      pool = await dbGet('cards','select=*&order=created_at.asc');
+      allUsers = await dbGet('users','select=id,pseudo&order=pseudo.asc');
+      const collRows = await dbGet('collections','user_id=eq.'+ME.id+'&select=card_id,count');
+      coll = {}; collRows.forEach(r=>{coll[r.card_id]=r.count;});
+      const users = await dbGet('users','id=eq.'+ME.id+'&select=*');
+      if(users.length) ME = users[0];
+      await loadInventory();
+      await syncArenaCards();
+      updateBoosterState();
+      updatePADisplay();
+      // Check for app update
+      checkForUpdate();
+    } catch(e) {}
+  }
+});
+
+// Also check update every 30 minutes
+setInterval(checkForUpdate, 30 * 60 * 1000);
+
+
+// ── VERSUS POINTS SYSTEM ───────────────────────────────────────────────────────
+// +1 point par heure par zone contrôlée
+// Calculé en temps réel depuis captured_at
+
+function getWeekStart() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // Lundi
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday.toISOString().slice(0, 10);
+}
+
+async function calcAndSaveVersusPoints() {
+  // Only owner triggers the calculation to avoid race conditions
+  if (!ME || !OWNER_ID || ME.id !== OWNER_ID) return;
+  try {
+    const arenaRows = await dbGet('arenas', 'select=*');
+    const weekStart = getWeekStart();
+    const now = new Date();
+    
+    // Calculate points per team based on time controlled
+    const teamPoints = {};
+    arenaRows.forEach(a => {
+      if (!a.team_id || !a.captured_at) return;
+      const capturedAt = new Date(a.captured_at);
+      // Cap to week start
+      const startTime = new Date(Math.max(capturedAt.getTime(), new Date(weekStart).getTime()));
+      const hoursControlled = Math.floor((now - startTime) / 3600000);
+      teamPoints[a.team_id] = (teamPoints[a.team_id] || 0) + hoursControlled;
+    });
+
+    // Upsert points for each team
+    for (const [teamId, points] of Object.entries(teamPoints)) {
+      const existing = (await dbGet('versus_points', 
+        'team_id=eq.' + teamId + '&week_start=eq.' + weekStart + '&select=*'))[0];
+      if (existing) {
+        await dbPatch('versus_points', { points }, 'id=eq.' + existing.id);
+      } else {
+        await dbPost('versus_points', {
+          id: 'vp_' + teamId + '_' + weekStart,
+          team_id: teamId,
+          week_start: weekStart,
+          points
+        });
+      }
+    }
+  } catch(e) { console.error('calcVersusPoints:', e); }
+}
+
+async function loadVersusPointsDisplay() {
+  try {
+    const weekStart = getWeekStart();
+    const points = await dbGet('versus_points', 
+      'week_start=eq.' + weekStart + '&select=*&order=points.desc');
+    const allTeams = await dbGet('teams', 'select=*');
+    const arenaRows = await dbGet('arenas', 'select=team_id');
+    
+    const palette = ['#4488ff','#ff4444','#44cc44','#ff8800','#aa44ff','#00ccaa'];
+    const teamColorMap = {};
+    allTeams.forEach((t, i) => { teamColorMap[t.id] = palette[i % palette.length]; });
+    
+    // Zone counts
+    const zoneCounts = {};
+    arenaRows.forEach(a => { 
+      if (a.team_id) zoneCounts[a.team_id] = (zoneCounts[a.team_id] || 0) + 1; 
+    });
+
+    // Update score display in versus screen
+    const scoresEl = document.getElementById('versus-score-bars');
+    if (scoresEl) {
+      scoresEl.innerHTML = '';
+      // Merge points + teams with zones
+      const allTeamIds = [...new Set([
+        ...points.map(p => p.team_id),
+        ...Object.keys(zoneCounts)
+      ])];
+      allTeamIds.forEach(teamId => {
+        const team = allTeams.find(t => t.id === teamId);
+        const col = teamColorMap[teamId] || '#888';
+        const pts = points.find(p => p.team_id === teamId)?.points || 0;
+        const zones = zoneCounts[teamId] || 0;
+        const isMe = ME && ME.team_id === teamId;
+        const d = document.createElement('div');
+        d.style.cssText = `display:flex;align-items:center;gap:8px;padding:4px 0`;
+        d.innerHTML = `
+          <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div>
+          <span style="flex:1;font-size:11px;color:rgba(255,255,255,.7);font-weight:${isMe?700:400}">${team?.name || '?'}</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.4)">${zones} zone${zones>1?'s':''}</span>
+          <span style="font-size:12px;font-weight:700;color:${col}">${pts} pts</span>`;
+        scoresEl.appendChild(d);
+      });
+    }
+
+    // Update home screen score too
+    const homeScores = document.getElementById('home-vs-scores');
+    if (homeScores) {
+      homeScores.innerHTML = '';
+      const sorted = [...points].sort((a,b) => b.points - a.points);
+      if (!sorted.length) {
+        homeScores.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,.3)">Aucun point cette semaine</div>';
+        return;
+      }
+      sorted.forEach(p => {
+        const team = allTeams.find(t => t.id === p.team_id);
+        const col = teamColorMap[p.team_id] || '#888';
+        const isMe = ME && ME.team_id === p.team_id;
+        const zones = zoneCounts[p.team_id] || 0;
+        const d = document.createElement('div');
+        d.style.cssText = `display:flex;align-items:center;gap:6px;background:${col}18;border:1px solid ${col}44;border-radius:8px;padding:4px 10px;${isMe?'border-color:'+col+';':''}`;
+        d.innerHTML = `
+          <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div>
+          <span style="font-size:11px;color:rgba(255,255,255,.7);font-weight:${isMe?700:400}">${team?.name || '?'}</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:2px">${zones}🏟️</span>
+          <span style="font-size:12px;font-weight:700;color:${col};margin-left:auto">${p.points}pts</span>`;
+        homeScores.appendChild(d);
+      });
+    }
+  } catch(e) { console.error('loadVersusPointsDisplay:', e); }
+}
+
+// Update captured_at when a zone is captured
+async function updateArenaCapturedAt(arenaId) {
+  try {
+    await dbPatch('arenas', { captured_at: new Date().toISOString() }, 'id=eq.' + arenaId);
+  } catch(e) {}
 }
 
 init();
