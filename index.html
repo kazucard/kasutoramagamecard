@@ -345,6 +345,13 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 .arena-card-hp-fill{height:100%;border-radius:2px;transition:width .3s}
 .arena-slot-empty{width:80px;height:115px;border-radius:10px;border:1px dashed rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.12);font-size:11px;flex-shrink:0}
 
+
+/* TOAST NOTIFICATIONS */
+#toast-container{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column-reverse;gap:8px;width:90%;max-width:360px;pointer-events:none}
+.toast-item{background:rgba(10,10,25,.95);border-radius:12px;padding:12px 16px;font-size:13px;color:#eee;border:1px solid rgba(255,255,255,.15);box-shadow:0 4px 20px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;pointer-events:all;cursor:grab;transition:transform .2s,opacity .2s;user-select:none;touch-action:pan-y}
+.toast-item.swiping{transition:none}
+.toast-item.dismissing{transform:translateX(120%) !important;opacity:0}
+
 </style>
 </head>
 <body>
@@ -3796,14 +3803,12 @@ async function doApplyRTT(card) {
     await loadInventory();
     renderColl();
     
-    toast.innerHTML = '🩹 ' + card.name + '<br>+' + healAmt + ' PV !';
-    toast.style.borderColor = '#4caf50';
-    setTimeout(() => toast.remove(), 2500);
+    toast.remove();
+    showToast('🩹 ' + card.name + ' +' + healAmt + ' PV !', '#4caf50', '🩹', 4000);
     
   } catch(e) {
-    toast.innerHTML = '❌ ' + e.message;
-    toast.style.borderColor = '#ff4444';
-    setTimeout(() => toast.remove(), 3000);
+    toast.remove();
+    showToast('❌ ' + e.message, '#ff4444', '❌', 4000);
   }
   
   currentItemType = null;
@@ -3924,7 +3929,7 @@ async function giveZoneHSRewards(arenaRows) {
   // Check last reward time
   const lastReward = parseInt(localStorage.getItem('cc_zone_hs_reward') || '0');
   const now = Date.now();
-  if (now - lastReward < 3600000) return; // Only once per hour
+  if (now - lastReward < 1800000) return; // Every 30 minutes
   localStorage.setItem('cc_zone_hs_reward', now);
   
   if (!ME || !ME.team_id) return;
@@ -3932,17 +3937,13 @@ async function giveZoneHSRewards(arenaRows) {
   const myZones = arenaRows.filter(a => a.team_id === ME.team_id).length;
   if (!myZones) return;
   
-  const hsGain = myZones * 5;
+  const hsGain = myZones * 15;
   const newHS = (ME.heures_sup || 0) + hsGain;
   await dbPatch('users', { heures_sup: newHS }, 'id=eq.' + ME.id);
   ME.heures_sup = newHS;
   
   // Show toast
-  const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:var(--gold);padding:10px 20px;border-radius:10px;font-size:13px;z-index:9999;border:1px solid var(--gold)';
-  toast.textContent = '🏟️ +' + hsGain + ' HS (contrôle de ' + myZones + ' zone' + (myZones>1?'s':'') + ')';
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+  showToast('🏟️ +' + hsGain + ' HS — contrôle de ' + myZones + ' zone' + (myZones>1?'s':'') + ' !', 'var(--gold)', '🏟️', 4000);
 }
 
 async function loadVersusPointsDisplay() {
@@ -4037,11 +4038,73 @@ async function checkDailyMission() {
   await dbPatch('users', { heures_sup: newHS }, 'id=eq.' + ME.id);
   ME.heures_sup = newHS;
   
-  const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:#6ddb9a;padding:12px 20px;border-radius:12px;font-size:13px;z-index:9999;border:1px solid #6ddb9a;text-align:center';
-  toast.innerHTML = '🎯 Mission du jour accomplie !<br><strong>+50 HS</strong>';
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
+  showToast('🎯 Mission du jour accomplie ! +50 HS', '#6ddb9a', '🎯', 5000);
+}
+
+
+// ── TOAST SYSTEM ──────────────────────────────────────────────────────────────
+function showToast(msg, color, icon, duration) {
+  color = color || 'var(--gold)';
+  icon = icon || '💬';
+  duration = duration || 0; // 0 = manual dismiss only
+  
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.style.borderColor = color + '55';
+  el.innerHTML = `<span style="font-size:18px;flex-shrink:0">${icon}</span>
+    <span style="flex:1;line-height:1.4">${msg}</span>
+    <span onclick="dismissToast(this.parentElement)" style="font-size:16px;color:rgba(255,255,255,.3);cursor:pointer;padding:2px 4px">✕</span>`;
+  
+  // Swipe to dismiss
+  let startX = 0, currentX = 0, isDragging = false;
+  
+  el.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    isDragging = true;
+    el.classList.add('swiping');
+  }, {passive:true});
+  
+  el.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    currentX = e.touches[0].clientX - startX;
+    el.style.transform = `translateX(${currentX}px)`;
+    el.style.opacity = 1 - Math.abs(currentX) / 200;
+  }, {passive:true});
+  
+  el.addEventListener('touchend', () => {
+    isDragging = false;
+    el.classList.remove('swiping');
+    if (Math.abs(currentX) > 80) {
+      dismissToast(el);
+    } else {
+      el.style.transform = '';
+      el.style.opacity = '';
+    }
+    currentX = 0;
+  });
+  
+  container.appendChild(el);
+  
+  // Auto dismiss if duration set
+  if (duration > 0) {
+    setTimeout(() => dismissToast(el), duration);
+  }
+  
+  return el;
+}
+
+function dismissToast(el) {
+  if (!el || !el.parentElement) return;
+  el.classList.add('dismissing');
+  setTimeout(() => el.remove(), 200);
+}
+
+function clearAllToasts() {
+  const container = document.getElementById('toast-container');
+  if (container) container.innerHTML = '';
 }
 
 init();
@@ -4169,5 +4232,6 @@ init();
   <button onclick="closeCardPicker()" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Annuler</button>
 </div>
 
+<div id="toast-container"></div>
 </body>
 </html>
