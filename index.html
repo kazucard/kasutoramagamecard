@@ -4059,29 +4059,30 @@ function showToast(msg, color, icon, duration) {
     <span onclick="dismissToast(this.parentElement)" style="font-size:16px;color:rgba(255,255,255,.3);cursor:pointer;padding:2px 4px">✕</span>`;
   
   // Swipe to dismiss
-  let startX = 0, currentX = 0, isDragging = false;
+  let startX = 0, currentX = 0;
   
   el.addEventListener('touchstart', e => {
     startX = e.touches[0].clientX;
-    isDragging = true;
-    el.classList.add('swiping');
+    currentX = 0;
   }, {passive:true});
   
   el.addEventListener('touchmove', e => {
-    if (!isDragging) return;
     currentX = e.touches[0].clientX - startX;
-    el.style.transform = `translateX(${currentX}px)`;
-    el.style.opacity = 1 - Math.abs(currentX) / 200;
+    el.style.transition = 'none';
+    el.style.transform = 'translateX(' + currentX + 'px)';
+    el.style.opacity = String(Math.max(0, 1 - Math.abs(currentX) / 150));
   }, {passive:true});
   
   el.addEventListener('touchend', () => {
-    isDragging = false;
-    el.classList.remove('swiping');
-    if (Math.abs(currentX) > 80) {
-      dismissToast(el);
+    if (Math.abs(currentX) > 60) {
+      el.style.transition = 'transform .2s, opacity .2s';
+      el.style.transform = 'translateX(' + (currentX > 0 ? '300px' : '-300px') + ')';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 200);
     } else {
-      el.style.transform = '';
-      el.style.opacity = '';
+      el.style.transition = 'transform .2s, opacity .2s';
+      el.style.transform = 'translateX(0)';
+      el.style.opacity = '1';
     }
     currentX = 0;
   });
