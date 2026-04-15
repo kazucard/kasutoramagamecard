@@ -3557,7 +3557,16 @@ async function loadNewsFeed() {
       feed.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.2);font-size:12px;padding:12px 0">Aucune actualité pour le moment</div>';
       return;
     }
-    news.forEach(n => {
+    // Get hidden news from localStorage
+    const hiddenNews = JSON.parse(localStorage.getItem('cc_hidden_news') || '[]');
+    const visibleNews = news.filter(n => !hiddenNews.includes(n.id));
+    
+    if (!visibleNews.length) {
+      feed.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.2);font-size:12px;padding:12px 0">Aucune actualité</div>';
+      return;
+    }
+
+    visibleNews.forEach(n => {
       const d = document.createElement('div');
       const isAuto = n.type === 'auto';
       const isAlert = n.type === 'alert';
@@ -3565,13 +3574,15 @@ async function loadNewsFeed() {
       const border = isAlert ? 'rgba(255,68,68,.25)' : isAuto ? 'rgba(201,168,76,.2)' : 'var(--bord)';
       const icon = isAlert ? '🚨' : isAuto ? '⭐' : '📢';
       const timeAgo = getTimeAgo(new Date(n.created_at));
-      d.style.cssText = `background:${bg};border:1px solid ${border};border-radius:10px;padding:10px 12px`;
+      d.style.cssText = `background:${bg};border:1px solid ${border};border-radius:10px;padding:10px 12px;position:relative`;
+      d.id = 'news-' + n.id;
       d.innerHTML = `<div style="display:flex;align-items:flex-start;gap:8px">
         <span style="font-size:16px;flex-shrink:0">${icon}</span>
         <div style="flex:1">
           <div style="font-size:13px;color:rgba(255,255,255,.85);line-height:1.5">${n.content}</div>
           <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:4px">${timeAgo}</div>
         </div>
+        <button onclick="hideNews('${n.id}')" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);font-size:12px;width:26px;height:26px;border-radius:50%;cursor:pointer;flex-shrink:0;padding:0;line-height:1">✕</button>
       </div>`;
       feed.appendChild(d);
     });
@@ -4149,6 +4160,20 @@ async function buyResurrectInventory() {
     document.getElementById('shop-screen-hs').textContent = newHS + ' HS';
     await loadInventory();
   } catch(e) { if(notif){notif.style.color='#ff8888';notif.textContent='Erreur : '+e.message;} }
+}
+
+
+function hideNews(newsId) {
+  const hidden = JSON.parse(localStorage.getItem('cc_hidden_news') || '[]');
+  if (!hidden.includes(newsId)) hidden.push(newsId);
+  localStorage.setItem('cc_hidden_news', JSON.stringify(hidden));
+  const el = document.getElementById('news-' + newsId);
+  if (el) {
+    el.style.transition = 'opacity .2s, transform .2s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(20px)';
+    setTimeout(() => el.remove(), 200);
+  }
 }
 
 init();
