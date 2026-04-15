@@ -2536,6 +2536,9 @@ async function updateShopImg(){
 const RTT_COST=50;
 const RTT_HEAL_PCT=0.15;
 const RESURRECT_COST=200;
+const CONGE_COST=100;
+const CONGE_HEAL_PCT=0.35;
+const RESURRECT_PCT=0.30;
 const REGEN_PER_HOUR=1/24; // Full regen in 24h
 
 function loadShopScreen(){
@@ -2881,10 +2884,13 @@ async function loadVersusMap() {
 
       // Color the circle based on team
       const circleEl = document.querySelector('#arena-' + i + ' circle');
+      const arenaCardCount = (cardsByArena[aid] || []).length;
       if (circleEl) {
-        if (!arena || !arena.team_id) {
+        if (!arena || !arena.team_id || arenaCardCount === 0) {
+          // Neutral - no team or no cards defending
           circleEl.setAttribute('fill', 'rgba(100,100,120,.3)');
           circleEl.setAttribute('stroke', 'rgba(255,255,255,.2)');
+          circleEl.setAttribute('stroke-width', '2');
         } else {
           const col = teamColorMap[arena.team_id] || '#888';
           const isMyTeam = ME && arena.team_id === ME.team_id;
@@ -3029,13 +3035,13 @@ async function openArena(arenaId) {
     const myCards = defCards.filter(c => c.user_id === ME.id);
 
     if (phase === 'defense') {
-      // Can place card if: neutral or my team, and < 3 cards
-      if ((isNeutral || isMyTeam) && defCards.length < 3) {
+      if (isEnemy) {
+        // Can't place in enemy zone during defense
+        actions.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;padding:8px">Zone ennemie — attaque à partir de mercredi</div>';
+      } else if ((isNeutral || isMyTeam) && defCards.length < 3) {
         actions.innerHTML = `<button class="btn btn-gold" onclick="openPlaceCardModal('${arenaId}')">🛡️ Placer une carte en défense</button>`;
       } else if (defCards.length >= 3) {
         actions.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;padding:8px">Arène complète (3/3 cartes)</div>';
-      } else if (isEnemy) {
-        actions.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;padding:8px">Phase attaque à partir de mercredi</div>';
       }
       // Remove own card
       if (myCards.length) {
@@ -3115,26 +3121,27 @@ async function selectPlaceCard(cardId, arenaId) {
   if (curPA < paCost) { alert('Pas assez de PA ! (' + curPA + '/' + paCost + ' requis)'); return; }
   
   try {
-    // Check if card is already in ANY arena
-    const existing = await dbGet('arena_cards', 'card_id=eq.' + cardId + '&select=id,arena_id');
+    // Check if THIS USER's card is already in ANY arena
+    const existing = await dbGet('arena_cards', 'card_id=eq.' + cardId + '&user_id=eq.' + ME.id + '&select=id,arena_id');
     if (existing.length) {
-      const toast = document.createElement('div');
-      toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.95);color:#ff8888;padding:16px 24px;border-radius:12px;font-size:13px;z-index:9999;border:1px solid #ff4444;text-align:center';
-      toast.textContent = '❌ Cette carte est déjà dans une arène !';
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2500);
+      showToast('❌ Ta carte est déjà dans une arène !', '#ff4444', '❌', 3000);
       document.getElementById('place-card-ov')?.remove();
       return;
     }
     const maxHP = getCardMaxHP(card);
-    await dbPost('arena_cards', { id: 'ac' + Date.now(), arena_id: arenaId, user_id: ME.id, card_id: cardId, hp: maxHP });
+    const currentHP = getCardCurrentHP(card);
+    // Use actual current HP, not max HP
+    await dbPost('arena_cards', { id: 'ac' + Date.now(), arena_id: arenaId, user_id: ME.id, card_id: cardId, hp: Math.max(1, currentHP) });
     // Mark card as in arena (localStorage)
     const inArena = JSON.parse(localStorage.getItem('cc_in_arena') || '{}');
     inArena[cardId] = arenaId;
     localStorage.setItem('cc_in_arena', JSON.stringify(inArena));
-    // Set arena team to my team if neutral
+    // Set arena team - always update if zone has no defending cards (visually neutral)
     const arena = (await dbGet('arenas', 'id=eq.' + arenaId))[0];
-    if (!arena.team_id && ME.team_id) {
+    const remainingCards = await dbGet('arena_cards', 'arena_id=eq.' + arenaId + '&select=id');
+    // remainingCards now includes the card we just added
+    if (ME.team_id && (remainingCards.length <= 1)) {
+      // First card in zone - claim it for our team
       await dbPatch('arenas', { team_id: ME.team_id, captured_at: new Date().toISOString() }, 'id=eq.' + arenaId);
     }
     spendPA(paCost);
@@ -3299,6 +3306,7 @@ function updateVbUI() {
 async function vbEnemyDefeated() {
   document.getElementById('versus-battle').classList.remove('active');
   saveCardHP(vbAttackerCard.id, Math.max(0, vbPlayerHP));
+  checkDailyMission();
   try {
     // Update defender slot HP to 0 (defeated)
     await dbPatch('arena_cards', { hp: 0 }, 'id=eq.' + vbDefenderSlot.id);
@@ -3673,7 +3681,9 @@ function closeInventory() {
 
 const ITEM_DEFS = {
   rtt: { icon: '🩹', name: 'RTT', desc: 'Soigne une carte de 15% PV max', color: '#4caf50' },
+  conge: { icon: '🏥', name: 'Congé Maladie', desc: 'Soigne une carte de 35% PV max', color: '#00bcd4' },
   booster: { icon: '🎁', name: 'Booster Extra', desc: 'Ouvre un booster supplémentaire', color: '#c9a84c' },
+  resurrect: { icon: '💊', name: 'Ressusciter', desc: 'Ramène une carte morte à 30% PV', color: '#ff6b6b' },
 };
 
 function renderInventoryItems() {
@@ -3714,10 +3724,14 @@ function useItem(itemType) {
 
 function showCardPickerForItem(itemType) {
   // Get available cards (not in arena, not dead)
-  const myCards = Object.keys(coll)
+  const allMyCards = Object.keys(coll)
     .filter(id => coll[id] > 0)
     .map(id => pool.find(p => p.id === id))
     .filter(c => c && !isCardInArena(c.id));
+  // For resurrect, show only dead cards; for others, show living cards
+  const myCards = currentItemType === 'resurrect' 
+    ? allMyCards.filter(c => getCardCurrentHP(c) <= 0)
+    : allMyCards;
 
   const picker = document.getElementById('item-card-picker');
   const grid = document.getElementById('item-card-picker-grid');
@@ -4077,6 +4091,41 @@ function dismissToast(el) {
 function clearAllToasts() {
   const container = document.getElementById('toast-container');
   if (container) container.innerHTML = '';
+}
+
+
+async function buyCongeInventory() {
+  if (!ME) return;
+  const notif = document.getElementById('shop-notif-screen');
+  if ((ME.heures_sup||0) < CONGE_COST) { if(notif){notif.style.color='#ff8888';notif.textContent='Pas assez de HS !';} return; }
+  try {
+    const newHS = (ME.heures_sup||0) - CONGE_COST;
+    await dbPatch('users', {heures_sup: newHS}, 'id=eq.' + ME.id);
+    ME.heures_sup = newHS;
+    const existing = (await dbGet('inventory', 'user_id=eq.' + ME.id + '&item_type=eq.conge&select=*'))[0];
+    if (existing) await dbPatch('inventory', {quantity: existing.quantity+1}, 'id=eq.' + existing.id);
+    else await dbPost('inventory', {id:'inv'+Date.now(), user_id:ME.id, item_type:'conge', quantity:1});
+    if(notif){notif.style.color='#6ddb9a';notif.textContent='🏥 Congé Maladie ajouté !';setTimeout(()=>{if(notif)notif.textContent='';},3000);}
+    document.getElementById('shop-screen-hs').textContent = newHS + ' HS';
+    await loadInventory();
+  } catch(e) { if(notif){notif.style.color='#ff8888';notif.textContent='Erreur : '+e.message;} }
+}
+
+async function buyResurrectInventory() {
+  if (!ME) return;
+  const notif = document.getElementById('shop-notif-screen');
+  if ((ME.heures_sup||0) < RESURRECT_COST) { if(notif){notif.style.color='#ff8888';notif.textContent='Pas assez de HS !';} return; }
+  try {
+    const newHS = (ME.heures_sup||0) - RESURRECT_COST;
+    await dbPatch('users', {heures_sup: newHS}, 'id=eq.' + ME.id);
+    ME.heures_sup = newHS;
+    const existing = (await dbGet('inventory', 'user_id=eq.' + ME.id + '&item_type=eq.resurrect&select=*'))[0];
+    if (existing) await dbPatch('inventory', {quantity: existing.quantity+1}, 'id=eq.' + existing.id);
+    else await dbPost('inventory', {id:'inv'+Date.now(), user_id:ME.id, item_type:'resurrect', quantity:1});
+    if(notif){notif.style.color='#6ddb9a';notif.textContent='💊 Ressusciter ajouté !';setTimeout(()=>{if(notif)notif.textContent='';},3000);}
+    document.getElementById('shop-screen-hs').textContent = newHS + ' HS';
+    await loadInventory();
+  } catch(e) { if(notif){notif.style.color='#ff8888';notif.textContent='Erreur : '+e.message;} }
 }
 
 init();
