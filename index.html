@@ -4104,20 +4104,16 @@ function showToast(msg, color, icon, duration) {
   const container = document.getElementById('toast-container');
   if (!container) return;
   
+  const id = 'toast_' + Date.now();
   const el = document.createElement('div');
   el.className = 'toast-item';
-  el.style.borderColor = color + '55';
-  el.style.cssText += ';cursor:pointer';
+  el.id = id;
+  el.style.borderColor = color + '66';
   el.innerHTML = `<span style="font-size:18px;flex-shrink:0">${icon}</span>
-    <span style="flex:1;line-height:1.4">${msg}</span>
-    <span style="font-size:16px;color:rgba(255,255,255,.3);padding:2px 6px">✕</span>`;
-  
-  // Tap to dismiss - use both click and touchend
-  el.addEventListener('click', () => dismissToast(el));
-  el.addEventListener('touchend', (e) => { e.preventDefault(); dismissToast(el); }, {passive:false});
+    <span style="flex:1;line-height:1.4;font-size:12px">${msg}</span>
+    <button onclick="dismissToast(document.getElementById('${id}'))" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:13px;width:28px;height:28px;border-radius:50%;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">✕</button>`;
   
   container.appendChild(el);
-  
   if (duration > 0) setTimeout(() => dismissToast(el), duration);
   return el;
 }
