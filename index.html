@@ -4046,7 +4046,7 @@ async function checkDailyMission() {
 function showToast(msg, color, icon, duration) {
   color = color || 'var(--gold)';
   icon = icon || '💬';
-  duration = duration || 0; // 0 = manual dismiss only
+  duration = duration || 5000;
   
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -4054,46 +4054,17 @@ function showToast(msg, color, icon, duration) {
   const el = document.createElement('div');
   el.className = 'toast-item';
   el.style.borderColor = color + '55';
+  el.style.cssText += ';cursor:pointer';
   el.innerHTML = `<span style="font-size:18px;flex-shrink:0">${icon}</span>
     <span style="flex:1;line-height:1.4">${msg}</span>
-    <span onclick="dismissToast(this.parentElement)" style="font-size:16px;color:rgba(255,255,255,.3);cursor:pointer;padding:2px 4px">✕</span>`;
+    <span style="font-size:16px;color:rgba(255,255,255,.3);padding:2px 6px">✕</span>`;
   
-  // Swipe to dismiss
-  let startX = 0, currentX = 0;
-  
-  el.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-    currentX = 0;
-  }, {passive:true});
-  
-  el.addEventListener('touchmove', e => {
-    currentX = e.touches[0].clientX - startX;
-    el.style.transition = 'none';
-    el.style.transform = 'translateX(' + currentX + 'px)';
-    el.style.opacity = String(Math.max(0, 1 - Math.abs(currentX) / 150));
-  }, {passive:true});
-  
-  el.addEventListener('touchend', () => {
-    if (Math.abs(currentX) > 60) {
-      el.style.transition = 'transform .2s, opacity .2s';
-      el.style.transform = 'translateX(' + (currentX > 0 ? '300px' : '-300px') + ')';
-      el.style.opacity = '0';
-      setTimeout(() => el.remove(), 200);
-    } else {
-      el.style.transition = 'transform .2s, opacity .2s';
-      el.style.transform = 'translateX(0)';
-      el.style.opacity = '1';
-    }
-    currentX = 0;
-  });
+  // Tap anywhere to dismiss
+  el.addEventListener('click', () => dismissToast(el));
   
   container.appendChild(el);
   
-  // Auto dismiss if duration set
-  if (duration > 0) {
-    setTimeout(() => dismissToast(el), duration);
-  }
-  
+  if (duration > 0) setTimeout(() => dismissToast(el), duration);
   return el;
 }
 
