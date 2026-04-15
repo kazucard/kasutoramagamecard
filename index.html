@@ -590,20 +590,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
         <div id="booster-shop-msg" style="margin-top:6px;font-size:11px;color:rgba(255,255,255,.35);text-align:center"></div>
       </div>
 
-      <!-- Ressusciter une carte -->
-      <div style="background:var(--surf);border:1px solid var(--bord);border-radius:14px;padding:16px;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="font-size:36px">💀</div>
-          <div style="flex:1">
-            <div style="font-weight:700;font-size:14px;color:#fff">Ressusciter</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px">Ramène une carte morte à la vie</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gold)">200 HS</div>
-            <button onclick="openResurrectModal()" class="btn btn-gold" style="padding:8px 16px;width:auto;margin-top:6px;font-size:12px">Choisir</button>
-          </div>
-        </div>
-      </div>
+      
 
       <div id="shop-notif-screen" style="font-size:12px;text-align:center;min-height:20px;margin-top:4px"></div>
     </div>
@@ -4111,7 +4098,7 @@ function showToast(msg, color, icon, duration) {
   el.style.borderColor = color + '66';
   el.innerHTML = `<span style="font-size:18px;flex-shrink:0">${icon}</span>
     <span style="flex:1;line-height:1.4;font-size:12px">${msg}</span>
-    <button onclick="dismissToast(document.getElementById('${id}'))" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:13px;width:28px;height:28px;border-radius:50%;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">✕</button>`;
+    <button onclick="this.closest('.toast-item').style.display='none'" style="background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.3);color:#fff;font-size:14px;font-weight:700;width:32px;height:32px;border-radius:50%;cursor:pointer;flex-shrink:0;padding:0;line-height:1">✕</button>`;
   
   container.appendChild(el);
   if (duration > 0) setTimeout(() => dismissToast(el), duration);
