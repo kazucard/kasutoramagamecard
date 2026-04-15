@@ -352,45 +352,6 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 .toast-item.swiping{transition:none}
 .toast-item.dismissing{transform:translateX(120%) !important;opacity:0}
 
-
-@keyframes float2px{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-
-
-/* VESTIAIRE GLOBAL BG */
-#vestiaire-fixed-bg{
-  position:fixed;inset:0;z-index:-1;
-  display:none;
-  image-rendering:pixelated;
-  image-rendering:crisp-edges;
-}
-#vestiaire-fixed-bg.active{display:block}
-#vestiaire-fixed-bg .bg-casier{
-  position:absolute;inset:0;width:100%;height:100%;
-  object-fit:cover;
-  image-rendering:pixelated;
-  image-rendering:crisp-edges;
-}
-#vestiaire-fixed-bg .bg-tshirt{
-  position:absolute;
-  bottom:25%;left:5%;
-  height:35%;
-  image-rendering:pixelated;
-  image-rendering:crisp-edges;
-  animation:float2px 2s ease-in-out infinite;
-  mix-blend-mode:multiply;
-}
-/* Make vestiaire screen transparent */
-#screen-booster{background:transparent !important}
-/* Make all content on vestiaire semi-transparent friendly */
-#screen-booster .stats-row,
-#screen-booster #hs-bar,
-#screen-booster #home-versus-bar,
-#screen-booster #daily-mission-bar,
-#screen-booster #home-news-feed .toast-item{
-  background:rgba(10,10,25,.75) !important;
-  backdrop-filter:blur(4px);
-}
-
 </style>
 </head>
 <body>
@@ -433,12 +394,6 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 
 <div id="loading"><div class="spinner"></div><p>Chargement...</p></div>
 
-<!-- VESTIAIRE FIXED BG -->
-<div id="vestiaire-fixed-bg">
-  <img class="bg-casier" src="data:image/png;base64,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">
-  <img class="bg-tshirt" src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAB9AFoDASIAAhEBAxEB/8QAGwABAAMBAAMAAAAAAAAAAAAAAAUGBwMCBAj/xAAuEAABAwMEAAQEBwEAAAAAAAAAAQIDBAURBhIhMQcTFFEiQWGRFSMyUnGBobH/xAAaAQEBAAIDAAAAAAAAAAAAAAAAAQIDBAUG/8QAJBEBAQABBAEDBQEAAAAAAAAAAAECAwQRIQUxUWEGEhNxsfH/2gAMAwEAAhEDEQA/APjIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkLTaaq4ruiRrYkXDnqvXXGPfCkeaHaKb0Nrigzuc1uV57VeeP7O98B4rHyOvcdS2YYzm2JbwqN6ss9ta2Tek0S9uRuNq/U6WnT9RXUyzvkSBq/oRW5Vye5fLhQTQxwx1tPtbUwNnjRytcj43ZwvCr3heF5OktvngtMVw3UiwyOVrGNq4nS557iR29qcLyrUTr3TPp8PpbYXXmvdWfhy6k57t76nv6W+/Xo146kznOPbMblb6m3yIyoa1N2drkXKLjv8A6eoXrVVL6q0PejsLD+YnPC4Tn/Cink/OeLnjd3dLG842Sy/H+tkvMAAdOoAAAAA8onujkbIxcOYqOavsqF00rfEud8obdVUyYmmY1zmu75TP8JjJSSy+GVJJV62tyRuYnlP8125fk1Mrj6nN2e/3G1+6aOdxmXV+YnDdPw+KTyfWvWu8imjpYPURxr5cTM7WphqfuXlcqpynsdpnej30UaKiY+BVYn2aqEiDDT3250rzp6ln6tn8OIwC56kljWakp4EarFViSOXPKcKuPuVkkNR0klDfq6kmcxz453IqtXKdkeZb3e6+7z51sueOp8QkAAcNQAAAAAJzRF7i0/fmXOWB87WRubsaqIqqqY7IMFl4o3eh8RdL1UyxrVy0+G7t00ao1fpxnk5XHxK01Suljhknqnsblqxs+B64yiZX7dGGgvM9hIakuDLrfay4xxujbUSrIjHLy3PyI8AlvN5AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/9k=">
-</div>
-
 <div id="app" style="display:none">
   <!-- PROFILE BAR -->
   <div id="profile-bar">
@@ -463,17 +418,6 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
   <!-- BOOSTER -->
   <div class="screen active" id="screen-booster">
     
-        <!-- BOOSTER PACK -->
-    <div id="booster-section" style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding-top:6px">
-      <div id="booster-pack" onclick="onBoosterClick()" style="width:160px;height:240px;cursor:pointer;border-radius:14px;overflow:hidden;border:2px solid var(--gold);box-shadow:0 0 30px rgba(201,168,76,.3);animation:float2px 2.5s ease-in-out infinite">
-        <img id="booster-img" src="" style="width:100%;height:100%;object-fit:cover;display:block">
-      </div>
-      <div id="cta-msg" style="font-size:11px;color:rgba(255,255,255,.8);text-align:center;display:none"></div>
-      <div id="timer-chip" style="font-size:11px;color:rgba(255,255,255,.5);display:none"></div>
-    </div>
-    <div id="no-cards-msg"  style="font-size:12px;color:rgba(255,255,255,.35);text-align:center;display:none;padding:4px 0">Aucune carte dans le pool.</div>
-    <div id="shop-section" style="display:none"><div id="shop-msg"></div></div>
-
     <!-- VERSUS COUNTDOWN + SCORE -->
     <div id="home-versus-bar" style="width:100%;background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.2);border-radius:12px;padding:10px 14px;margin-top:10px;display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -491,15 +435,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
       </div>
       <div id="cta-msg">Ouvre ton booster une fois par semaine !</div>
       <div id="timer-chip"></div>
-      <!-- BOOSTER PACK -->
-    <div id="booster-section" style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding-top:6px">
-      <div id="booster-pack" onclick="onBoosterClick()" style="width:160px;height:240px;cursor:pointer;border-radius:14px;overflow:hidden;border:2px solid var(--gold);box-shadow:0 0 30px rgba(201,168,76,.3);animation:float2px 2.5s ease-in-out infinite">
-        <img id="booster-img" src="" style="width:100%;height:100%;object-fit:cover;display:block">
-      </div>
-      <div id="cta-msg" style="font-size:11px;color:rgba(255,255,255,.8);text-align:center;display:none"></div>
-      <div id="timer-chip" style="font-size:11px;color:rgba(255,255,255,.5);display:none"></div>
-    </div>
-    <div id="no-cards-msg" >Aucune carte dans le pool.<br>L'admin doit en ajouter !</div>
+      <div id="no-cards-msg">Aucune carte dans le pool.<br>L'admin doit en ajouter !</div>
       <div id="shop-section" style="display:none"><div id="shop-msg"></div></div>
     </div>
 
@@ -1178,10 +1114,7 @@ async function startApp(uid){
     await syncArenaCards();
     await loadInventory();
     loadHomeScreen();
-    renderProfile();updateLevel();updateBoosterState();
-    // Activate vestiaire bg on home screen
-    const vbg=document.getElementById('vestiaire-fixed-bg');
-    if(vbg)vbg.classList.add('active');updatePADisplay();
+    renderProfile();updateLevel();updateBoosterState();updatePADisplay();
     checkPendingTrades();
     checkUnreadMessages();
     await checkDailyReward();
@@ -1285,9 +1218,6 @@ function updateLevel(){
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function showTab(name){
-  // Vestiaire background
-  const vbg = document.getElementById('vestiaire-fixed-bg');
-  if(vbg) vbg.classList.toggle('active', name==='booster');
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
