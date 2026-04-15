@@ -448,6 +448,15 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 
     <!-- NEWS FEED -->
     <div style="width:100%;margin-top:14px">
+      <!-- DAILY MISSION -->
+      <div id="daily-mission-bar" style="background:rgba(109,219,154,.08);border:1px solid rgba(109,219,154,.2);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">🎯</span>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:700;color:#6ddb9a">Mission du jour</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px">Gagner 1 combat → +50 HS</div>
+        </div>
+        <div id="daily-mission-status" style="font-size:11px;font-weight:700"></div>
+      </div>
       <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">📰 Actualités</div>
       <div id="home-news-feed" style="display:flex;flex-direction:column;gap:8px">
         <div style="text-align:center;color:rgba(255,255,255,.2);font-size:12px;padding:20px 0">Chargement...</div>
@@ -2271,10 +2280,11 @@ function startBattleUI(){
 function autoBattleTick(){
   const enemy=battleEnemies[battleIdx];
   // Player auto-attacks
-  const playerDmg=Math.max(1,Math.floor((selectedCard.atk||50)/80));
+  const playerDmg=Math.max(1,Math.floor((selectedCard.atk||50)/60));
   enemyHP=Math.max(0,enemyHP-playerDmg);
   // Enemy auto-attacks player
-  const enemyDmg=Math.max(50,Math.floor(((enemy.atk||50)*0.9-Math.floor((selectedCard.def||0)*0.25))));
+  const rawAdv = (enemy.atk||50)*0.4 - (selectedCard.def||0)*0.4;
+  const enemyDmg=Math.max(10,Math.floor(rawAdv/2));
   playerHP=Math.max(0,playerHP-enemyDmg);
   updateBattleUI();
   if(enemyHP<=0){clearInterval(battleInterval);battleInterval=null;enemyDefeated();}
@@ -3029,7 +3039,8 @@ async function openArena(arenaId) {
       if (isEnemy || isNeutral) {
         if (!defCards.length) {
           // No defenders - capture directly
-          actions.innerHTML = `<button class="btn btn-gold" onclick="captureArena('${arenaId}')">🏳️ Capturer (zone libre !)</button>`;
+          actions.innerHTML = `<div style="font-size:12px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:10px">Zone libre ! Place une carte pour la capturer.</div>
+            <button class="btn btn-gold" onclick="openPlaceCardModal('${arenaId}')">🛡️ Placer une carte pour capturer</button>`;
         } else {
           // Attack first defender
           const nextDefender = defCards[0];
@@ -3097,6 +3108,13 @@ async function selectPlaceCard(cardId, arenaId) {
     spendPA(paCost);
     document.getElementById('place-card-ov')?.remove();
     closeArenaModal();
+    // Post news if zone changes team
+    const updatedArena = (await dbGet('arenas', 'id=eq.' + arenaId + '&select=team_id,name'))[0];
+    const myTeam2 = ME.team_id ? (await dbGet('teams', 'id=eq.' + ME.team_id + '&select=name'))[0] : null;
+    if (myTeam2) {
+      const arenaName2 = ARENA_NAMES[arenaId] || arenaId;
+      await postAutoNews('🏳️ La Team ' + myTeam2.name + ' a capturé "' + arenaName2 + '" !');
+    }
     alert('✅ Carte placée en défense !');
     loadVersusMap();
   } catch(e) { alert('Erreur : ' + e.message); }
@@ -3120,16 +3138,9 @@ async function removeMyCard(arenaId) {
 }
 
 async function captureArena(arenaId) {
+  // Can't capture without placing a card - redirect to place card
   if (!ME || !ME.team_id) { alert('Tu dois être dans une équipe !'); return; }
-  const paCost = 1;
-  if (getCurrentPA() < paCost) { alert('Pas assez de PA !'); return; }
-  try {
-    await dbPatch('arenas', { team_id: ME.team_id, captured_at: new Date().toISOString() }, 'id=eq.' + arenaId);
-    spendPA(paCost);
-    closeArenaModal();
-    alert('🏳️ Zone capturée !');
-    loadVersusMap();
-  } catch(e) { alert('Erreur : ' + e.message); }
+  openPlaceCardModal(arenaId);
 }
 
 // ── VS BATTLE ─────────────────────────────────────────────────────────────────
@@ -3209,13 +3220,23 @@ async function launchVsBattle(attackerCardId, defenderSlotId, arenaId) {
   vbInterval = setInterval(vbAutoTick, 2000);
 }
 
+let vbLastHPSave = 0;
 function vbAutoTick() {
   const defCard = vbDefenderCard;
-  const playerDmg = Math.max(1, Math.floor((vbAttackerCard.atk || 50) / 80));
-  const enemyDmg = Math.max(20, Math.floor(((defCard?.atk || 50) * 0.9 - Math.floor((vbAttackerCard.def || 0) * 0.25))));
+  // Attacker: ATK/60 auto dégâts
+  const playerDmg = Math.max(1, Math.floor((vbAttackerCard.atk || 50) / 60));
+  // Defender: ATK réduite de 50% (mode défense) - DEF de l'attaquant atténue
+  const rawEnemyDmg = (defCard?.atk || 50) * 0.4 - (vbAttackerCard.def || 0) * 0.4;
+  const enemyDmg = Math.max(10, Math.floor(rawEnemyDmg / 2));
   vbEnemyHP = Math.max(0, vbEnemyHP - playerDmg);
   vbPlayerHP = Math.max(0, vbPlayerHP - enemyDmg);
   updateVbUI();
+  // Save defender HP to DB every 10 seconds to avoid too many requests
+  const now = Date.now();
+  if (now - vbLastHPSave > 10000 && vbDefenderSlot) {
+    vbLastHPSave = now;
+    dbPatch('arena_cards', { hp: Math.ceil(vbEnemyHP) }, 'id=eq.' + vbDefenderSlot.id).catch(()=>{});
+  }
   if (vbEnemyHP <= 0) { clearInterval(vbInterval); vbInterval = null; vbEnemyDefeated(); }
   else if (vbPlayerHP <= 0) { clearInterval(vbInterval); vbInterval = null; vbPlayerDefeated(); }
 }
@@ -3279,19 +3300,25 @@ async function vbPlayerDefeated() {
   showVbResult('💀 Défaite !', vbAttackerCard.name + ' a été vaincue. Ressuscite-la dans le Shop.', false);
 }
 
-function showVbResult(title, msg, captured) {
+function showVbResult(title, msg, captured, canPlace) {
   const ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px';
-  ov.innerHTML = `<div style="font-size:56px">${captured ? '🏆' : title.includes('💀') ? '💀' : '⚔️'}</div>
+  const emoji = captured ? '🏆' : canPlace ? '⚔️' : title.includes('💀') ? '💀' : '✅';
+  ov.innerHTML = `<div style="font-size:56px">${emoji}</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold);text-align:center">${title}</div>
     <div style="font-size:13px;color:rgba(255,255,255,.6);text-align:center;line-height:1.6">${msg}</div>
-    <button onclick="this.closest('div').remove();loadVersusMap()" style="padding:13px 36px;background:linear-gradient(135deg,var(--gold),#e0b840);color:#1a1209;font-weight:700;font-size:14px;border-radius:12px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">OK</button>`;
+    ${canPlace ? `<button onclick="this.closest('div').remove();openArena(currentArenaId)" style="padding:13px 36px;background:linear-gradient(135deg,var(--gold),#e0b840);color:#1a1209;font-weight:700;font-size:14px;border-radius:12px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Capturer la zone !</button>` : ''}
+    <button onclick="this.closest('div').remove();loadVersusMap()" style="padding:13px 36px;background:${canPlace?'rgba(255,255,255,.07)':'linear-gradient(135deg,var(--gold),#e0b840)'};border:${canPlace?'1px solid var(--bord)':'none'};color:${canPlace?'#eee':'#1a1209'};font-weight:700;font-size:14px;border-radius:12px;cursor:pointer;font-family:'DM Sans',sans-serif">${canPlace?'Plus tard':'OK'}</button>`;
   document.body.appendChild(ov);
 }
 
 function surrenderVsBattle() {
   clearInterval(vbInterval); vbInterval = null;
   saveCardHP(vbAttackerCard?.id, Math.max(0, vbPlayerHP));
+  // Save defender HP to DB
+  if (vbDefenderSlot && vbEnemyHP > 0) {
+    dbPatch('arena_cards', { hp: Math.ceil(vbEnemyHP) }, 'id=eq.' + vbDefenderSlot.id).catch(()=>{});
+  }
   document.getElementById('versus-battle').classList.remove('active');
   loadVersusMap();
 }
@@ -3377,6 +3404,14 @@ async function loadHomeScreen() {
   loadVersusCountdown();
   loadNewsFeed();
   await loadVersusPointsDisplay();
+  // Update daily mission status
+  const today = new Date().toISOString().slice(0,10);
+  const done = localStorage.getItem('cc_daily_mission') === today;
+  const el = document.getElementById('daily-mission-status');
+  if (el) {
+    el.textContent = done ? '✅ Accomplie' : '⏳ En cours';
+    el.style.color = done ? '#6ddb9a' : 'rgba(255,255,255,.4)';
+  }
 }
 
 function getNextMonday() {
@@ -3830,40 +3865,59 @@ function getWeekStart() {
 }
 
 async function calcAndSaveVersusPoints() {
-  // Only owner triggers the calculation to avoid race conditions
   if (!ME || !OWNER_ID || ME.id !== OWNER_ID) return;
   try {
     const arenaRows = await dbGet('arenas', 'select=*');
     const weekStart = getWeekStart();
     const now = new Date();
-    
-    // Calculate points per team based on time controlled
     const teamPoints = {};
     arenaRows.forEach(a => {
       if (!a.team_id || !a.captured_at) return;
       const capturedAt = new Date(a.captured_at);
-      // Cap to week start
       const startTime = new Date(Math.max(capturedAt.getTime(), new Date(weekStart).getTime()));
       const hoursControlled = Math.floor((now - startTime) / 3600000);
       teamPoints[a.team_id] = (teamPoints[a.team_id] || 0) + hoursControlled;
     });
-
-    // Upsert points for each team
     for (const [teamId, points] of Object.entries(teamPoints)) {
-      const existing = (await dbGet('versus_points', 
+      const existing = (await dbGet('versus_points',
         'team_id=eq.' + teamId + '&week_start=eq.' + weekStart + '&select=*'))[0];
       if (existing) {
         await dbPatch('versus_points', { points }, 'id=eq.' + existing.id);
       } else {
         await dbPost('versus_points', {
           id: 'vp_' + teamId + '_' + weekStart,
-          team_id: teamId,
-          week_start: weekStart,
-          points
+          team_id: teamId, week_start: weekStart, points
         });
       }
     }
+    // Give +5 HS per controlled zone to each team member (once per hour)
+    await giveZoneHSRewards(arenaRows);
   } catch(e) { console.error('calcVersusPoints:', e); }
+}
+
+async function giveZoneHSRewards(arenaRows) {
+  // Check last reward time
+  const lastReward = parseInt(localStorage.getItem('cc_zone_hs_reward') || '0');
+  const now = Date.now();
+  if (now - lastReward < 3600000) return; // Only once per hour
+  localStorage.setItem('cc_zone_hs_reward', now);
+  
+  if (!ME || !ME.team_id) return;
+  // Count zones controlled by my team
+  const myZones = arenaRows.filter(a => a.team_id === ME.team_id).length;
+  if (!myZones) return;
+  
+  const hsGain = myZones * 5;
+  const newHS = (ME.heures_sup || 0) + hsGain;
+  await dbPatch('users', { heures_sup: newHS }, 'id=eq.' + ME.id);
+  ME.heures_sup = newHS;
+  
+  // Show toast
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:var(--gold);padding:10px 20px;border-radius:10px;font-size:13px;z-index:9999;border:1px solid var(--gold)';
+  toast.textContent = '🏟️ +' + hsGain + ' HS (contrôle de ' + myZones + ' zone' + (myZones>1?'s':'') + ')';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
 }
 
 async function loadVersusPointsDisplay() {
@@ -3942,6 +3996,27 @@ async function updateArenaCapturedAt(arenaId) {
   try {
     await dbPatch('arenas', { captured_at: new Date().toISOString() }, 'id=eq.' + arenaId);
   } catch(e) {}
+}
+
+
+// ── DAILY MISSION ─────────────────────────────────────────────────────────────
+async function checkDailyMission() {
+  if (!ME) return;
+  const today = new Date().toISOString().slice(0,10);
+  const lastMission = localStorage.getItem('cc_daily_mission');
+  if (lastMission === today) return; // Already done today
+  
+  localStorage.setItem('cc_daily_mission', today);
+  const reward = 50;
+  const newHS = (ME.heures_sup || 0) + reward;
+  await dbPatch('users', { heures_sup: newHS }, 'id=eq.' + ME.id);
+  ME.heures_sup = newHS;
+  
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:#6ddb9a;padding:12px 20px;border-radius:12px;font-size:13px;z-index:9999;border:1px solid #6ddb9a;text-align:center';
+  toast.innerHTML = '🎯 Mission du jour accomplie !<br><strong>+50 HS</strong>';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
 }
 
 init();
