@@ -598,6 +598,13 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 
   <!-- AVENTURE -->
   <div class="screen" id="screen-aventure">
+    <!-- BOUNTY HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:10px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--gold)">🎯 Chasseur de Prime</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.35)">1 quête à la fois</div>
+    </div>
+    <div id="bounty-list" style="width:100%;margin-bottom:16px"></div>
+    <div style="width:100%;height:1px;background:var(--bord);margin-bottom:14px"></div>
     <div id="adv-map" style="width:100%;padding-top:10px">
       <!-- LORE -->
       <div style="background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(201,168,76,.03));border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:14px 16px;margin-bottom:16px">
@@ -1246,7 +1253,7 @@ function showTab(name){
   if(name==='collection')renderColl();
   if(name==='classement')renderClassement();
   if(name==='messages'){loadInbox();setTimeout(()=>loadMsgUserSelect(),100);}
-  if(name==='aventure')loadAdventureMap();
+  if(name==='aventure'){loadAdventureMap();renderBounties();}
   if(name==='booster')loadHomeScreen();
   if(name==='versus')loadVersusMap();
   if(name==='shop')loadShopScreen();
@@ -4224,6 +4231,181 @@ function getLevel(xp) {
   let lv = 1;
   for (let i = 0; i < LEVELS.length; i++) { if (xp >= LEVELS[i]) lv = i + 1; }
   return lv;
+}
+
+
+// ── BOUNTY QUESTS ─────────────────────────────────────────────────────────────
+const BOUNTY_QUESTS = [
+  { id:'bq1', type:'timer', title:'La chaussette de Doby', desc:"Doby a égaré sa chaussette dans le magasin, aide le à la retrouver !", duration:30, reward:15, icon:'🧦' },
+  { id:'bq2', type:'timer', title:'Faux sourire de rigueur', desc:"Ce matin t'es de mauvaise humeur, mais aborde ton meilleur sourire faux cul et dis joyeusement bonjour à tous tes collègues.", duration:30, reward:15, icon:'😁' },
+  { id:'bq3', type:'timer', title:'Le produit invisible', desc:"Le digital ne trouve pas un produit, montre lui qu'il se trouve juste en face de lui et qu'il ne fait aucun effort.", duration:5, reward:10, icon:'📦' },
+  { id:'bq4', type:'timer', title:'Les phablettes de Dora', desc:"Les phablettes sont dispersées de partout, aide Dora et Babouche à les retrouver dans le magasin de BRON !", duration:60, reward:35, icon:'📱' },
+  { id:'bq5', type:'timer', title:'Les lunettes de Harry', desc:"Harry a encore cassé ses lunettes, trouve lui une colle Pattex au plus vite !", duration:30, reward:15, icon:'👓' },
+  { id:'bq6', type:'timer', title:'Le rat du rangement', desc:"Un rat traîne du côté du rangement, aide Samantha à le faire fuir.", duration:10, reward:10, icon:'🐀' },
+  { id:'bq7', type:'timer', title:'Breakdance en LSF', desc:"Un client sourd et muet tente de t'expliquer ce qu'il recherche en langage des signes, réponds lui avec ton meilleur breakdance.", duration:5, reward:5, icon:'🕺' },
+  { id:'bq8', type:'timer', title:'Les retours de secteur', desc:"Les secteurs sont priés de venir faire leurs retours, prends ta meilleure démarche et va récupérer tes produits.", duration:10, reward:10, icon:'📋' },
+  { id:'bq9', type:'timer', title:'Le héros du digital', desc:"Le digital est blindé de commandes internet, flex un max et propose de te charger des commandes liées à ton rayon.", duration:40, reward:40, icon:'💪' },
+  { id:'bq10', type:'timer', title:'Tank client niveau 9000', desc:"Un client s'en prend à toi, tank le plus longtemps possible.", duration:30, reward:30, icon:'🛡️' },
+  { id:'bq11', type:'timer', title:'La nacelle maudite', desc:"Trouve une putain de nacelle dans ce putain de magasin !!!", duration:15, reward:15, icon:'🏗️' },
+  { id:'bq12', type:'timer', title:'Carte Casto Pro', desc:"Propose à un client la carte Casto Pro.", duration:5, reward:10, icon:'💳' },
+  { id:'bq13', type:'combat', title:'Les écarteurs de Jeremy', desc:"Un client se plaint des écarteurs de Jeremy. Il trouve que ce n'est pas approprié au travail. Pète lui la gueule avec ton meilleur chariot !", reward:20, icon:'⚔️' },
+  { id:'bq14', type:'combat', title:"L'espion de Leroy Merlin", desc:"Un espion de Leroy Merlin inverse les prix, montre lui qu'il n'est pas le bienvenu !", reward:20, icon:'🕵️' },
+];
+
+const BOUNTY_VISIBLE = 5;
+const BOUNTY_STORAGE = 'cc_bounties';
+const BOUNTY_ACTIVE = 'cc_bounty_active';
+
+function getBountyState() {
+  try { return JSON.parse(localStorage.getItem(BOUNTY_STORAGE) || 'null'); } catch(e) { return null; }
+}
+
+function saveBountyState(state) {
+  localStorage.setItem(BOUNTY_STORAGE, JSON.stringify(state));
+}
+
+function getActiveBounty() {
+  try { return JSON.parse(localStorage.getItem(BOUNTY_ACTIVE) || 'null'); } catch(e) { return null; }
+}
+
+function saveActiveBounty(b) {
+  if (b) localStorage.setItem(BOUNTY_ACTIVE, JSON.stringify(b));
+  else localStorage.removeItem(BOUNTY_ACTIVE);
+}
+
+function initBounties() {
+  let state = getBountyState();
+  if (!state || !state.visible || state.visible.length < BOUNTY_VISIBLE) {
+    // Pick 5 random quests
+    const shuffled = [...BOUNTY_QUESTS].sort(() => Math.random() - 0.5);
+    state = { visible: shuffled.slice(0, BOUNTY_VISIBLE).map(q => q.id), done: [] };
+    saveBountyState(state);
+  }
+  return state;
+}
+
+function refreshBounties() {
+  let state = getBountyState() || { visible: [], done: [] };
+  // Remove done quests and add new ones
+  const available = BOUNTY_QUESTS.filter(q => !state.done.includes(q.id) && !state.visible.includes(q.id));
+  while (state.visible.length < BOUNTY_VISIBLE && available.length) {
+    const idx = Math.floor(Math.random() * available.length);
+    state.visible.push(available[idx].id);
+    available.splice(idx, 1);
+  }
+  // No auto reset - wait for new quests to be added
+  saveBountyState(state);
+  return state;
+}
+
+let bountyTimerInterval = null;
+
+function renderBounties() {
+  const container = document.getElementById('bounty-list');
+  if (!container) return;
+  const state = initBounties();
+  const active = getActiveBounty();
+  container.innerHTML = '';
+
+  if (!state.visible.length) {
+    container.innerHTML = '<div style="text-align:center;padding:30px 20px;color:rgba(255,255,255,.3);font-size:13px;line-height:2">🎯 Toutes les quêtes accomplies !<br>De nouvelles missions arrivent bientôt...</div>';
+    return;
+  }
+  state.visible.forEach(qid => {
+    const q = BOUNTY_QUESTS.find(x => x.id === qid);
+    if (!q) return;
+    const isActive = active && active.id === qid;
+    const timeLeft = isActive ? Math.max(0, active.endTime - Date.now()) : 0;
+    const done = isActive && timeLeft <= 0;
+
+    const d = document.createElement('div');
+    d.style.cssText = `background:var(--surf);border:1px solid ${isActive?'var(--gold)':'var(--bord)'};border-radius:12px;padding:12px;margin-bottom:8px`;
+    d.innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <span style="font-size:24px;flex-shrink:0">${q.icon}</span>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:13px;color:#fff;margin-bottom:3px">${q.title}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.5;margin-bottom:8px">${q.desc}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:11px;color:var(--gold);font-weight:600">${q.type==='timer'?'⏱️ '+q.duration+'min':'⚔️ Combat'} → +${q.reward} HS</div>
+            ${done ? `<button onclick="claimBounty('${q.id}')" style="padding:6px 14px;background:linear-gradient(135deg,var(--gold),#e0b840);color:#1a1209;font-weight:700;font-size:11px;border-radius:8px;border:none;cursor:pointer">Récupérer !</button>`
+              : isActive ? `<div id="bounty-timer-${q.id}" style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--gold)">...</div>`
+              : active ? `<button disabled style="padding:6px 14px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.3);font-size:11px;border-radius:8px;border:1px solid var(--bord);cursor:not-allowed">Une quête active</button>`
+              : `<button onclick="startBounty('${q.id}')" style="padding:6px 14px;background:linear-gradient(135deg,var(--gold),#e0b840);color:#1a1209;font-weight:700;font-size:11px;border-radius:8px;border:none;cursor:pointer">Démarrer</button>`}
+          </div>
+        </div>
+      </div>`;
+    container.appendChild(d);
+  });
+
+  // Start timer display if active
+  if (active && Date.now() < active.endTime) {
+    startBountyTimerDisplay(active);
+  }
+}
+
+function startBounty(qid) {
+  const active = getActiveBounty();
+  if (active) { showToast('⚠️ Une quête est déjà en cours !', '#ff8800', '⚠️', 3000); return; }
+  const q = BOUNTY_QUESTS.find(x => x.id === qid);
+  if (!q) return;
+  if (q.type === 'combat') {
+    // Combat quest - just reward immediately after confirming
+    if (!confirm('Quête combat : ' + q.title + '\n\nConfirmes-tu avoir accompli cette mission ?')) return;
+    claimBountyReward(qid);
+    return;
+  }
+  // Timer quest
+  const endTime = Date.now() + q.duration * 60 * 1000;
+  saveActiveBounty({ id: qid, endTime });
+  renderBounties();
+  startBountyTimerDisplay({ id: qid, endTime });
+  showToast('⏱️ Quête lancée ! Reviens dans ' + q.duration + ' min', 'var(--gold)', q.icon, 4000);
+}
+
+function startBountyTimerDisplay(active) {
+  if (bountyTimerInterval) clearInterval(bountyTimerInterval);
+  bountyTimerInterval = setInterval(() => {
+    const left = Math.max(0, active.endTime - Date.now());
+    const el = document.getElementById('bounty-timer-' + active.id);
+    if (el) {
+      const m = Math.floor(left / 60000);
+      const s = Math.floor((left % 60000) / 1000);
+      el.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }
+    if (left <= 0) {
+      clearInterval(bountyTimerInterval);
+      bountyTimerInterval = null;
+      renderBounties(); // Show "Récupérer" button
+      showToast('✅ Quête terminée ! Récupère ta récompense', '#6ddb9a', '🎯', 5000);
+    }
+  }, 1000);
+}
+
+async function claimBounty(qid) {
+  const active = getActiveBounty();
+  if (!active || active.id !== qid) return;
+  if (Date.now() < active.endTime) { showToast('⏱️ Pas encore fini !', '#ff8800', '⚠️', 2000); return; }
+  claimBountyReward(qid);
+}
+
+async function claimBountyReward(qid) {
+  const q = BOUNTY_QUESTS.find(x => x.id === qid);
+  if (!q || !ME) return;
+  try {
+    const newHS = (ME.heures_sup || 0) + q.reward;
+    await dbPatch('users', { heures_sup: newHS }, 'id=eq.' + ME.id);
+    ME.heures_sup = newHS;
+    saveActiveBounty(null);
+    // Remove from visible, add to done
+    const state = getBountyState();
+    state.visible = state.visible.filter(id => id !== qid);
+    state.done = [...(state.done||[]), qid];
+    saveBountyState(state);
+    refreshBounties();
+    renderBounties();
+    showToast(q.icon + ' +' + q.reward + ' HS ! Quête accomplie !', '#6ddb9a', '🎯', 5000);
+  } catch(e) { showToast('❌ Erreur : ' + e.message, '#ff4444', '❌', 3000); }
 }
 
 init();
