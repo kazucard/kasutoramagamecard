@@ -3135,7 +3135,9 @@ async function openPlaceCardModal(arenaId) {
         const curHP = getCardCurrentHP(c);
         const maxHP = getCardMaxHP(c);
         const dead = curHP <= 0;
-        const alreadyInArena = inArenaIds.has(c.id);
+        const placedCount = inArenaCounts[c.id] || 0;
+        const ownedCount = coll[c.id] || 0;
+        const alreadyInArena = placedCount >= ownedCount;
         const blocked = dead || alreadyInArena;
         return `<div onclick="${blocked ? '' : "selectPlaceCard('" + c.id + "','" + arenaId + "')"}" style="border-radius:10px;overflow:hidden;border:2px solid ${dead ? '#ff444444' : 'var(--bord)'};cursor:${dead ? 'not-allowed' : 'pointer'};background:rgba(255,255,255,.04);opacity:${dead ? .4 : 1}" id="pcs-${c.id}">
           ${isUrl ? `<img src="${c.img_url}" style="width:100%;height:80px;object-fit:cover;display:block">` : `<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">${c.img_url || '🛒'}</div>`}
@@ -3757,66 +3759,73 @@ function renderInventoryItems() {
   });
 }
 
-function useItem(itemType) {
+async function useItem(itemType) {
   currentItemType = itemType;
   closeInventory();
   if(itemType==='booster'){
-    // Go to vestiaire and open booster
     showTab('booster');
     setTimeout(()=>onBoosterClick(), 400);
     return;
   }
-  showCardPickerForItem(itemType);
+  await showCardPickerForItem(itemType);
 }
 
-function showCardPickerForItem(itemType) {
-  // Get available cards (not in arena, not dead)
+async function showCardPickerForItem(itemType) {
+  // Load arena counts from DB
+  let inArenaCount = {};
+  try {
+    const arenaCards = await dbGet('arena_cards', 'user_id=eq.' + ME.id + '&select=card_id');
+    arenaCards.forEach(ac => { inArenaCount[ac.card_id] = (inArenaCount[ac.card_id]||0)+1; });
+    const obj = {};
+    Object.keys(inArenaCount).forEach(id => { obj[id] = true; });
+    localStorage.setItem('cc_in_arena', JSON.stringify(obj));
+  } catch(e) {}
+
   const allMyCards = Object.keys(coll)
     .filter(id => coll[id] > 0)
     .map(id => pool.find(p => p.id === id))
-    .filter(c => c && !isCardInArena(c.id));
-  // For resurrect, show only dead cards; for others, show living cards
-  const myCards = currentItemType === 'resurrect' 
-    ? allMyCards.filter(c => getCardCurrentHP(c) <= 0)
-    : allMyCards;
+    .filter(c => c);
 
   const picker = document.getElementById('item-card-picker');
   const grid = document.getElementById('item-card-picker-grid');
   const title = document.getElementById('item-card-picker-title');
+  const def = ITEM_DEFS[itemType] || { icon: '📦', name: itemType };
   
   if (!picker || !grid) return;
-  
-  title.textContent = '🩹 Sur quelle carte ?';
+  title.textContent = def.icon + ' Sur quelle carte ?';
   grid.innerHTML = '';
-  
-  if (!myCards.length) {
+
+  if (!allMyCards.length) {
     grid.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:13px;text-align:center;padding:20px;grid-column:1/-1">Aucune carte disponible</div>';
   } else {
-    myCards.forEach(c => {
+    allMyCards.forEach(c => {
       const isUrl = c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
       const curHP = getCardCurrentHP(c);
       const maxHP = getCardMaxHP(c);
       const hpPct = Math.max(0, Math.round(curHP / maxHP * 100));
       const hpCol = hpPct > 60 ? '#4caf50' : hpPct > 30 ? '#ff9800' : '#f44336';
-      const full = curHP >= maxHP;
-      
+      const isDead = curHP <= 0;
+      const placed = inArenaCount[c.id] || 0;
+      const owned = coll[c.id] || 0;
+      const allInArena = placed >= owned;
+      const full = !isDead && curHP >= maxHP;
+      // Block logic per item type
+      let blocked = allInArena;
+      if (itemType === 'resurrect') blocked = blocked || !isDead;
+      else blocked = blocked || isDead || full;
+
       const d = document.createElement('div');
-      d.style.cssText = 'border-radius:10px;overflow:hidden;border:2px solid var(--bord);background:rgba(255,255,255,.04);cursor:' + (full ? 'not-allowed' : 'pointer') + ';opacity:' + (full ? '0.5' : '1');
-      d.innerHTML = (isUrl ? `<img src="${c.img_url}" style="width:100%;height:80px;object-fit:cover;display:block">` : `<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">${c.img_url || '🛒'}</div>`) +
+      d.style.cssText = 'border-radius:10px;overflow:hidden;border:2px solid var(--bord);background:rgba(255,255,255,.04);cursor:' + (blocked?'not-allowed':'pointer') + ';opacity:' + (blocked?'0.35':'1');
+      d.innerHTML = (isUrl ? `<img src="${c.img_url}" style="width:100%;height:80px;object-fit:cover;display:block">` : `<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">${c.img_url||'🛒'}</div>`) +
         `<div style="height:3px;background:rgba(255,255,255,.1)"><div style="height:100%;width:${hpPct}%;background:${hpCol}"></div></div>
-        <div style="font-size:9px;padding:3px 4px;text-align:center;color:rgba(255,255,255,.6);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</div>
-        <div style="font-size:8px;text-align:center;padding:0 4px 4px;color:${hpCol}">❤️${Math.ceil(curHP)}/${maxHP}${full ? ' ✅' : ''}</div>`;
-      
-      if (!full) {
-        d.onclick = () => doApplyRTT(c);
-      }
+        <div style="font-size:9px;padding:3px 4px;text-align:center;color:rgba(255,255,255,.6);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}${owned>1?' x'+owned:''}</div>
+        <div style="font-size:8px;text-align:center;padding:0 4px 4px;color:${hpCol}">❤️${Math.ceil(curHP)}/${maxHP}${allInArena?' 🏟️':''}</div>`;
+      if (!blocked) d.onclick = () => doApplyRTT(c);
       grid.appendChild(d);
     });
   }
-  
   picker.style.display = 'flex';
 }
-
 function closeCardPicker() {
   const picker = document.getElementById('item-card-picker');
   if (picker) picker.style.display = 'none';
