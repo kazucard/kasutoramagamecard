@@ -1589,7 +1589,7 @@ function openSell(c){
   const price=SELL_PRICES[c.rarity||'common']||10,pts=ME?(ME.heures_sup||0):0;
   document.getElementById('sell-sub').textContent=c.name+' — '+(RARITY_LABEL[c.rarity]||c.rarity);
   document.getElementById('sell-price-val').textContent=price+' HS';
-  document.getElementById('sell-pts-cur').textContent=HS+' HS';
+  document.getElementById('sell-pts-cur').textContent=pts+' HS';
   document.getElementById('sell-pts-after').textContent=(pts+price)+' HS';
   openModal('sell-modal');
 }
@@ -1848,7 +1848,10 @@ async function checkDailyReward(){
   if(lastLogin===today)return;
   const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
   let streak=ME.streak||0;
-  if(lastLogin===yesterday){streak=Math.min(streak+1,7);}else{streak=1;}
+  if(lastLogin===yesterday){
+    if(streak>=7)return; // Streak complete, no more rewards
+    streak=streak+1;
+  }else{streak=1;}
   const pts=STREAK_PTS[streak-1]||10;
   const newHS=(ME.heures_sup||0)+pts;
   try{
@@ -3155,9 +3158,11 @@ async function selectPlaceCard(cardId, arenaId) {
   
   try {
     // Check if THIS USER's card is already in ANY arena
+    // Allow placing if user has more copies than already placed
     const existing = await dbGet('arena_cards', 'card_id=eq.' + cardId + '&user_id=eq.' + ME.id + '&select=id,arena_id');
-    if (existing.length) {
-      showToast('❌ Ta carte est déjà dans une arène !', '#ff4444', '❌', 3000);
+    const cardCount = coll[cardId] || 0;
+    if (existing.length >= cardCount) {
+      showToast('❌ Toutes tes copies sont déjà en arène !', '#ff4444', '❌', 3000);
       document.getElementById('place-card-ov')?.remove();
       return;
     }
@@ -3478,14 +3483,11 @@ async function loadHomeScreen() {
   loadVersusCountdown();
   loadNewsFeed();
   await loadVersusPointsDisplay();
-  // Update daily mission status
+  // Update daily mission status - hide if done
   const today = new Date().toISOString().slice(0,10);
   const done = localStorage.getItem('cc_daily_mission') === today;
-  const el = document.getElementById('daily-mission-status');
-  if (el) {
-    el.textContent = done ? '✅ Accomplie' : '⏳ En cours';
-    el.style.color = done ? '#6ddb9a' : 'rgba(255,255,255,.4)';
-  }
+  const missionBar = document.getElementById('daily-mission-bar');
+  if (missionBar) missionBar.style.display = done ? 'none' : 'flex';
 }
 
 function getNextMonday() {
@@ -3834,36 +3836,49 @@ async function doApplyRTT(card) {
   try {
     // Reload inventory from DB
     const rows = await dbGet('inventory', 'user_id=eq.' + ME.id + '&select=*');
-    const item = rows.find(i => i.item_type === 'rtt');
+    const itemType = currentItemType || 'rtt';
+    const item = rows.find(i => i.item_type === itemType);
     
     if (!item || item.quantity <= 0) {
-      toast.innerHTML = '❌ Plus de RTT !';
+      const labels = {rtt:'RTT', conge:'Congé Maladie', resurrect:'Ressusciter'};
+      toast.innerHTML = '❌ Plus de ' + (labels[itemType]||itemType) + ' !';
       toast.style.borderColor = '#ff4444';
       setTimeout(() => toast.remove(), 2000);
       return;
     }
-    
-    // Apply heal
+
     const maxHP = getCardMaxHP(card);
     const curHP = getCardCurrentHP(card);
-    const healAmt = Math.floor(maxHP * RTT_HEAL_PCT);
-    const newHP = Math.min(maxHP, curHP + healAmt);
+    let healAmt, newHP, toastMsg, toastIcon, toastCol;
+
+    if (itemType === 'resurrect') {
+      if (curHP > 0) {
+        toast.innerHTML = '❌ Cette carte est vivante !';
+        toast.style.borderColor = '#ff4444';
+        setTimeout(() => toast.remove(), 2000);
+        return;
+      }
+      newHP = Math.floor(maxHP * RESURRECT_PCT);
+      toastMsg = '💊 ' + card.name + ' ressuscitée à ' + newHP + ' PV !';
+      toastIcon = '💊'; toastCol = '#ff6b6b';
+    } else {
+      const pct = itemType === 'conge' ? CONGE_HEAL_PCT : RTT_HEAL_PCT;
+      healAmt = Math.floor(maxHP * pct);
+      newHP = Math.min(maxHP, curHP + healAmt);
+      const icon = itemType === 'conge' ? '🏥' : '🩹';
+      toastMsg = icon + ' ' + card.name + ' +' + healAmt + ' PV !';
+      toastIcon = icon; toastCol = '#4caf50';
+    }
     saveCardHP(card.id, newHP);
     
-    // Update inventory in DB
     const newQty = item.quantity - 1;
-    if (newQty <= 0) {
-      await dbDel('inventory', 'id=eq.' + item.id);
-    } else {
-      await dbPatch('inventory', { quantity: newQty }, 'id=eq.' + item.id);
-    }
+    if (newQty <= 0) await dbDel('inventory', 'id=eq.' + item.id);
+    else await dbPatch('inventory', { quantity: newQty }, 'id=eq.' + item.id);
     
-    // Refresh
     await loadInventory();
     renderColl();
-    
     toast.remove();
-    showToast('🩹 ' + card.name + ' +' + healAmt + ' PV !', '#4caf50', '🩹', 4000);
+    showToast(toastMsg, toastCol, toastIcon, 4000);
     
   } catch(e) {
     toast.remove();
