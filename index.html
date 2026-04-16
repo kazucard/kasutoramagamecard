@@ -3114,13 +3114,12 @@ async function openPlaceCardModal(arenaId) {
   if (!myCards.length) { alert('Tu n’as aucune carte !'); return; }
   
   // Load cards already in ANY arena from DB (source of truth)
-  let inArenaIds = new Set();
+  let inArenaCounts = {};
   try {
     const cardsInArenas = await dbGet('arena_cards', 'user_id=eq.' + ME.id + '&select=card_id');
-    inArenaIds = new Set(cardsInArenas.map(c => c.card_id));
-    // Sync localStorage
+    cardsInArenas.forEach(c => { inArenaCounts[c.card_id] = (inArenaCounts[c.card_id]||0)+1; });
     const inArenaObj = {};
-    cardsInArenas.forEach(c => { inArenaObj[c.card_id] = true; });
+    Object.keys(inArenaCounts).forEach(id => { inArenaObj[id] = true; });
     localStorage.setItem('cc_in_arena', JSON.stringify(inArenaObj));
   } catch(e) {}
 
@@ -3763,6 +3762,7 @@ async function useItem(itemType) {
   currentItemType = itemType;
   closeInventory();
   if(itemType==='booster'){
+    // Go to vestiaire and open booster
     showTab('booster');
     setTimeout(()=>onBoosterClick(), 400);
     return;
@@ -3771,14 +3771,11 @@ async function useItem(itemType) {
 }
 
 async function showCardPickerForItem(itemType) {
-  // Load arena counts from DB
+  // Load arena counts from DB (without touching syncArenaCards)
   let inArenaCount = {};
   try {
     const arenaCards = await dbGet('arena_cards', 'user_id=eq.' + ME.id + '&select=card_id');
     arenaCards.forEach(ac => { inArenaCount[ac.card_id] = (inArenaCount[ac.card_id]||0)+1; });
-    const obj = {};
-    Object.keys(inArenaCount).forEach(id => { obj[id] = true; });
-    localStorage.setItem('cc_in_arena', JSON.stringify(obj));
   } catch(e) {}
 
   const allMyCards = Object.keys(coll)
@@ -3789,9 +3786,9 @@ async function showCardPickerForItem(itemType) {
   const picker = document.getElementById('item-card-picker');
   const grid = document.getElementById('item-card-picker-grid');
   const title = document.getElementById('item-card-picker-title');
-  const def = ITEM_DEFS[itemType] || { icon: '📦', name: itemType };
-  
   if (!picker || !grid) return;
+
+  const def = ITEM_DEFS[itemType] || { icon: '📦', name: itemType };
   title.textContent = def.icon + ' Sur quelle carte ?';
   grid.innerHTML = '';
 
@@ -3809,7 +3806,6 @@ async function showCardPickerForItem(itemType) {
       const owned = coll[c.id] || 0;
       const allInArena = placed >= owned;
       const full = !isDead && curHP >= maxHP;
-      // Block logic per item type
       let blocked = allInArena;
       if (itemType === 'resurrect') blocked = blocked || !isDead;
       else blocked = blocked || isDead || full;
