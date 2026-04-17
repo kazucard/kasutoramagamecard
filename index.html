@@ -3440,9 +3440,9 @@ async function vbEnemyDefeated() {
     // Check if arena is now empty - if so, player can capture
     const remaining = await dbGet('arena_cards', 'arena_id=eq.' + currentArenaId);
     if (!remaining.length) {
-      // Capture arena for attacker's team
-      if (ME.team_id) await dbPatch('arenas', { team_id: ME.team_id, captured_at: new Date().toISOString() }, 'id=eq.' + currentArenaId);
-      showVbResult('⭐ Zone capturée !', "Tu as vaincu tous les défenseurs et capturé la zone !", true);
+      // Zone is now empty — set neutral, player must place a card
+      await dbPatch('arenas', { team_id: null, captured_at: null }, 'id=eq.' + currentArenaId);
+      showVbResult('⚔️ Zone libérée !', 'Tous les défenseurs sont vaincus ! Place une carte pour capturer la zone.', false, true);
     } else {
       showVbResult('✅ Carte vaincue !', remaining.length + ' défenseur(s) restant(s). Continue l\'attaque !', false);
     }
