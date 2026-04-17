@@ -792,7 +792,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
       <!-- Legend -->
       <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(255,255,255,.4)"><div style="width:10px;height:10px;border-radius:50%;background:rgba(100,100,120,.5);border:1px solid rgba(255,255,255,.2)"></div>Neutre</div>
-        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(255,255,255,.4)"><div id="legend-my-team" style="width:10px;height:10px;border-radius:50%;background:#4488ff"></div>Ton équipe</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(255,255,255,.4)"><div style="width:10px;height:10px;border-radius:50%;background:#44cc44"></div>Ton équipe</div>
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(255,255,255,.4)"><div style="width:10px;height:10px;border-radius:50%;background:#ff4444"></div>Ennemis</div>
       </div>
     </div>
@@ -2074,7 +2074,7 @@ async function checkUnreadMessages(){
 
 // ── PLAYER PROFILE ────────────────────────────────────────────────────────────
 function openPlayerModal(u,userColl){
-  const team=teams.find(t=>t.id===u.team_id);const lv=getLevel(u.opens||0);
+  const team=teams.find(t=>t.id===u.team_id);const lv=getLevel(u.xp||0);
   if(u.avatar_url){document.getElementById('pb-av-img').src=u.avatar_url;document.getElementById('pb-av-img').style.display='block';document.getElementById('pb-av-icon').style.display='none';}
   else{document.getElementById('pb-av-img').style.display='none';document.getElementById('pb-av-icon').style.display='block';}
   document.getElementById('pb-pseudo').textContent=u.pseudo||'?';
@@ -2319,15 +2319,17 @@ function showCardSelectModal(myCards,shop,stageNum,stage,enemies){
       ${myCards.map(c=>{
         const isUrl=c.img_url&&(c.img_url.startsWith('http')||c.img_url.startsWith('data:'));
         return `<div onclick="selectBattleCard('${c.id}')" style="border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:pointer;background:rgba(255,255,255,.04)" id="bcs-${c.id}">
-          ${isUrl?`<img src="${c.img_url}" style="width:100%;height:80px;object-fit:cover;display:block">`:`<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">${c.img_url||'🛒'}</div>`}
-          <div style="padding:4px;font-size:9px;text-align:center;color:rgba(255,255,255,.6)">${c.name}</div>
-          <div style="padding:0 4px 4px;display:flex;justify-content:space-between;font-size:8px">
+          ${isUrl?`<img src="${c.img_url}" style="width:100%;height:75px;object-fit:cover;display:block">`:`<div style="height:75px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">${c.img_url||'🛒'}</div>`}
+          <div style="height:3px;background:rgba(255,255,255,.1)"><div style="height:100%;width:${Math.max(0,Math.round(getCardCurrentHP(c)/getCardMaxHP(c)*100))}%;background:${getCardCurrentHP(c)/getCardMaxHP(c)>0.6?'#4caf50':getCardCurrentHP(c)/getCardMaxHP(c)>0.3?'#ff9800':'#f44336'}"></div></div>
+          <div style="padding:2px 4px;font-size:8px;text-align:center;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+          <div style="padding:0 3px 1px;display:flex;justify-content:space-between;font-size:7px">
             <span style="color:#ff8877">⚔️${c.atk||0}</span>
             <span style="color:var(--gold)">⚡${c.pa||1}PA</span>
             <span style="color:#77aaff">🛡️${c.def||0}</span>
           </div>
+          <div style="font-size:7px;text-align:center;padding:0 3px 2px;color:rgba(255,255,255,.4)">❤️${Math.ceil(getCardCurrentHP(c))}/${getCardMaxHP(c)}</div>
         </div>`;
-      }).join('')}
+      }).join('')})}
     </div>
     <div style="display:flex;gap:8px;width:100%">
       <button onclick="document.getElementById('battle-card-select').remove()" style="flex:1;padding:12px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Annuler</button>
@@ -2801,7 +2803,7 @@ function getBattlePlayerHP(card){
 
 
 // ── PA SYSTEM ──────────────────────────────────────────────────────────────────
-const PA_MAX=20;
+const PA_MAX=40;
 const PA_REGEN_MS=10*60*1000; // 10 minutes
 
 function getCurrentPA(){
@@ -3011,8 +3013,7 @@ async function loadVersusMap() {
     // Load all teams for colors
     const allTeams = await dbGet('teams', 'select=*');
     const teamColorMap = {};
-    const palette = ['#4488ff','#ff4444','#44cc44','#ff8800','#aa44ff','#00ccaa'];
-    allTeams.forEach((t, i) => { teamColorMap[t.id] = palette[i % palette.length]; });
+    allTeams.forEach(t => { teamColorMap[t.id] = (ME && t.id === ME.team_id) ? '#44cc44' : '#ff4444'; });
 
     // Update SVG arena circles
     for (let i = 1; i <= 10; i++) {
@@ -3110,9 +3111,10 @@ async function openArena(arenaId) {
     const arena = (await dbGet('arenas', 'id=eq.' + arenaId))[0];
     const defCards = await dbGet('arena_cards', 'arena_id=eq.' + arenaId + '&select=*');
     const allTeams = await dbGet('teams', 'select=*');
-    const palette = ['#4488ff','#ff4444','#44cc44','#ff8800','#aa44ff','#00ccaa'];
     const teamColorMap = {};
-    allTeams.forEach((t, i) => { teamColorMap[t.id] = palette[i % palette.length]; });
+    allTeams.forEach(t => {
+      teamColorMap[t.id] = (ME && t.id === ME.team_id) ? '#44cc44' : '#ff4444';
+    });
 
     // If no cards in arena, always show as neutral regardless of team_id
     const hasCards = defCards.length > 0;
@@ -3655,9 +3657,10 @@ async function loadHomeVersusScore() {
   try {
     const arenaRows = await dbGet('arenas', 'select=team_id');
     const allTeams = await dbGet('teams', 'select=*');
-    const palette = ['#4488ff','#ff4444','#44cc44','#ff8800','#aa44ff','#00ccaa'];
     const teamColorMap = {};
-    allTeams.forEach((t, i) => { teamColorMap[t.id] = palette[i % palette.length]; });
+    allTeams.forEach(t => {
+      teamColorMap[t.id] = (ME && t.id === ME.team_id) ? '#44cc44' : '#ff4444';
+    });
     const counts = {};
     arenaRows.forEach(a => { if (a.team_id) counts[a.team_id] = (counts[a.team_id] || 0) + 1; });
     const scoresEl = document.getElementById('home-vs-scores');
@@ -4104,27 +4107,39 @@ async function calcAndSaveVersusPoints() {
     const arenaRows = await dbGet('arenas', 'select=*');
     const weekStart = getWeekStart();
     const now = new Date();
-    const teamPoints = {};
+    const allTeams = await dbGet('teams', 'select=id');
+    
+    // Calculate points earned since last check for currently held zones
+    const lastCalc = parseInt(localStorage.getItem('cc_last_pts_calc') || new Date(weekStart).getTime());
+    const hoursSinceCalc = Math.floor((now - lastCalc) / 3600000);
+    localStorage.setItem('cc_last_pts_calc', now.getTime());
+
+    if (hoursSinceCalc <= 0) {
+      await giveZoneHSRewards(arenaRows);
+      return;
+    }
+
+    // Count current zones per team
+    const currentZones = {};
     arenaRows.forEach(a => {
-      if (!a.team_id || !a.captured_at) return;
-      const capturedAt = new Date(a.captured_at);
-      const startTime = new Date(Math.max(capturedAt.getTime(), new Date(weekStart).getTime()));
-      const hoursControlled = Math.floor((now - startTime) / 3600000);
-      teamPoints[a.team_id] = (teamPoints[a.team_id] || 0) + hoursControlled;
+      const cards = a.team_id; // we only have team_id here
+      if (a.team_id) currentZones[a.team_id] = (currentZones[a.team_id] || 0) + 1;
     });
-    for (const [teamId, points] of Object.entries(teamPoints)) {
+
+    // Add points for currently held zones
+    for (const [teamId, zoneCount] of Object.entries(currentZones)) {
+      const newPts = zoneCount * hoursSinceCalc;
       const existing = (await dbGet('versus_points',
         'team_id=eq.' + teamId + '&week_start=eq.' + weekStart + '&select=*'))[0];
       if (existing) {
-        await dbPatch('versus_points', { points }, 'id=eq.' + existing.id);
+        await dbPatch('versus_points', { points: existing.points + newPts }, 'id=eq.' + existing.id);
       } else {
         await dbPost('versus_points', {
           id: 'vp_' + teamId + '_' + weekStart,
-          team_id: teamId, week_start: weekStart, points
+          team_id: teamId, week_start: weekStart, points: newPts
         });
       }
     }
-    // Give +5 HS per controlled zone to each team member (once per hour)
     await giveZoneHSRewards(arenaRows);
   } catch(e) { console.error('calcVersusPoints:', e); }
 }
@@ -4158,9 +4173,10 @@ async function loadVersusPointsDisplay() {
     const allTeams = await dbGet('teams', 'select=*');
     const arenaRows = await dbGet('arenas', 'select=team_id');
     
-    const palette = ['#4488ff','#ff4444','#44cc44','#ff8800','#aa44ff','#00ccaa'];
     const teamColorMap = {};
-    allTeams.forEach((t, i) => { teamColorMap[t.id] = palette[i % palette.length]; });
+    allTeams.forEach(t => {
+      teamColorMap[t.id] = (ME && t.id === ME.team_id) ? '#44cc44' : '#ff4444';
+    });
     
     // Zone counts
     const zoneCounts = {};
