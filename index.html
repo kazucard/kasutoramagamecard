@@ -1612,12 +1612,12 @@ async function renderClassement(){
   const list=document.getElementById('rank-list');
   list.innerHTML='<div class="empty-msg">Chargement...</div>';
   try{
-    const users=await dbGet('users','select=*&order=opens.desc');
+    const users=await dbGet('users','select=*&order=xp.desc');
     const collAll=await dbGet('collections','select=user_id,card_id,count');
     list.innerHTML='';
     users.forEach((u,i)=>{
       const uc=collAll.filter(r=>r.user_id===u.id);
-      const unique=uc.length,total=uc.reduce((s,r)=>s+r.count,0),lv=getLevel(u.opens||0);
+      const unique=uc.length,total=uc.reduce((s,r)=>s+r.count,0),lv=getLevel(u.xp||0);
       const team=teams.find(t=>t.id===u.team_id);
       const isMe=ME&&u.id===ME.id;const pos=i+1;
       const posClass=pos===1?'gold':pos===2?'silver':pos===3?'bronze':'';
@@ -1629,7 +1629,7 @@ async function renderClassement(){
           <div class="rank-sub">${unique} uniques · ${u.heures_sup||0} HS</div>
           ${team?`<span class="rank-team">${team.name}</span>`:''}
         </div>
-        <div class="rank-stats"><div class="rank-lv">NIV.${lv}</div><div class="rank-pts">${u.opens||0} ouv.</div></div>`;
+        <div class="rank-stats"><div class="rank-lv">NIV.${lv}</div><div class="rank-pts">${u.xp||0} XP</div></div>`;
       d.onclick=()=>openPlayerModal(u,collAll.filter(r=>r.user_id===u.id));
       list.appendChild(d);
     });
