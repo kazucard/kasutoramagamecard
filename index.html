@@ -3080,7 +3080,9 @@ async function openArena(arenaId) {
     const teamColorMap = {};
     allTeams.forEach((t, i) => { teamColorMap[t.id] = palette[i % palette.length]; });
 
-    const ownerTeam = arena && arena.team_id ? allTeams.find(t => t.id === arena.team_id) : null;
+    // If no cards in arena, always show as neutral regardless of team_id
+    const hasCards = defCards.length > 0;
+    const ownerTeam = (arena && arena.team_id && hasCards) ? allTeams.find(t => t.id === arena.team_id) : null;
     const col = ownerTeam ? (teamColorMap[ownerTeam.id] || '#888') : 'rgba(255,255,255,.2)';
     
     teamBadge.textContent = ownerTeam ? ownerTeam.name : 'Neutre';
@@ -3138,8 +3140,8 @@ async function openArena(arenaId) {
     // Actions based on phase and team
     actions.innerHTML = '';
     const phase = getVersusPhase();
-    const isMyTeam = ME && arena && arena.team_id === ME.team_id;
-    const isNeutral = !arena || !arena.team_id;
+    const isMyTeam = ME && arena && arena.team_id === ME.team_id && defCards.length > 0;
+    const isNeutral = !arena || !arena.team_id || defCards.length === 0;
     const isEnemy = !isMyTeam && !isNeutral;
     const myCards = defCards.filter(c => c.user_id === ME.id);
 
