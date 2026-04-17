@@ -429,6 +429,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
   100%{background-position:-200% 0}
 }
 
+#taupe-screen.active{display:flex;flex-direction:column}
 </style>
 </head>
 <body>
@@ -2169,14 +2170,27 @@ async function loadAdventureMap(){
     // Load progress for current user
     const progress=await dbGet('adventure_progress','user_id=eq.'+ME.id+'&select=*');
     const progressMap={};progress.forEach(p=>{progressMap[p.shop_id]=p;});
-    shops.forEach(shop=>{
+    // Sort shops by position
+    const sortedShops = [...shops].sort((a,b)=>(a.position||0)-(b.position||0));
+    // Check which shops are unlocked based on previous completion
+    const shopProgress = {};
+    sortedShops.forEach(s => {
+      const p = progressMap[s.id];
+      shopProgress[s.id] = p ? p.stage_number : 0;
+    });
+    sortedShops.forEach((shop, shopIdx)=>{
       const prog=progressMap[shop.id];
       const stageReached=prog?prog.stage_number:0;
       const completed=prog?prog.completed:false;
       const pct=Math.round((stageReached/shop.stages)*100);
+      // Lock if previous shop not completed (stage_number < stages)
+      const prevShop = shopIdx > 0 ? sortedShops[shopIdx-1] : null;
+      const prevCompleted = prevShop ? (shopProgress[prevShop.id] >= prevShop.stages) : true;
+      const locked = !prevCompleted;
       const d=document.createElement('div');
-      d.style.cssText='background:var(--surf);border:1px solid var(--bord);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .15s';
+      d.style.cssText='background:var(--surf);border:1px solid var(--bord);border-radius:14px;overflow:hidden;cursor:' + (locked?'not-allowed':'pointer') + ';transition:transform .15s;opacity:' + (locked?'0.5':'1');
       d.innerHTML=`
+        ${locked?'<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;z-index:1">🔒</div>':''}
         ${shop.img_url?`<img src="${shop.img_url}" style="width:100%;height:120px;object-fit:cover;display:block">`:'<div style="width:100%;height:80px;background:linear-gradient(135deg,#1a1a3e,#0d0d20);display:flex;align-items:center;justify-content:center;font-size:40px">🏪</div>'}
         <div style="padding:12px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -2189,7 +2203,13 @@ async function loadAdventureMap(){
           </div>
           <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px">Récompense boss : 20 HS</div>
         </div>`;
-      d.onclick=()=>openShop(shop,stageReached);
+      d.onclick=()=>{
+        if(locked){
+          showToast('🔒 Termine ' + prevShop.name + ' d\'abord !', '#ff8800', '🔒', 3000);
+          return;
+        }
+        openShop(shop,stageReached);
+      };
       d.onmousedown=()=>{d.style.transform='scale(.97)';};
       d.onmouseup=()=>{d.style.transform='scale(1)';};
       list.appendChild(d);
@@ -2201,7 +2221,11 @@ async function openShop(shop,stageReached){
   currentShop=shop;
   // Show Star Wars crawl only on first visit (stage 0)
   if(stageReached===0){
-    showStarWars('I','FERMETURE À MINUIT',()=>_openShopUI(shop,stageReached));
+    if(shop.id==='sh_lm_nice2'){
+      showStarWars('II','EN ROUTE POUR NICE CENTRE-VILLE',()=>_openShopUI(shop,stageReached),SW_MESSAGES_2);
+    } else {
+      showStarWars('I','FERMETURE À MINUIT',()=>_openShopUI(shop,stageReached));
+    }
     return;
   }
   _openShopUI(shop,stageReached);
@@ -2242,6 +2266,12 @@ function backToMap(){
 }
 
 async function startBattle(shop,stageNum,stage){
+  // Special: La Taupe (LM Nice Centre-Ville stage 10)
+  if(shop.id==='sh_lm_nice2' && stageNum===10){
+    currentBattleShop=shop;
+    showTaupeDialogue(shop.id, stageNum);
+    return;
+  }
   try{
     // Build stage_id from pattern if stage exists
     const stageId=stage?stage.id:('st_'+shop.id.replace('sh_','')+'_'+stageNum);
@@ -2872,20 +2902,23 @@ const SW_MESSAGES=[
   {text:"PRirent la route pour venir à bout des Leroy Merlin une bonne fois pour toute !"},
 ];
 
-function showStarWars(episodeNum,title,callback){
+function showStarWars(episodeNum,title,callback,messages){
   swCallback=callback;swIdx=0;
+  if(messages) { window._swMessages = messages; } else { window._swMessages = null; }
   document.getElementById('sw-episode-num').textContent='ÉPISODE '+episodeNum;
   document.getElementById('sw-episode-title').textContent=title;
   // Build dots
   const prog=document.getElementById('sw-progress');
-  prog.innerHTML=SW_MESSAGES.map((_,i)=>`<div class="sw-dot" id="sw-dot-${i}"></div>`).join('');
+  const _msgs = messages || SW_MESSAGES;
+  prog.innerHTML=_msgs.map((_,i)=>`<div class="sw-dot" id="sw-dot-${i}"></div>`).join('');
   document.getElementById('sw-screen').classList.add('active');
   swShowMsg(0);
 }
 
 function swShowMsg(idx){
   swIdx=idx;
-  const msg=SW_MESSAGES[idx];
+  const msgs = window._swMessages || SW_MESSAGES;
+  const msg=msgs[idx];
   const el=document.getElementById('sw-msg-text');
   el.classList.remove('visible','italic');
   el.textContent='';
@@ -2905,7 +2938,8 @@ function swShowMsg(idx){
 }
 
 function swNext(){
-  if(swIdx>=SW_MESSAGES.length-1){finishStarWars();return;}
+  const msgs = window._swMessages || SW_MESSAGES;
+  if(swIdx>=msgs.length-1){finishStarWars();return;}
   swShowMsg(swIdx+1);
 }
 
@@ -4662,6 +4696,73 @@ function bountyDefeat() {
   currentBountyQuest = null;
 }
 
+
+// ── LA TAUPE ──────────────────────────────────────────────────────────────────
+const TAUPE_MESSAGES = [
+  { text: "...", speaker: "???" },
+  { text: "Attends ! Ne m'attaque pas !", speaker: "???" },
+  { text: "Je suis des vôtres !", speaker: "La Taupe" },
+  { text: "Ça fait 15 ans que j'espionne Leroy Merlin pour le compte de Castorama !", speaker: "La Taupe" },
+  { text: "J'ai tout noté. Leurs stocks, leurs prix, leurs failles...", speaker: "La Taupe" },
+  { text: "Je vous transmets tout. Utilisez ces infos pour les écraser !", speaker: "La Taupe" },
+];
+let taupeIdx = 0;
+let taupeShopId = null;
+let taupeStageNum = null;
+
+function showTaupeDialogue(shopId, stageNum) {
+  taupeIdx = 0;
+  taupeShopId = shopId;
+  taupeStageNum = stageNum;
+  document.getElementById('taupe-screen').classList.add('active');
+  showTaupeMsg(0);
+}
+
+function showTaupeMsg(idx) {
+  taupeIdx = idx;
+  const msg = TAUPE_MESSAGES[idx];
+  document.getElementById('taupe-speaker').textContent = msg.speaker;
+  document.getElementById('taupe-text').textContent = msg.text;
+  document.getElementById('taupe-next').textContent = idx >= TAUPE_MESSAGES.length - 1 ? '✅ Recruter !' : 'Suite →';
+}
+
+async function taupeNext() {
+  if (taupeIdx >= TAUPE_MESSAGES.length - 1) {
+    // End dialogue - give reward and complete stage
+    document.getElementById('taupe-screen').classList.remove('active');
+    showToast('🕵️ La taupe rejoint vos rangs ! +15 HS', '#6ddb9a', '🕵️', 5000);
+    // Give reward
+    const newHS = (ME.heures_sup || 0) + 15;
+    await dbPatch('users', { heures_sup: newHS }, 'id=eq.' + ME.id);
+    ME.heures_sup = newHS;
+    gainXP(XP_ADVENTURE);
+    // Mark stage as complete
+    try {
+      const existing = await dbGet('adventure_progress', 'user_id=eq.' + ME.id + '&shop_id=eq.' + taupeShopId);
+      if (existing.length) {
+        if (taupeStageNum > (existing[0].stage_number || 0)) {
+          await dbPatch('adventure_progress', { stage_number: taupeStageNum }, 'user_id=eq.' + ME.id + '&shop_id=eq.' + taupeShopId);
+        }
+      } else {
+        await dbPost('adventure_progress', { user_id: ME.id, shop_id: taupeShopId, stage_number: taupeStageNum, completed: false });
+      }
+    } catch(e) {}
+    // Return to stage view and refresh
+    loadAdventureStages(currentBattleShop, taupeStageNum);
+  } else {
+    showTaupeMsg(taupeIdx + 1);
+  }
+}
+
+// Episode II messages
+const SW_MESSAGES_2 = [
+  {text:"Vous avez mis à feu et à sang Leroy Merlin Nice…", italic:true},
+  {text:"Continuons sur cette lancée ! Le prochain Leroy Merlin ne sait pas ce qui l'attend."},
+  {text:"D'après nos informations, son directeur serait un proche de mouvements d'extrême droite !"},
+  {text:"Jordan Carambar. Un homme dangereux. Un homme qui mérite d'être remis à sa place."},
+  {text:"Munissez-vous de vos meilleurs chariots. La route est longue mais la cause est juste !"},
+];
+
 init();
 </script>
 
@@ -4807,6 +4908,17 @@ init();
     <div style="font-size:10px;color:rgba(255,255,255,.3);margin-bottom:14px">1 quête active à la fois • Patience récompensée</div>
     <div id="bounty-list"></div>
   </div>
+</div>
+
+
+<!-- TAUPE SCREEN -->
+<div id="taupe-screen" style="position:fixed;inset:0;background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);z-index:700;display:none;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px">
+  <div style="font-size:64px;animation:float2px 2s ease-in-out infinite">🕵️</div>
+  <div style="width:100%;max-width:360px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.2);border-radius:16px;padding:16px;position:relative">
+    <div id="taupe-speaker" style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px"></div>
+    <div id="taupe-text" style="font-size:14px;color:#fff;line-height:1.7;min-height:60px"></div>
+  </div>
+  <button id="taupe-next" onclick="taupeNext()" style="width:100%;max-width:360px;padding:14px;background:linear-gradient(135deg,var(--gold),#e0b840);color:#1a1209;font-weight:700;font-size:14px;border-radius:12px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Suite →</button>
 </div>
 
 </body>
