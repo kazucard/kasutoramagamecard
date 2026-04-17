@@ -4744,7 +4744,7 @@ async function taupeNext() {
           await dbPatch('adventure_progress', { stage_number: taupeStageNum }, 'user_id=eq.' + ME.id + '&shop_id=eq.' + taupeShopId);
         }
       } else {
-        await dbPost('adventure_progress', { user_id: ME.id, shop_id: taupeShopId, stage_number: taupeStageNum, completed: false });
+        try{await dbPost('adventure_progress', { user_id: ME.id, shop_id: taupeShopId, stage_number: taupeStageNum, completed: false });}catch(dup){}
       }
     } catch(e) {}
     // Return to stage view and refresh
