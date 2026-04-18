@@ -430,6 +430,13 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 }
 
 #taupe-screen.active{display:flex;flex-direction:column}
+
+/* Pixel heart HP bar */
+.hp-hearts { display:flex;gap:3px;flex-wrap:wrap;align-items:center; }
+.hp-heart { width:12px;height:12px;image-rendering:pixelated;font-size:11px;line-height:12px;text-align:center; }
+.hp-heart.full { filter:none; }
+.hp-heart.empty { opacity:0.25; }
+
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
@@ -2421,7 +2428,7 @@ function startBattleUI(){
     <button onclick="surrenderBattle()" style="padding:8px 20px;background:rgba(255,255,255,.06);border:1px solid var(--bord);border-radius:8px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Abandonner</button>`;
   document.body.appendChild(ov);
   // Auto damage every 2s
-  battleInterval=setInterval(autoBattleTick,1000);
+  battleInterval=setInterval(autoBattleTick,500);
 }
 
 function autoBattleTick(){
@@ -3259,15 +3266,18 @@ async function openPlaceCardModal(arenaId) {
         const blocked = dead || alreadyInArena;
         const hpPct2 = Math.max(0, Math.round(curHP/maxHP*100));
         const hpCol2 = hpPct2>60?'#4caf50':hpPct2>30?'#ff9800':'#f44336';
+        const heartsFull = Math.round((curHP/maxHP)*5);
+        const heartsHtml = Array(5).fill(0).map((_,i)=>`<span style="font-size:10px;color:#ff4444;opacity:${i<heartsFull?1:0.2}">♥</span>`).join('');
         return `<div onclick="${blocked ? '' : "selectPlaceCard('" + c.id + "','" + arenaId + "')"}" style="border-radius:10px;overflow:hidden;border:2px solid ${blocked ? '#ff444444' : 'var(--bord)'};cursor:${blocked ? 'not-allowed' : 'pointer'};background:rgba(255,255,255,.04);opacity:${blocked ? 0.35 : 1}" id="pcs-${c.id}">
-          ${isUrl ? `<img src="${c.img_url}" style="width:100%;height:75px;object-fit:cover;display:block">` : `<div style="height:75px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">${c.img_url || '🛒'}</div>`}
-          <div style="height:3px;background:rgba(255,255,255,.1)"><div style="height:100%;width:${hpPct2}%;background:${hpCol2}"></div></div>
-          <div style="padding:2px 4px;font-size:8px;text-align:center;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+          ${isUrl ? `<img src="${c.img_url}" style="width:100%;height:70px;object-fit:cover;display:block">` : `<div style="height:70px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">${c.img_url || '🛒'}</div>`}
+          <div style="padding:2px 4px;font-size:8px;text-align:center;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600">${c.name}</div>
           <div style="padding:0 3px 1px;display:flex;justify-content:space-between;font-size:7px">
-            <span style="color:${hpCol2}">❤️${Math.ceil(curHP)}/${maxHP}</span>
-            <span style="color:var(--gold)">⚡${c.pa||1}PA</span>
+            <span style="color:#ff8877">⚔️${c.atk||0}</span>
+            <span style="color:var(--gold)">⚡${c.pa||1}</span>
+            <span style="color:#77aaff">🛡️${c.def||0}</span>
           </div>
-          ${dead ? '<div style="font-size:7px;color:#ff4444;text-align:center;padding-bottom:2px">💀 Morte</div>' : alreadyInArena ? '<div style="font-size:7px;color:#88aaff;text-align:center;padding-bottom:2px">🏟️ En arène</div>' : ''}
+          <div style="padding:1px 4px 3px;display:flex;justify-content:center;gap:1px">${heartsHtml}</div>
+          ${dead ? '<div style="font-size:7px;color:#ff4444;text-align:center">💀</div>' : alreadyInArena ? '<div style="font-size:7px;color:#88aaff;text-align:center">🏟️</div>' : ''}
         </div>`;
       }).join('')}
     </div>
@@ -4983,6 +4993,20 @@ function roadNext(){
     return;
   }
   roadShowBubble(roadStep);
+}
+
+
+function renderHearts(curHP, maxHP, containerId) {
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  const totalHearts = Math.min(10, Math.ceil(maxHP / (maxHP/10)));
+  const fullHearts = Math.round((curHP/maxHP) * totalHearts);
+  let html = '<div class="hp-hearts">';
+  for(let i=0;i<totalHearts;i++) {
+    html += '<span class="hp-heart ' + (i<fullHearts?'full':'empty') + '">♥</span>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 init();
