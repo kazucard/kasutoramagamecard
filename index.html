@@ -2326,21 +2326,18 @@ function showCardSelectModal(myCards,shop,stageNum,stage,enemies){
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-height:50vh;overflow-y:auto">
       ${myCards.map(c=>{
         const isUrl=c.img_url&&(c.img_url.startsWith('http')||c.img_url.startsWith('data:'));
-        const battleHeartsFull = Math.round((getCardCurrentHP(c)/getCardMaxHP(c))*5);
-        const battleHeartsHtml = Array(5).fill(0).map((_,i)=>'<span style="font-size:11px;color:'+(i<battleHeartsFull?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
-        return `<div onclick="selectBattleCard('${c.id}')" style="border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:pointer;background:#000;position:relative" id="bcs-${c.id}">
-          ${isUrl?`<img src="${c.img_url}" style="width:100%;height:100px;object-fit:cover;display:block">`:`<div style="height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">${c.img_url||'🛒'}</div>`}
-          <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.88));padding:5px 7px 4px">
-            <div style="font-size:9px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">${c.name}</div>
-            <div style="display:flex;justify-content:space-between;font-size:8px;margin-bottom:2px">
-              <span style="color:#ff8877">⚔️${c.atk||0}</span>
-              <span style="color:var(--gold)">⚡${c.pa||1}PA</span>
-              <span style="color:#77aaff">🛡️${c.def||0}</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:2px">${battleHeartsHtml}<span style="font-size:8px;color:rgba(255,255,255,.5);margin-left:3px">${Math.ceil(getCardCurrentHP(c))}/${getCardMaxHP(c)}</span></div>
+        return `<div onclick="selectBattleCard('${c.id}')" style="border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:pointer;background:rgba(255,255,255,.04)" id="bcs-${c.id}">
+          ${isUrl?`<img src="${c.img_url}" style="width:100%;height:75px;object-fit:cover;display:block">`:`<div style="height:75px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">${c.img_url||'🛒'}</div>`}
+          <div style="height:3px;background:rgba(255,255,255,.1)"><div style="height:100%;width:${Math.max(0,Math.round(getCardCurrentHP(c)/getCardMaxHP(c)*100))}%;background:${getCardCurrentHP(c)/getCardMaxHP(c)>0.6?'#4caf50':getCardCurrentHP(c)/getCardMaxHP(c)>0.3?'#ff9800':'#f44336'}"></div></div>
+          <div style="padding:2px 4px;font-size:8px;text-align:center;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+          <div style="padding:0 3px 1px;display:flex;justify-content:space-between;font-size:7px">
+            <span style="color:#ff8877">⚔️${c.atk||0}</span>
+            <span style="color:var(--gold)">⚡${c.pa||1}PA</span>
+            <span style="color:#77aaff">🛡️${c.def||0}</span>
           </div>
+          <div style="font-size:7px;text-align:center;padding:0 3px 2px;color:rgba(255,255,255,.4)">❤️${Math.ceil(getCardCurrentHP(c))}/${getCardMaxHP(c)}</div>
         </div>`;
-      }).join('')})})}
+      }).join('')})}
     </div>
     <div style="display:flex;gap:8px;width:100%">
       <button onclick="document.getElementById('battle-card-select').remove()" style="flex:1;padding:12px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Annuler</button>
@@ -3267,27 +3264,26 @@ async function openPlaceCardModal(arenaId) {
     const alreadyInArena = placedCount >= ownedCount;
     const blocked = dead || alreadyInArena;
     const heartsFull = Math.round((curHP/maxHP)*5);
-    const heartsHtml = Array(5).fill(0).map((_,i)=>'<span style="font-size:14px;color:'+(i<heartsFull?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
-    const imgHtml = isUrl ? '<img src="'+c.img_url+'" style="width:100%;height:110px;object-fit:cover;display:block">' : '<div style="height:110px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">'+(c.img_url||'🛒')+'</div>';
-    const badge = dead ? '💀 ' : alreadyInArena ? '🏟️ ' : '';
+    const heartsHtml = Array(5).fill(0).map((_,i)=>'<span style="font-size:11px;color:'+(i<heartsFull?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
+    const imgHtml = isUrl ? '<img src="'+c.img_url+'" style="width:100%;height:70px;object-fit:cover;display:block">' : '<div style="height:70px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">'+(c.img_url||'🛒')+'</div>';
+    const badge = dead ? '<div style="font-size:7px;color:#ff4444;text-align:center">💀</div>' : alreadyInArena ? '<div style="font-size:7px;color:#88aaff;text-align:center">🏟️</div>' : '';
     const dataClick = blocked ? '' : ' data-cid="'+c.id+'" data-aid="'+arenaId+'"';
-    return '<div'+dataClick+' onclick="if(this.dataset.cid)selectPlaceCard(this.dataset.cid,this.dataset.aid)" style="border-radius:10px;overflow:hidden;border:2px solid '+(blocked?'rgba(255,68,68,.4)':'var(--bord)')+';cursor:'+(blocked?'not-allowed':'pointer')+';background:#000;opacity:'+(blocked?0.4:1)+';position:relative" id="pcs-'+c.id+'">'+
+    return '<div'+dataClick+' onclick="if(this.dataset.cid)selectPlaceCard(this.dataset.cid,this.dataset.aid)" style="border-radius:10px;overflow:hidden;border:2px solid '+(blocked?'rgba(255,68,68,.3)':'var(--bord)')+';cursor:'+(blocked?'not-allowed':'pointer')+';background:rgba(255,255,255,.04);opacity:'+(blocked?0.35:1)+'" id="pcs-'+c.id+'">'+
       imgHtml+
-      '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.85));padding:6px 8px 5px">'+
-        '<div style="font-size:10px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">'+badge+c.name+'</div>'+
-        '<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:3px">'+
-          '<span style="color:#ff8877">⚔️'+(c.atk||0)+'</span>'+
-          '<span style="color:var(--gold)">⚡'+(c.pa||1)+'PA</span>'+
-          '<span style="color:#77aaff">🛡️'+(c.def||0)+'</span>'+
-        '</div>'+
-        '<div style="display:flex;align-items:center;gap:2px">'+heartsHtml+'<span style="font-size:8px;color:rgba(255,255,255,.5);margin-left:3px">'+c.name+'</span></div>'+
+      '<div style="padding:2px 4px;font-size:8px;text-align:center;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600">'+c.name+'</div>'+
+      '<div style="padding:0 3px 1px;display:flex;justify-content:space-between;font-size:7px">'+
+        '<span style="color:#ff8877">⚔️'+(c.atk||0)+'</span>'+
+        '<span style="color:var(--gold)">⚡'+(c.pa||1)+'</span>'+
+        '<span style="color:#77aaff">🛡️'+(c.def||0)+'</span>'+
       '</div>'+
+      '<div style="padding:1px 4px 3px;display:flex;justify-content:center;gap:2px">'+heartsHtml+'</div>'+
+      badge+
     '</div>';
   }).join('');
 
   ov.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)">Choisir une carte à défendre</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-height:60vh;overflow-y:auto">'+cardsHtml+'</div>'+
-    '<button id="close-place-ov-btn" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer">Annuler</button>';
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-height:55vh;overflow-y:auto">'+cardsHtml+'</div>'+
+    '<button id="close-place-ov-btn" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer">Annuler</button>'
   document.body.appendChild(ov);
   const closeBtn = document.getElementById('close-place-ov-btn');
   if(closeBtn) closeBtn.onclick = () => document.getElementById('place-card-ov').remove();
@@ -3386,15 +3382,27 @@ function showVsCardSelect(myCards, slot, defCard, arenaId) {
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:12px';
   ov.innerHTML = `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)">Choisir ta carte</div>
     <div style="font-size:11px;color:rgba(255,255,255,.4)">Tu affrontes : <strong style="color:#ff8877">${defCard?.name || '?'}</strong> (ATK:${defCard?.atk || 0} DEF:${defCard?.def || 0})</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-height:50vh;overflow-y:auto">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-height:55vh;overflow-y:auto">
       ${myCards.map(c => {
         const isUrl = c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
-        const curHP = getCardCurrentHP(c); const dead = curHP <= 0; const inAr = isCardInArena(c.id);
-        return `<div onclick="${(dead||inAr) ? '' : "launchVsBattle('" + c.id + "','" + slot.id + "','" + arenaId + "')"}" style="border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:${(dead||inAr) ? 'not-allowed' : 'pointer'};opacity:${(dead||inAr) ? .4 : 1};background:rgba(255,255,255,.04)">
-          ${isUrl ? `<img src="${c.img_url}" style="width:100%;height:70px;object-fit:cover;display:block">` : `<div style="height:70px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#111">${c.img_url || '🛒'}</div>`}
-          <div style="padding:3px;font-size:8px;text-align:center;color:rgba(255,255,255,.6)">${c.name}</div>
-          <div style="font-size:8px;text-align:center;padding-bottom:3px;color:rgba(255,255,255,.35)">❤️${Math.round(curHP)}/${getCardMaxHP(c)}</div>
-        </div>`;
+        const curHP = getCardCurrentHP(c); const maxHP = getCardMaxHP(c);
+        const dead = curHP <= 0; const inAr = isCardInArena(c.id);
+        const blocked = dead || inAr;
+        const heartsFull = Math.round((curHP/maxHP)*5);
+        const heartsHtml = Array(5).fill(0).map((_,i)=>'<span style="font-size:11px;color:'+(i<heartsFull?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
+        const imgHtml = isUrl ? '<img src="'+c.img_url+'" style="width:100%;height:100px;object-fit:cover;display:block">' : '<div style="height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">'+(c.img_url||'🛒')+'</div>';
+        return '<div onclick="'+(blocked?'':"launchVsBattle('"+c.id+"','"+slot.id+"','"+arenaId+"')")+'" style="border-radius:10px;overflow:hidden;border:2px solid '+(blocked?'rgba(255,68,68,.3)':'var(--bord)')+';cursor:'+(blocked?'not-allowed':'pointer')+';background:#000;opacity:'+(blocked?0.4:1)+';position:relative">'+
+          imgHtml+
+          '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.88));padding:5px 7px 4px">'+
+            '<div style="font-size:10px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(dead?'💀 ':inAr?'🏟️ ':'')+c.name+'</div>'+
+            '<div style="display:flex;justify-content:space-between;font-size:8px;margin-bottom:2px">'+
+              '<span style="color:#ff8877">⚔️'+(c.atk||0)+'</span>'+
+              '<span style="color:var(--gold)">⚡'+(c.pa||1)+'PA</span>'+
+              '<span style="color:#77aaff">🛡️'+(c.def||0)+'</span>'+
+            '</div>'+
+            '<div style="display:flex;gap:2px">'+heartsHtml+'</div>'+
+          '</div>'+
+        '</div>';
       }).join('')}
     </div>
     <button onclick="document.getElementById('vs-card-sel').remove();openArena(currentArenaId)" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Annuler</button>`;
@@ -4767,8 +4775,7 @@ function showTaupeDialogue(shopId, stageNum) {
   taupeIdx = 0;
   taupeShopId = shopId;
   taupeStageNum = stageNum;
-  const ts = document.getElementById('taupe-screen');
-  if(ts) { ts.style.display = 'flex'; ts.style.flexDirection = 'column'; }
+  document.getElementById('taupe-screen').classList.add('active');
   showTaupeMsg(0);
 }
 
@@ -4783,8 +4790,7 @@ function showTaupeMsg(idx) {
 async function taupeNext() {
   if (taupeIdx >= TAUPE_MESSAGES.length - 1) {
     // End dialogue - give reward and complete stage
-    const tsClose = document.getElementById('taupe-screen');
-    if(tsClose) tsClose.style.display = 'none';
+    document.getElementById('taupe-screen').classList.remove('active');
     showToast('🕵️ La taupe rejoint vos rangs ! +15 HS', '#6ddb9a', '🕵️', 5000);
     // Give reward
     const newHS = (ME.heures_sup || 0) + 15;
