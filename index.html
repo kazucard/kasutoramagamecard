@@ -2222,9 +2222,9 @@ async function openShop(shop,stageReached){
   // Show Star Wars crawl only on first visit (stage 0)
   if(stageReached===0){
     if(shop.id==='sh_lm_nice2'){
-      showStarWars('II','EN ROUTE POUR NICE CENTRE-VILLE',()=>_openShopUI(shop,stageReached),SW_MESSAGES_2);
+      showRoadAnimation('II','EN ROUTE POUR NICE CENTRE-VILLE',SW_MESSAGES_2,'LM NICE CENTRE-VILLE',()=>_openShopUI(shop,stageReached));
     } else {
-      showStarWars('I','FERMETURE À MINUIT',()=>_openShopUI(shop,stageReached));
+      showRoadAnimation('I','FERMETURE À MINUIT',SW_MESSAGES_1,'LM NICE',()=>_openShopUI(shop,stageReached));
     }
     return;
   }
