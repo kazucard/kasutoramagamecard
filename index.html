@@ -3283,7 +3283,7 @@ async function openPlaceCardModal(arenaId) {
 
   ov.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)">Choisir une carte à défendre</div>'+
     '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-height:55vh;overflow-y:auto">'+cardsHtml+'</div>'+
-    '<button id="close-place-ov-btn" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer">Annuler</button>'
+    '<button id="close-place-ov-btn" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer">Annuler</button>';
   document.body.appendChild(ov);
   const closeBtn = document.getElementById('close-place-ov-btn');
   if(closeBtn) closeBtn.onclick = () => document.getElementById('place-card-ov').remove();
