@@ -2299,7 +2299,7 @@ function openBattleScreen(shop,stageNum,stage,enemies){
   const myCards=Object.keys(coll).filter(id=>coll[id]>0).map(id=>pool.find(p=>p.id===id)).filter(Boolean);
   if(!myCards.length){alert('Tu n\'as aucune carte dans ta collection !');return;}
   // Filter out cards in arena or dead
-  const availableCards=myCards.filter(c=>!isCardInArena(c.id)&&getCardCurrentHP(c)>0);
+  const availableCards=myCards.filter(c=>getCardCurrentHP(c)>0);
   if(!availableCards.length){
     alert('Toutes tes cartes sont en arène ou mortes ! Récupère-les ou ressuscite-les dans le Shop.');
     return;
@@ -3445,6 +3445,8 @@ function vbAutoTick() {
 }
 
 function vbTapAttack() {
+  const btn = document.getElementById('vb-tap-btn');
+  if(btn){btn.style.transform='scale(0.9)';setTimeout(function(){btn.style.transform='scale(1)'},80);}
   const tapDmg = Math.max(1, Math.floor((vbAttackerCard.atk || 50) / 20));
   vbEnemyHP = Math.max(0, vbEnemyHP - tapDmg);
   const att = document.getElementById('vb-attacker');
@@ -4611,7 +4613,7 @@ function startBountyCombat(q) {
   // Show card selection
   const myCards = Object.keys(coll).filter(id => coll[id] > 0)
     .map(id => pool.find(p => p.id === id))
-    .filter(c => c && getCardCurrentHP(c) > 0 && !isCardInArena(c.id));
+    .filter(c => c && getCardCurrentHP(c) > 0);
   
   if (!myCards.length) {
     showToast('❌ Aucune carte disponible !', '#ff4444', '❌', 3000);
@@ -5084,6 +5086,7 @@ init();
   </div>
 
   <div id="vb-log" style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;min-height:18px"></div>
+  <button id="vb-tap-btn" onclick="vbTapAttack()" style="background:#000;color:#fff;border:4px solid #fff;padding:14px 40px;font-family:'Press Start 2P',monospace;font-size:16px;font-weight:bold;cursor:pointer;active:transform:scale(0.95);transition:transform 0.05s">* TAP</button>
   <button onclick="surrenderVsBattle()" style="padding:8px 20px;background:rgba(255,255,255,.06);border:1px solid var(--bord);border-radius:8px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Abandonner</button>
 </div>
 
