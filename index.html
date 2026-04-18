@@ -4795,6 +4795,183 @@ const SW_MESSAGES_2 = [
   {text:"Munissez-vous de vos meilleurs chariots. La route est longue mais la cause est juste !"},
 ];
 
+
+// ── ROAD ANIMATION ────────────────────────────────────────────────────────────
+const VAN_IMG_SRC = 'data:image/png;base64,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';
+let roadAnimCallback = null;
+let roadAnimMoving = false;
+let roadAnimRAF = null;
+let roadMessages = [], roadStep = 0;
+let roadBOff=0, roadTOff=0, roadSOff=0, roadAngle=0, roadLast=0;
+
+function showRoadAnimation(episodeNum, title, messages, destination, callback) {
+  roadAnimCallback = callback;
+  roadMessages = messages;
+  roadStep = 0;
+  roadBOff=0; roadTOff=0; roadSOff=0; roadAngle=0; roadLast=0;
+  roadAnimMoving = true;
+
+  let screen = document.getElementById('road-anim-screen');
+  if (!screen) {
+    screen = document.createElement('div');
+    screen.id = 'road-anim-screen';
+    screen.style.cssText = 'position:fixed;inset:0;z-index:600;background:#0d0d2b;overflow:hidden;font-family:Courier New,monospace';
+    document.body.appendChild(screen);
+  }
+
+  const stripesHtml = '<div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div><div style="width:60px;height:6px;background:#f0c000;flex-shrink:0"></div>';
+
+  screen.innerHTML = `
+  <div style="position:absolute;inset:0;height:65%;background:linear-gradient(180deg,#0d0d2b 0%,#1a1a5e 70%,#2d1a6e 100%)"></div>
+  <div id="road-stars"></div>
+  <div id="road-bwrap" style="position:absolute;bottom:35%;width:100%;height:120px;overflow:hidden"><div id="road-binner" style="display:flex;height:100%;position:absolute;bottom:0"></div></div>
+  <div id="road-twrap" style="position:absolute;bottom:33%;width:100%;height:70px;overflow:hidden"><div id="road-tinner" style="display:flex;position:absolute;bottom:0"></div></div>
+  <div style="position:absolute;bottom:0;left:0;width:100%;height:35%;background:#222">
+    <div style="position:absolute;top:0;width:100%;height:10px;background:#555;border-top:3px solid #888"></div>
+    <div id="road-stripes" style="position:absolute;top:50%;left:0;width:400%;height:6px;margin-top:-3px;display:flex;gap:70px">${stripesHtml}</div>
+  </div>
+  <div id="road-lm" style="position:absolute;bottom:35%;right:-180px;transition:right 1.5s cubic-bezier(0.4,0,0.2,1)">
+    <svg width="140" height="100" viewBox="0 0 140 100" style="image-rendering:pixelated">
+      <rect x="8" y="18" width="124" height="82" fill="#e0e0e0" stroke="#333" stroke-width="2"/>
+      <rect x="8" y="8" width="124" height="14" fill="#1a6e1a" stroke="#333" stroke-width="2"/>
+      <text x="70" y="19" text-anchor="middle" font-size="7" fill="#fff" font-weight="bold" font-family="Courier New">LEROY MERLIN</text>
+      <rect x="18" y="28" width="22" height="16" fill="#aaddff" stroke="#333" stroke-width="1"/>
+      <rect x="50" y="28" width="22" height="16" fill="#aaddff" stroke="#333" stroke-width="1"/>
+      <rect x="82" y="28" width="22" height="16" fill="#aaddff" stroke="#333" stroke-width="1"/>
+      <rect x="54" y="62" width="32" height="38" fill="#aaddff" stroke="#333" stroke-width="1"/>
+      <text x="70" y="55" text-anchor="middle" font-size="14" fill="#1a6e1a" font-weight="bold" font-family="Courier New">LM</text>
+    </svg>
+    <div style="font-size:8px;color:#f0c000;font-weight:bold;text-align:center;text-shadow:1px 1px 0 #000">${destination}</div>
+  </div>
+  <div id="road-van" style="position:absolute;bottom:4%;left:8%;transition:left 1.5s cubic-bezier(0.4,0,0.2,1);width:130px;height:62px">
+    <img src="${VAN_IMG_SRC}" style="position:absolute;top:0;left:0;width:130px;height:62px;image-rendering:pixelated;display:block">
+    <svg style="position:absolute;top:0;left:0;width:130px;height:62px;pointer-events:none;overflow:visible" viewBox="0 0 130 62">
+      <circle cx="38" cy="52" r="9" fill="#1a1a1a" stroke="#444" stroke-width="1.5"/>
+      <circle cx="38" cy="52" r="3" fill="#666"/>
+      <line id="road-s1a" stroke="#888" stroke-width="1.5"/>
+      <line id="road-s1b" stroke="#888" stroke-width="1.5"/>
+      <circle cx="86" cy="53" r="9" fill="#1a1a1a" stroke="#444" stroke-width="1.5"/>
+      <circle cx="86" cy="53" r="3" fill="#666"/>
+      <line id="road-s2a" stroke="#888" stroke-width="1.5"/>
+      <line id="road-s2b" stroke="#888" stroke-width="1.5"/>
+    </svg>
+  </div>
+  <div id="road-bubble" style="position:absolute;bottom:52%;left:8%;background:#fff;border:3px solid #111;border-radius:10px;padding:9px 13px;max-width:72%;font-size:11px;color:#111;line-height:1.5;opacity:0;transform:scale(0.85);transition:opacity 0.3s,transform 0.3s;z-index:10">
+    <div id="road-bubble-text"></div>
+    <div style="position:absolute;bottom:-12px;left:18px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:12px solid #111"></div>
+    <div style="position:absolute;bottom:-8px;left:21px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:10px solid #fff;z-index:1"></div>
+  </div>
+  <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);color:#f0c000;font-size:12px;font-weight:bold;text-shadow:2px 2px 0 #000;white-space:nowrap">ÉPISODE ${episodeNum} — ${title}</div>
+  <div id="road-dots" style="position:absolute;top:10px;left:10px;display:flex;gap:5px;z-index:5"></div>
+  <button onclick="roadNext()" style="position:absolute;bottom:12px;right:16px;background:#f0c000;color:#111;border:3px solid #111;padding:6px 16px;font-family:Courier New,monospace;font-size:11px;font-weight:bold;cursor:pointer;z-index:20;border-radius:4px">Suite ▶</button>`;
+
+  screen.style.display = 'block';
+
+  // Stars
+  const starsEl = document.getElementById('road-stars');
+  for(let i=0;i<50;i++){
+    const s=document.createElement('div');
+    s.style.cssText='position:absolute;width:2px;height:2px;background:#fff;left:'+Math.random()*100+'%;top:'+Math.random()*55+'%;animation:twinkle '+(1+Math.random())+'s ease-in-out infinite;animation-delay:'+Math.random()*2+'s';
+    starsEl.appendChild(s);
+  }
+  // Buildings
+  const bi=document.getElementById('road-binner');
+  const bc=['#1a1a4a','#222260','#15153a','#0f0f35'];
+  let bHtml='';
+  for(let b=0;b<22;b++){
+    const h=45+Math.random()*55,w=35+Math.random()*45;
+    const wins=Array(Math.floor(h/22)).fill(0).map((_,r)=>Array(Math.floor(w/18)).fill(0).map((_,c)=>'<rect x="'+(4+c*16)+'" y="'+(h-r*22-20)+'" width="9" height="12" fill="'+(Math.random()>0.45?'#ffee88':'#1a1a3a')+'" opacity="0.85"/>').join('')).join('');
+    bHtml+='<svg width="'+w+'" height="120" viewBox="0 0 '+w+' 120" style="flex-shrink:0;margin-right:'+(8+Math.random()*18)+'px;image-rendering:pixelated"><rect x="0" y="'+(120-h)+'" width="'+w+'" height="'+h+'" fill="'+bc[b%4]+'" stroke="#111" stroke-width="1"/>'+wins+'</svg>';
+  }
+  bi.innerHTML=bHtml+bHtml;
+  // Trees
+  const ti=document.getElementById('road-tinner');
+  const tc=['#2a7a2a','#1e661e','#338833'];
+  let tHtml='';
+  for(let t=0;t<24;t++){
+    const w=28+Math.random()*14,h=28+Math.random()*18;
+    tHtml+='<div style="flex-shrink:0;margin-right:'+(45+Math.random()*30)+'px;display:flex;flex-direction:column;align-items:center"><div style="width:'+w+'px;height:'+h+'px;background:'+tc[t%3]+';clip-path:polygon(50% 0%,0% 100%,100% 100%)"></div><div style="width:9px;height:14px;background:#5a3010"></div></div>';
+  }
+  ti.innerHTML=tHtml+tHtml;
+  // Dots
+  const dotsEl=document.getElementById('road-dots');
+  messages.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.style.cssText='width:7px;height:7px;border-radius:50%;background:'+(i===0?'#f0c000':'#333')+';border:1px solid '+(i===0?'#f0c000':'#666');
+    d.id='rdot'+i;
+    dotsEl.appendChild(d);
+  });
+
+  if(roadAnimRAF) cancelAnimationFrame(roadAnimRAF);
+  roadAnimRAF = requestAnimationFrame(roadTick);
+  roadShowBubble(0);
+}
+
+function roadTick(ts) {
+  const dt=Math.min(ts-roadLast,50)/1000; roadLast=ts;
+  if(roadAnimMoving){
+    const bi=document.getElementById('road-binner');
+    const ti=document.getElementById('road-tinner');
+    const str=document.getElementById('road-stripes');
+    if(bi&&ti&&str){
+      const bMax=bi.scrollWidth/2, tMax=ti.scrollWidth/2;
+      roadBOff=(roadBOff+30*dt)%bMax;
+      roadTOff=(roadTOff+60*dt)%tMax;
+      roadSOff=(roadSOff+150*dt); if(roadSOff>130)roadSOff-=130;
+      roadAngle=(roadAngle+300*dt)%360;
+      bi.style.transform='translateX(-'+roadBOff+'px)';
+      ti.style.transform='translateX(-'+roadTOff+'px)';
+      str.style.transform='translateX(-'+roadSOff+'px)';
+      roadUpdateSpokes(roadAngle);
+    }
+  }
+  roadAnimRAF=requestAnimationFrame(roadTick);
+}
+
+function roadUpdateSpokes(a){
+  const r1=Math.PI*a/180,r2=r1+Math.PI/2;
+  [{id:'road-s1',cx:38,cy:52,r:7},{id:'road-s2',cx:86,cy:53,r:7}].forEach(function(w){
+    const xa=Math.cos(r1)*w.r,ya=Math.sin(r1)*w.r,xb=Math.cos(r2)*w.r,yb=Math.sin(r2)*w.r;
+    const la=document.getElementById(w.id+'a'),lb=document.getElementById(w.id+'b');
+    if(la){la.setAttribute('x1',w.cx-xa);la.setAttribute('y1',w.cy-ya);la.setAttribute('x2',w.cx+xa);la.setAttribute('y2',w.cy+ya);}
+    if(lb){lb.setAttribute('x1',w.cx-xb);lb.setAttribute('y1',w.cy-yb);lb.setAttribute('x2',w.cx+xb);lb.setAttribute('y2',w.cy+yb);}
+  });
+}
+
+function roadShowBubble(idx){
+  const bubble=document.getElementById('road-bubble');
+  const text=document.getElementById('road-bubble-text');
+  if(!bubble||!text)return;
+  bubble.style.opacity='0';bubble.style.transform='scale(0.85)';
+  setTimeout(function(){
+    text.textContent=roadMessages[idx].text;
+    bubble.style.opacity='1';bubble.style.transform='scale(1)';
+    roadMessages.forEach(function(_,i){
+      const d=document.getElementById('rdot'+i);
+      if(d)d.style.background=i<=idx?'#f0c000':'#333';
+    });
+    if(roadMessages[idx].action==='arrive'){
+      roadAnimMoving=false;
+      const van=document.getElementById('road-van');
+      const lm=document.getElementById('road-lm');
+      if(van)van.style.left='20%';
+      if(lm)lm.style.right='3%';
+    }
+  },300);
+}
+
+function roadNext(){
+  roadStep++;
+  if(roadStep>=roadMessages.length){
+    if(roadAnimRAF){cancelAnimationFrame(roadAnimRAF);roadAnimRAF=null;}
+    const screen=document.getElementById('road-anim-screen');
+    if(screen)screen.style.display='none';
+    if(roadAnimCallback)roadAnimCallback();
+    return;
+  }
+  roadShowBubble(roadStep);
+}
+
 init();
 </script>
 
