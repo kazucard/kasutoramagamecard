@@ -499,7 +499,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
       🔔<span id="notif-badge">0</span>
     </div>
   </div>
-  <div id="site-title"><h1>Castor Card</h1><p>Kasutorama Card Game</p></div>
+  <div id="site-title" onclick="handleTitleTap()"><h1>Castor Card</h1><p>Kasutorama Card Game</p></div>
 
   <!-- BOOSTER -->
   <div class="screen active" id="screen-booster">
@@ -4826,11 +4826,11 @@ const SW_MESSAGES_1 = [
 ];
 
 const SW_MESSAGES_2 = [
-  {text:"Vous avez mis à feu et à sang Leroy Merlin Nice…", italic:true},
-  {text:"Continuons sur cette lancée ! Le prochain Leroy Merlin ne sait pas ce qui l'attend."},
-  {text:"D'après nos informations, son directeur serait un proche de mouvements d'extrême droite !"},
-  {text:"Jordan Carambar. Un homme dangereux. Un homme qui mérite d'être remis à sa place."},
-  {text:"Munissez-vous de vos meilleurs chariots. La route est longue mais la cause est juste !"},
+  {text:"Putain ! Le nouveau il plaisante pas hein !"},
+  {text:"Il en faut des gars comme toi, parce que c'est que le début là !"},
+  {text:"Figure toi que d'après nos sources, le prochain Leroy Merlin est dirigé par Jordan Carambar !"},
+  {text:"Le PUTAIN de Jordan Carambar !", action:'arrive'},
+  {text:"Bref, on va leur montrer qu'on veut pas de FAF ici. Je compte sur toi le nouveau !"},
 ];
 
 
@@ -5023,6 +5023,24 @@ function renderHearts(curHP, maxHP, containerId) {
   }
   html += '</div>';
   el.innerHTML = html;
+}
+
+
+let titleTapCount = 0;
+let titleTapTimer = null;
+function handleTitleTap() {
+  titleTapCount++;
+  if (titleTapTimer) clearTimeout(titleTapTimer);
+  titleTapTimer = setTimeout(() => { titleTapCount = 0; }, 800);
+  if (titleTapCount >= 3) {
+    titleTapCount = 0;
+    const tab = document.getElementById('tab-admin');
+    if (tab) {
+      tab.style.display = 'flex';
+      showTab('admin');
+      showToast('🔧 Mode Admin activé', 'var(--gold)', '⚙️', 2000);
+    }
+  }
 }
 
 init();
