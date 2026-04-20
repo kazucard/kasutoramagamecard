@@ -499,7 +499,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
       🔔<span id="notif-badge">0</span>
     </div>
   </div>
-  <div id="site-title"><h1>Castor Card</h1><p>Kasutorama Card Game</p></div>
+  <div id="site-title" onclick="handleTitleTap()"><h1>Castor Card</h1><p>Kasutorama Card Game</p></div>
 
   <!-- BOOSTER -->
   <div class="screen active" id="screen-booster">
@@ -705,11 +705,15 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 
   <!-- VERSUS -->
   <div class="screen" id="screen-versus">
+    <div id="vs-vote-panel" style="width:100%;display:none;margin-bottom:16px"></div>
+    <div style="width:100%;display:flex;justify-content:flex-end;margin-bottom:4px">
+      <button onclick="openRewardsPopup()" style="background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);color:var(--gold);padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">🏆 Récompenses possibles</button>
+    </div>
     <div id="versus-phase-banner" style="width:100%;padding:8px 14px;border-radius:10px;text-align:center;font-size:12px;font-weight:600;margin:10px 0;display:none"></div>
     
     <!-- MAP -->
     <div id="versus-map-wrap" style="width:100%;position:relative;margin-bottom:12px">
-      <svg id="versus-map" viewBox="0 0 320 480" style="width:100%;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--bord)">
+      <svg id="versus-map" viewBox="0 0 320 580" style="width:100%;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--bord)">
         <!-- Background grid -->
         <defs>
           <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
@@ -795,6 +799,25 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
         <line x1="160" y1="268" x2="240" y2="285" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
         <line x1="80" y1="358" x2="100" y2="394" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
         <line x1="240" y1="338" x2="215" y2="394" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+
+        <line x1="110" y1="448" x2="80" y2="510" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>
+        <line x1="220" y1="448" x2="160" y2="510" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>
+        <line x1="220" y1="448" x2="245" y2="510" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>
+        <g id="arena-11" class="arena-node" onclick="openArena('arena_11')" style="cursor:pointer">
+          <circle cx="80" cy="530" r="28" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.15)" stroke-width="2" id="arena-11-circle"/>
+          <text x="80" y="526" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)" font-weight="600">La Cave</text>
+          <text x="80" y="538" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.4)" id="arena-11-count">0/3</text>
+        </g>
+        <g id="arena-12" class="arena-node" onclick="openArena('arena_12')" style="cursor:pointer">
+          <circle cx="160" cy="530" r="28" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.15)" stroke-width="2" id="arena-12-circle"/>
+          <text x="160" y="526" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)" font-weight="600">La Découpe</text>
+          <text x="160" y="538" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.4)" id="arena-12-count">0/3</text>
+        </g>
+        <g id="arena-13" class="arena-node" onclick="openArena('arena_13')" style="cursor:pointer">
+          <circle cx="245" cy="530" r="28" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.15)" stroke-width="2" id="arena-13-circle"/>
+          <text x="245" y="526" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)" font-weight="600">L'Outlet</text>
+          <text x="245" y="538" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.4)" id="arena-13-count">0/3</text>
+        </g>
       </svg>
 
       <!-- Legend -->
@@ -1017,7 +1040,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
     <button class="nav-btn" id="nav-aventure"  onclick="showTab('aventure')"><span class="nav-icon" style="font-size:17px">⚔️</span>Aventure</button>
     <button class="nav-btn" id="nav-versus" onclick="showTab('versus')"><span class="nav-icon" style="font-size:17px">🏟️</span>Versus</button>
     <button class="nav-btn" id="nav-messages"   onclick="showTab('messages')" style="position:relative"><img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAwADADASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAYIBwEC/8QAMxAAAAUBBAcFCQEAAAAAAAAAAAECAwQFBgcRIQgSEyIxUZQXGCNVVhRBYXFyg6HS07H/xAAaAQABBQEAAAAAAAAAAAAAAAAEAgMFBgcB/8QAKhEAAQMCAwcEAwAAAAAAAAAAAQACAwQRBRJhBhMUFSFRUlNiktGBkbH/2gAMAwEAAhEDEQA/AIyAAOVgbsLcW8gyZtlKIqotRnSacPbtt7xljlrqIjwLDH6iCJJWRNzPIA16LoaXGwSaAat3db5fRbnXxf6g7ut8votzr4v9QNzGk9VvyH2l7p/iVlIA8W4umvBsTSSqtp7Orp8I1k2TpymXN4+BYIWZ/gI4IiljlbmjcCNDdILS3oQgWJoSJX2VVN2O5s5DdcdNJ8/AYyP4COxXWhZI2V2dTTjmdZcPD7LIr21cpiw8uHcI3DmZ5raKkqXWkzEKQrw5DeTjZ8SPn8h6qVYagsa61Gpaj1W2y4rPkQVJaFOPJksO7GSngsveXI+ZDkdtZyTly3ttI4JPDAkFyIhl3FMve/4U/wAOs00wzeduZfky1az7k+PulwQWJ5EIoFm6Xsja3PuIM8/b2P8ATEZDTtkZd7QF3uP8CgsSZkmtogN1ibx7WWNpzsCgT24zDrxvLSplK8VGRFjvEeGSSCiAWKeniqGZJWhw7EXCCZI6M5mGxWm9u95fnTHRtfqDt3vL86Y6Nr9RmQADyTDfQZ8R9J7jKjzP7TpbG8+2VraQdKrlRakRDWlzVTHQg9YuGZFiEsAAbT00NMzJC0NHYCyZkkfIbvNyv//Z" style="width:24px;height:24px;object-fit:contain">Messages<span id="msg-nav-dot" style="position:absolute;top:6px;right:calc(50% - 14px);width:7px;height:7px;border-radius:50%;background:#ff4444;display:none"></span></button>
-    <button class="nav-btn" id="nav-admin" onclick="showTab('admin')"><img src="data:image/png;base64,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" style="width:24px;height:24px;object-fit:contain">Admin</button>
+    <button class="nav-btn" id="nav-admin" onclick="showTab('admin')" style="display:none"><img src="data:image/png;base64,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" style="width:24px;height:24px;object-fit:contain">Admin</button>
   </nav>
   <!-- FLOATING INVENTORY BUTTON -->
   <div id="inventory-fab" onclick="openInventory()" style="position:fixed;bottom:80px;right:16px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#e0b840);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,.4);z-index:300;transition:transform .15s;display:none" id="inventory-fab">
@@ -1227,6 +1250,7 @@ async function startApp(uid){
     await checkDailyReward();
     populateMsgSelect();
     showLoading(false);
+    setTimeout(checkNewsPopup, 1500);
   }catch(e){showLoading(false);alert('Erreur : '+e.message);}
 }
 function showLoading(v){document.getElementById('loading').style.display=v?'flex':'none';}
@@ -2983,10 +3007,18 @@ const ARENA_NAMES = {
   arena_3:'ZRM', arena_4:'Réception',
   arena_5:'Les Caisses', arena_6:'Sanitaire',
   arena_7:'Chapiteau Jardin', arena_8:'Bureaux Admins',
-  arena_9:'Rangement', arena_10:'Peinture'
+  arena_9:'Rangement', arena_10:'Peinture',
+  arena_11:'La Cave', arena_12:'La Découpe', arena_13:"L'Outlet"
 };
 const TEAM_COLORS = {};
 const VS_REWARD = 300;
+
+const VS_REWARDS = [
+  { id:'r1', icon:'🛡️', title:'Boost DEF + 500 HS', desc:'Vos cartes en arène gagnent +25% DEF, chaque membre reçoit 500 HS' },
+  { id:'r2', icon:'💰', title:'1000 HS', desc:'Chaque membre de l\'équipe gagnante reçoit 1000 HS' },
+  { id:'r3', icon:'🎁', title:'Booster Extra sans Commun', desc:'Chaque membre reçoit un Booster Extra garanti sans carte Commune' },
+  { id:'r4', icon:'⚡', title:'Double points ZRM + 500 HS', desc:'La ZRM rapporte 2x plus de points la semaine suivante + 500 HS' },
+];
 
 let arenas = {};
 let currentArenaId = null;
@@ -3040,7 +3072,7 @@ async function loadVersusMap() {
     allTeams.forEach(t => { teamColorMap[t.id] = (ME && t.id === ME.team_id) ? '#44cc44' : '#ff4444'; });
 
     // Update SVG arena circles
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 13; i++) {
       const aid = 'arena_' + i;
       const arena = rows.find(r => r.id === aid);
       const slotCards = cardsByArena[aid] || [];
@@ -3087,7 +3119,7 @@ async function loadVersusMap() {
 }
 
 async function initArenas() {
-  for (let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 13; i++) {
     try {
       await dbPost('arenas', { id: 'arena_' + i, name: ARENA_NAMES['arena_' + i], position_x: i, position_y: 0, team_id: null });
     } catch(e) {}
@@ -5164,6 +5196,113 @@ function showBossDefeatDialogue() {
   document.getElementById("boss-defeat-btn").onclick = function() { ov.remove(); };
 }
 
+
+// ── TRIPLE TAP ADMIN ─────────────────────────────────────────────────────────
+let titleTapCount = 0, titleTapTimer = null;
+function handleTitleTap() {
+  titleTapCount++;
+  if (titleTapTimer) clearTimeout(titleTapTimer);
+  titleTapTimer = setTimeout(() => { titleTapCount = 0; }, 800);
+  if (titleTapCount >= 3) {
+    titleTapCount = 0;
+    const btn = document.getElementById('nav-admin');
+    if (btn) { btn.style.display = 'flex'; showTab('admin'); showToast('🔧 Mode Admin activé', 'var(--gold)', '⚙️', 2000); }
+  }
+}
+
+// ── REWARDS POPUP ─────────────────────────────────────────────────────────────
+function openRewardsPopup() {
+  const popup = document.getElementById('rewards-popup');
+  const box = document.getElementById('rewards-box');
+  const list = document.getElementById('rewards-list');
+  list.innerHTML = VS_REWARDS.map(r =>
+    '<div style="background:var(--surf);border:1px solid var(--bord);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start">' +
+    '<span style="font-size:28px;flex-shrink:0">' + r.icon + '</span>' +
+    '<div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">' + r.title + '</div>' +
+    '<div style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.5">' + r.desc + '</div></div></div>'
+  ).join('');
+  popup.style.display = 'flex';
+  setTimeout(() => { box.style.transform = 'translateY(0)'; }, 10);
+}
+function closeRewardsPopup() {
+  const box = document.getElementById('rewards-box');
+  box.style.transform = 'translateY(100%)';
+  setTimeout(() => { document.getElementById('rewards-popup').style.display = 'none'; }, 250);
+}
+
+// ── VOTE SYSTEM ───────────────────────────────────────────────────────────────
+function getVsPhase() {
+  const now = new Date(), day = now.getDay(), hour = now.getHours();
+  if (day === 0 && hour >= 18) return 'vote';
+  if (day === 1 || day === 2) return 'placement';
+  return 'attack';
+}
+
+async function loadVotePanel() {
+  const phase = getVsPhase();
+  const voteEl = document.getElementById('vs-vote-panel');
+  if (!voteEl) return;
+  if (phase !== 'vote') { voteEl.style.display = 'none'; return; }
+  voteEl.style.display = 'block';
+  const votes = await dbGet('versus_votes', 'week_start=eq.' + getWeekStart() + '&select=*');
+  const voteCounts = {}; VS_REWARDS.forEach(r => { voteCounts[r.id] = 0; });
+  votes.forEach(v => { if (voteCounts[v.reward_id] !== undefined) voteCounts[v.reward_id]++; });
+  const myVote = votes.find(v => v.user_id === ME?.id);
+  const totalVotes = votes.length;
+  let html = '<div style="font-size:1.1rem;color:var(--gold);margin-bottom:8px;font-weight:bold">🗳️ Vote récompense</div>';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:12px">Vote pour la récompense de ton équipe !</div>';
+  VS_REWARDS.forEach(r => {
+    const count = voteCounts[r.id] || 0, pct = totalVotes ? Math.round(count/totalVotes*100) : 0;
+    const voted = myVote && myVote.reward_id === r.id;
+    const clickFn = myVote ? '' : 'castVote(' + JSON.stringify(r.id) + ')';
+    html += '<div style="background:'+(voted?'rgba(201,168,76,.12)':'var(--surf)')+';border:1px solid '+(voted?'var(--gold)':'var(--bord)')+';border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:'+(myVote?'default':'pointer')+'" onclick="'+clickFn+'">';
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="font-size:18px">'+r.icon+'</span>';
+    html += '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:#fff">'+r.title+'</div>';
+    html += '<div style="font-size:10px;color:rgba(255,255,255,.4)">'+r.desc+'</div></div>';
+    if(voted) html += '<span style="font-size:10px;color:var(--gold);font-weight:700">✓</span>';
+    html += '</div><div style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--gold);border-radius:2px"></div></div>';
+    html += '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">'+count+' vote'+(count>1?'s':'')+' ('+pct+'%)</div></div>';
+  });
+  voteEl.innerHTML = html;
+}
+
+async function castVote(rewardId) {
+  if (!ME) return;
+  const week = getWeekStart();
+  try {
+    const existing = await dbGet('versus_votes', 'user_id=eq.' + ME.id + '&week_start=eq.' + week + '&select=id');
+    if (existing.length) { showToast('Tu as déjà voté !', '#ff8800', '🗳️', 2000); return; }
+    await dbPost('versus_votes', { id: 'vote_' + ME.id + '_' + week, user_id: ME.id, team_id: ME.team_id, reward_id: rewardId, week_start: week });
+    showToast('✅ Vote enregistré !', '#6ddb9a', '🗳️', 3000);
+    await loadVotePanel();
+  } catch(e) { showToast('❌ ' + e.message, '#ff4444', '❌', 3000); }
+}
+
+// ── NEWS POPUP ────────────────────────────────────────────────────────────────
+async function checkNewsPopup() {
+  if (!ME) return;
+  try {
+    const news = await dbGet('news', 'type=eq.manual&select=*&order=created_at.desc&limit=1');
+    if (!news.length) return;
+    const latest = news[0];
+    if (localStorage.getItem('cc_last_news_seen') === latest.id) return;
+    const ov = document.createElement('div');
+    ov.id = 'news-popup-ov';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:950;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+    ov.innerHTML = '<div style="font-size:48px">📢</div>' +
+      '<div style="width:100%;max-width:400px;background:#000;border:4px solid #fff;padding:20px 22px;color:#fff;font-size:13px;line-height:1.8">' +
+      '<div style="color:var(--gold);font-size:10px;margin-bottom:10px;font-weight:bold">* MESSAGE DE LA DIRECTION</div>' +
+      '<div id="news-popup-text"></div></div>' +
+      '<button id="news-popup-btn" style="background:#000;color:#fff;border:4px solid #fff;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* OK !</button>';
+    document.body.appendChild(ov);
+    document.getElementById('news-popup-text').textContent = latest.content;
+    document.getElementById('news-popup-btn').onclick = () => {
+      localStorage.setItem('cc_last_news_seen', latest.id);
+      ov.remove();
+    };
+  } catch(e) {}
+}
+
 init();
 </script>
 
@@ -5336,6 +5475,24 @@ init();
 <div id="update-banner" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,var(--gold),#e0b840);padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;cursor:pointer" onclick="window.location.reload(true)">
   <div style="font-size:12px;color:#1a1209;font-weight:700;line-height:1.4">⚡ Des mises à jour ont peut-être été réalisées.<br>Appuie ici pour mettre à jour !</div>
   <button onclick="event.stopPropagation();document.getElementById('update-banner').style.display='none'" style="background:rgba(0,0,0,.15);border:none;color:#1a1209;font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0">✕</button>
+</div>
+
+
+<!-- REWARDS POPUP -->
+<div id="rewards-popup" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:800;display:none;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeRewardsPopup()">
+  <div id="rewards-box" style="background:linear-gradient(145deg,#13132a,#1a1a3e);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;border-top:1px solid var(--bord);max-height:80vh;overflow-y:auto;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)">🏆 Récompenses ce Versus</div>
+      <button onclick="closeRewardsPopup()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:16px">L'équipe gagnante vote pour sa récompense — Dimanche 18h</div>
+    <div id="rewards-list"></div>
+    <div style="margin-top:14px;padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--bord);font-size:11px;color:rgba(255,255,255,.5);line-height:1.7">
+      🗳️ <strong style="color:#fff">Comment voter ?</strong><br>
+      Dimanche 18h → panel de vote dans cet écran.<br>
+      La récompense la plus votée est appliquée lundi à minuit.
+    </div>
+  </div>
 </div>
 
 </body>
