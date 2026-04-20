@@ -3064,7 +3064,7 @@ async function loadVersusMap() {
     allTeams.forEach(t => { teamColorMap[t.id] = (ME && t.id === ME.team_id) ? '#44cc44' : '#ff4444'; });
 
     // Update SVG arena circles
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 13; i++) {
       const aid = 'arena_' + i;
       const arena = rows.find(r => r.id === aid);
       const slotCards = cardsByArena[aid] || [];
