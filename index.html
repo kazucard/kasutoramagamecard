@@ -3354,12 +3354,8 @@ async function selectPlaceCard(cardId, arenaId) {
     const inArena = JSON.parse(localStorage.getItem('cc_in_arena') || '{}');
     inArena[cardId] = arenaId;
     localStorage.setItem('cc_in_arena', JSON.stringify(inArena));
-    // Set arena team - always update if zone has no defending cards (visually neutral)
-    const arena = (await dbGet('arenas', 'id=eq.' + arenaId))[0];
-    const remainingCards = await dbGet('arena_cards', 'arena_id=eq.' + arenaId + '&select=id');
-    // remainingCards now includes the card we just added
-    if (ME.team_id && (remainingCards.length <= 1)) {
-      // First card in zone - claim it for our team
+    // Update arena team_id whenever we place a card
+    if (ME.team_id) {
       await dbPatch('arenas', { team_id: ME.team_id, captured_at: new Date().toISOString() }, 'id=eq.' + arenaId);
     }
     spendPA(paCost);
