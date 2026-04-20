@@ -499,7 +499,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
       🔔<span id="notif-badge">0</span>
     </div>
   </div>
-  <div id="site-title" onclick="handleTitleTap()"><h1>Castor Card</h1><p>Kasutorama Card Game</p></div>
+  <div id="site-title"><h1>Castor Card</h1><p>Kasutorama Card Game</p></div>
 
   <!-- BOOSTER -->
   <div class="screen active" id="screen-booster">
@@ -705,16 +705,11 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 
   <!-- VERSUS -->
   <div class="screen" id="screen-versus">
-  <div id="vs-vote-panel" style="width:100%;display:none;margin-bottom:16px"></div>
     <div id="versus-phase-banner" style="width:100%;padding:8px 14px;border-radius:10px;text-align:center;font-size:12px;font-weight:600;margin:10px 0;display:none"></div>
-    <!-- Rewards button -->
-    <div style="width:100%;display:flex;justify-content:flex-end;margin-bottom:6px">
-      <button onclick="openRewardsPopup()" style="background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);color:var(--gold);padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">🏆 Récompenses possibles</button>
-    </div>
     
     <!-- MAP -->
     <div id="versus-map-wrap" style="width:100%;position:relative;margin-bottom:12px">
-      <svg id="versus-map" viewBox="0 0 320 580" style="width:100%;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--bord)">
+      <svg id="versus-map" viewBox="0 0 320 480" style="width:100%;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--bord)">
         <!-- Background grid -->
         <defs>
           <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
@@ -800,32 +795,6 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
         <line x1="160" y1="268" x2="240" y2="285" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
         <line x1="80" y1="358" x2="100" y2="394" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
         <line x1="240" y1="338" x2="215" y2="394" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
-
-        <!-- Lines to new arenas -->
-        <line x1="110" y1="448" x2="80" y2="510" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>
-        <line x1="220" y1="448" x2="220" y2="510" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>
-        <line x1="220" y1="448" x2="310" y2="510" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>
-
-        <!-- Arena 11: La Cave -->
-        <g id="arena-11" class="arena-node" onclick="openArena('arena_11')" style="cursor:pointer">
-          <circle cx="80" cy="530" r="28" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.15)" stroke-width="2" id="arena-11-circle"/>
-          <text x="80" y="525" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)" font-weight="600">La Cave</text>
-          <text x="80" y="538" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.4)" id="arena-11-count">0/3</text>
-        </g>
-
-        <!-- Arena 12: La Découpe -->
-        <g id="arena-12" class="arena-node" onclick="openArena('arena_12')" style="cursor:pointer">
-          <circle cx="220" cy="530" r="28" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.15)" stroke-width="2" id="arena-12-circle"/>
-          <text x="220" y="525" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)" font-weight="600">La Découpe</text>
-          <text x="220" y="538" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.4)" id="arena-12-count">0/3</text>
-        </g>
-
-        <!-- Arena 13: L'Outlet -->
-        <g id="arena-13" class="arena-node" onclick="openArena('arena_13')" style="cursor:pointer">
-          <circle cx="310" cy="530" r="28" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.15)" stroke-width="2" id="arena-13-circle"/>
-          <text x="310" y="525" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)" font-weight="600">L'Outlet</text>
-          <text x="310" y="538" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.4)" id="arena-13-count">0/3</text>
-        </g>
       </svg>
 
       <!-- Legend -->
@@ -1048,7 +1017,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
     <button class="nav-btn" id="nav-aventure"  onclick="showTab('aventure')"><span class="nav-icon" style="font-size:17px">⚔️</span>Aventure</button>
     <button class="nav-btn" id="nav-versus" onclick="showTab('versus')"><span class="nav-icon" style="font-size:17px">🏟️</span>Versus</button>
     <button class="nav-btn" id="nav-messages"   onclick="showTab('messages')" style="position:relative"><img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAwADADASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAYIBwEC/8QAMxAAAAUBBAcFCQEAAAAAAAAAAAECAwQFBgcRIQgSEyIxUZQXGCNVVhRBYXFyg6HS07H/xAAaAQABBQEAAAAAAAAAAAAAAAAEAgMFBgcB/8QAKhEAAQMCAwcEAwAAAAAAAAAAAQACAwQRBRJhBhMUFSFRUlNiktGBkbH/2gAMAwEAAhEDEQA/AIyAAOVgbsLcW8gyZtlKIqotRnSacPbtt7xljlrqIjwLDH6iCJJWRNzPIA16LoaXGwSaAat3db5fRbnXxf6g7ut8votzr4v9QNzGk9VvyH2l7p/iVlIA8W4umvBsTSSqtp7Orp8I1k2TpymXN4+BYIWZ/gI4IiljlbmjcCNDdILS3oQgWJoSJX2VVN2O5s5DdcdNJ8/AYyP4COxXWhZI2V2dTTjmdZcPD7LIr21cpiw8uHcI3DmZ5raKkqXWkzEKQrw5DeTjZ8SPn8h6qVYagsa61Gpaj1W2y4rPkQVJaFOPJksO7GSngsveXI+ZDkdtZyTly3ttI4JPDAkFyIhl3FMve/4U/wAOs00wzeduZfky1az7k+PulwQWJ5EIoFm6Xsja3PuIM8/b2P8ATEZDTtkZd7QF3uP8CgsSZkmtogN1ibx7WWNpzsCgT24zDrxvLSplK8VGRFjvEeGSSCiAWKeniqGZJWhw7EXCCZI6M5mGxWm9u95fnTHRtfqDt3vL86Y6Nr9RmQADyTDfQZ8R9J7jKjzP7TpbG8+2VraQdKrlRakRDWlzVTHQg9YuGZFiEsAAbT00NMzJC0NHYCyZkkfIbvNyv//Z" style="width:24px;height:24px;object-fit:contain">Messages<span id="msg-nav-dot" style="position:absolute;top:6px;right:calc(50% - 14px);width:7px;height:7px;border-radius:50%;background:#ff4444;display:none"></span></button>
-    <button class="nav-btn" id="nav-admin" onclick="showTab('admin')" style="display:none"><img src="data:image/png;base64,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" style="width:24px;height:24px;object-fit:contain">Admin</button>
+    <button class="nav-btn" id="nav-admin" onclick="showTab('admin')"><img src="data:image/png;base64,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" style="width:24px;height:24px;object-fit:contain">Admin</button>
   </nav>
   <!-- FLOATING INVENTORY BUTTON -->
   <div id="inventory-fab" onclick="openInventory()" style="position:fixed;bottom:80px;right:16px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#e0b840);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,.4);z-index:300;transition:transform .15s;display:none" id="inventory-fab">
@@ -1258,7 +1227,6 @@ async function startApp(uid){
     await checkDailyReward();
     populateMsgSelect();
     showLoading(false);
-    setTimeout(checkNewsPopup, 1500);
   }catch(e){showLoading(false);alert('Erreur : '+e.message);}
 }
 function showLoading(v){document.getElementById('loading').style.display=v?'flex':'none';}
@@ -2312,6 +2280,12 @@ async function startBattle(shop,stageNum,stage){
     showTaupeDialogue(shop.id, stageNum);
     return;
   }
+  // Special: Boss Jordan Carambar (LM Nice Centre-Ville stage 20)
+  if(shop.id==='sh_lm_nice2' && stageNum===20){
+    currentBattleShop=shop;
+    showBossDialogue(shop, stageNum, stage);
+    return;
+  }
   try{
     // Build stage_id from pattern if stage exists
     const stageId=stage?stage.id:('st_'+shop.id.replace('sh_','')+'_'+stageNum);
@@ -2543,6 +2517,16 @@ async function stageCleared(){
     }else{
       await dbPost('adventure_progress',{user_id:ME.id,shop_id:currentBattleShop.id,stage_number:newStage,completed});
     }
+    // Boss defeat dialogue for Jordan Carambar
+    if(currentBattleShop.id==='sh_lm_nice2' && currentBattleStageNum===20 && completed){
+      showBossDefeatDialogue();
+    }
+    // Boss defeat dialogue for Jordan Carambar
+    if(currentBattleShop && currentBattleShop.id==='sh_lm_nice2' && currentBattleStageNum===20 && completed){
+      setTimeout(showBossDefeatDialogue, 500);
+    }
+    // Boss defeat dialogue
+    if(currentBattleShop && currentBattleShop.id==='sh_lm_nice2' && currentBattleStageNum===20 && completed){ setTimeout(showBossDefeatDialogue,500); }
     // Show result
     const ov=document.createElement('div');
     ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px';
@@ -2999,19 +2983,10 @@ const ARENA_NAMES = {
   arena_3:'ZRM', arena_4:'Réception',
   arena_5:'Les Caisses', arena_6:'Sanitaire',
   arena_7:'Chapiteau Jardin', arena_8:'Bureaux Admins',
-  arena_9:'Rangement', arena_10:'Peinture',
-  arena_11:'La Cave', arena_12:'La Découpe', arena_13:'L\'Outlet'
+  arena_9:'Rangement', arena_10:'Peinture'
 };
 const TEAM_COLORS = {};
 const VS_REWARD = 300;
-
-// Versus rewards system
-const VS_REWARDS = [
-  { id:'r1', icon:'🛡️', title:'Boost DEF + 500 HS', desc:'Toutes vos cartes en arène gagnent +25% DEF pendant une semaine, et chaque membre reçoit 500 HS' },
-  { id:'r2', icon:'💰', title:'1000 HS', desc:'Chaque membre de l\'équipe gagnante reçoit 1000 HS' },
-  { id:'r3', icon:'🎁', title:'Booster Extra sans Commun', desc:'Chaque membre reçoit un Booster Extra avec garantie sans carte Commune' },
-  { id:'r4', icon:'⚡', title:'Double points ZRM + 500 HS', desc:'La ZRM rapporte 2x plus de points la semaine suivante, et chaque membre reçoit 500 HS' },
-];
 
 let arenas = {};
 let currentArenaId = null;
@@ -3065,7 +3040,7 @@ async function loadVersusMap() {
     allTeams.forEach(t => { teamColorMap[t.id] = (ME && t.id === ME.team_id) ? '#44cc44' : '#ff4444'; });
 
     // Update SVG arena circles
-    for (let i = 1; i <= 13; i++) {
+    for (let i = 1; i <= 10; i++) {
       const aid = 'arena_' + i;
       const arena = rows.find(r => r.id === aid);
       const slotCards = cardsByArena[aid] || [];
@@ -3355,8 +3330,12 @@ async function selectPlaceCard(cardId, arenaId) {
     const inArena = JSON.parse(localStorage.getItem('cc_in_arena') || '{}');
     inArena[cardId] = arenaId;
     localStorage.setItem('cc_in_arena', JSON.stringify(inArena));
-    // Update arena team_id whenever we place a card
-    if (ME.team_id) {
+    // Set arena team - always update if zone has no defending cards (visually neutral)
+    const arena = (await dbGet('arenas', 'id=eq.' + arenaId))[0];
+    const remainingCards = await dbGet('arena_cards', 'arena_id=eq.' + arenaId + '&select=id');
+    // remainingCards now includes the card we just added
+    if (ME.team_id && (remainingCards.length <= 1)) {
+      // First card in zone - claim it for our team
       await dbPatch('arenas', { team_id: ME.team_id, captured_at: new Date().toISOString() }, 'id=eq.' + arenaId);
     }
     spendPA(paCost);
@@ -3419,27 +3398,15 @@ function showVsCardSelect(myCards, slot, defCard, arenaId) {
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:12px';
   ov.innerHTML = `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)">Choisir ta carte</div>
     <div style="font-size:11px;color:rgba(255,255,255,.4)">Tu affrontes : <strong style="color:#ff8877">${defCard?.name || '?'}</strong> (ATK:${defCard?.atk || 0} DEF:${defCard?.def || 0})</div>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-height:55vh;overflow-y:auto">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-height:50vh;overflow-y:auto">
       ${myCards.map(c => {
         const isUrl = c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
-        const curHP = getCardCurrentHP(c); const maxHP = getCardMaxHP(c);
-        const dead = curHP <= 0; const inAr = isCardInArena(c.id);
-        const blocked = dead || inAr;
-        const heartsFull = Math.round((curHP/maxHP)*5);
-        const heartsHtml = Array(5).fill(0).map((_,i)=>'<span style="font-size:11px;color:'+(i<heartsFull?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
-        const imgHtml = isUrl ? '<img src="'+c.img_url+'" style="width:100%;height:100px;object-fit:cover;display:block">' : '<div style="height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">'+(c.img_url||'🛒')+'</div>';
-        return '<div onclick="'+(blocked?'':"launchVsBattle('"+c.id+"','"+slot.id+"','"+arenaId+"')")+'" style="border-radius:10px;overflow:hidden;border:2px solid '+(blocked?'rgba(255,68,68,.3)':'var(--bord)')+';cursor:'+(blocked?'not-allowed':'pointer')+';background:#000;opacity:'+(blocked?0.4:1)+';position:relative">'+
-          imgHtml+
-          '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.88));padding:5px 7px 4px">'+
-            '<div style="font-size:10px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(dead?'💀 ':inAr?'🏟️ ':'')+c.name+'</div>'+
-            '<div style="display:flex;justify-content:space-between;font-size:8px;margin-bottom:2px">'+
-              '<span style="color:#ff8877">⚔️'+(c.atk||0)+'</span>'+
-              '<span style="color:var(--gold)">⚡'+(c.pa||1)+'PA</span>'+
-              '<span style="color:#77aaff">🛡️'+(c.def||0)+'</span>'+
-            '</div>'+
-            '<div style="display:flex;gap:2px">'+heartsHtml+'</div>'+
-          '</div>'+
-        '</div>';
+        const curHP = getCardCurrentHP(c); const dead = curHP <= 0; const inAr = isCardInArena(c.id);
+        return `<div onclick="${(dead||inAr) ? '' : "launchVsBattle('" + c.id + "','" + slot.id + "','" + arenaId + "')"}" style="border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:${(dead||inAr) ? 'not-allowed' : 'pointer'};opacity:${(dead||inAr) ? .4 : 1};background:rgba(255,255,255,.04)">
+          ${isUrl ? `<img src="${c.img_url}" style="width:100%;height:70px;object-fit:cover;display:block">` : `<div style="height:70px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#111">${c.img_url || '🛒'}</div>`}
+          <div style="padding:3px;font-size:8px;text-align:center;color:rgba(255,255,255,.6)">${c.name}</div>
+          <div style="font-size:8px;text-align:center;padding-bottom:3px;color:rgba(255,255,255,.35)">❤️${Math.round(curHP)}/${getCardMaxHP(c)}</div>
+        </div>`;
       }).join('')}
     </div>
     <button onclick="document.getElementById('vs-card-sel').remove();openArena(currentArenaId)" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Annuler</button>`;
@@ -3860,17 +3827,11 @@ async function handleVersusReset() {
       const winnerId = sorted[0][0];
       const winnerTeam = (await dbGet('teams', 'id=eq.' + winnerId + '&select=name'))[0];
       
-      // Apply voted reward
-      const weekVotes = await dbGet('versus_votes', 'week_start=eq.' + thisMonday + '&team_id=eq.' + winnerId + '&select=reward_id');
-      const voteTally = {};
-      weekVotes.forEach(v => { voteTally[v.reward_id] = (voteTally[v.reward_id]||0)+1; });
-      let chosenReward = 'r2'; // default 1000 HS
-      if (Object.keys(voteTally).length) {
-        const maxVotes = Math.max(...Object.values(voteTally));
-        const topRewards = Object.entries(voteTally).filter(([,c])=>c===maxVotes).map(([id])=>id);
-        chosenReward = topRewards[Math.floor(Math.random()*topRewards.length)];
+      // Give 300 HS to all members of winning team
+      const winners = await dbGet('users', 'team_id=eq.' + winnerId + '&select=id,heures_sup,pseudo');
+      for (const u of winners) {
+        await dbPatch('users', { heures_sup: (u.heures_sup || 0) + 300 }, 'id=eq.' + u.id);
       }
-      await applyWinnerReward(winnerId, chosenReward);
       
       // Post news
       await postAutoNews('🏆 ' + (winnerTeam?.name || '?') + ' remporte le Versus cette semaine avec ' + sorted[0][1] + ' zones ! (+300 HS pour tous les membres)');
@@ -4499,14 +4460,11 @@ function saveActiveBounty(b) {
 
 function initBounties() {
   let state = getBountyState();
-  if (!state || !state.visible) {
-    // First time - pick 5 random quests, none done
+  if (!state || !state.visible || state.visible.length < BOUNTY_VISIBLE) {
+    // Pick 5 random quests
     const shuffled = [...BOUNTY_QUESTS].sort(() => Math.random() - 0.5);
     state = { visible: shuffled.slice(0, BOUNTY_VISIBLE).map(q => q.id), done: [] };
     saveBountyState(state);
-  } else if (state.visible.length < BOUNTY_VISIBLE) {
-    // Some quests were completed - fill up from available ones (not done)
-    state = refreshBounties();
   }
   return state;
 }
@@ -4806,12 +4764,9 @@ function bountyDefeat() {
 
 // ── LA TAUPE ──────────────────────────────────────────────────────────────────
 const TAUPE_MESSAGES = [
-  { text: "...", speaker: "???" },
-  { text: "Attends ! Ne m'attaque pas !", speaker: "???" },
-  { text: "Je suis des vôtres !", speaker: "La Taupe" },
-  { text: "Ça fait 15 ans que j'espionne Leroy Merlin pour le compte de Castorama !", speaker: "La Taupe" },
-  { text: "J'ai tout noté. Leurs stocks, leurs prix, leurs failles...", speaker: "La Taupe" },
-  { text: "Je vous transmets tout. Utilisez ces infos pour les écraser !", speaker: "La Taupe" },
+  { text: "Attends ! Ne me fais pas de mal !", speaker: "???" },
+  { text: "Je suis de votre côté ! J'ai été envoyé voilà des années par Castorama pour espionner Leroy Merlin !", speaker: "???" },
+  { text: "Je suis l'un des vôtres.", speaker: "La Taupe", choice: true },
 ];
 let taupeIdx = 0;
 let taupeShopId = null;
@@ -4829,14 +4784,27 @@ function showTaupeMsg(idx) {
   taupeIdx = idx;
   const msg = TAUPE_MESSAGES[idx];
   document.getElementById('taupe-speaker').textContent = msg.speaker;
-  document.getElementById('taupe-text').textContent = msg.text;
-  document.getElementById('taupe-next').textContent = idx >= TAUPE_MESSAGES.length - 1 ? '✅ Recruter !' : 'Suite →';
+  document.getElementById('taupe-text').textContent = '* ' + msg.text;
+  
+  const nextBtn = document.getElementById('taupe-next');
+  const choiceDiv = document.getElementById('taupe-choices');
+  
+  if (msg.choice) {
+    nextBtn.style.display = 'none';
+    if (choiceDiv) choiceDiv.style.display = 'flex';
+  } else {
+    nextBtn.style.display = 'block';
+    if (choiceDiv) choiceDiv.style.display = 'none';
+    nextBtn.textContent = 'Suite →';
+  }
 }
 
 async function taupeNext() {
+  if (TAUPE_MESSAGES[taupeIdx] && TAUPE_MESSAGES[taupeIdx].choice) return; // handled by choice buttons
   if (taupeIdx >= TAUPE_MESSAGES.length - 1) {
     // End dialogue - give reward and complete stage
-    document.getElementById('taupe-screen').classList.remove('active');
+    const tsEl = document.getElementById('taupe-screen');
+    if(tsEl) tsEl.style.display = 'none';
     showToast('🕵️ La taupe rejoint vos rangs ! +15 HS', '#6ddb9a', '🕵️', 5000);
     // Give reward
     const newHS = (ME.heures_sup || 0) + 15;
@@ -5072,195 +5040,128 @@ function renderHearts(curHP, maxHP, containerId) {
 }
 
 
-let titleTapCount = 0;
-let titleTapTimer = null;
-function handleTitleTap() {
-  titleTapCount++;
-  if (titleTapTimer) clearTimeout(titleTapTimer);
-  titleTapTimer = setTimeout(() => { titleTapCount = 0; }, 800);
-  if (titleTapCount >= 3) {
-    titleTapCount = 0;
-    const btn = document.getElementById('nav-admin');
-    if (btn) {
-      btn.style.display = 'flex';
-      showTab('admin');
-      showToast('🔧 Mode Admin activé', 'var(--gold)', '⚙️', 2000);
-    }
-  }
+async function taupeChooseRecruit() {
+  const choiceDiv = document.getElementById('taupe-choices');
+  if (choiceDiv) choiceDiv.style.display = 'none';
+  document.getElementById('taupe-text').textContent = '* Merci. Je vais vous transmettre tout ce que je sais sur Leroy Merlin...';
+  document.getElementById('taupe-speaker').textContent = 'La Taupe';
+  const nextBtn = document.getElementById('taupe-next');
+  nextBtn.textContent = '✅ Continuer';
+  nextBtn.style.display = 'block';
+  nextBtn.onclick = async function() {
+    nextBtn.onclick = null;
+    const tsEl = document.getElementById('taupe-screen');
+    if(tsEl) tsEl.style.display = 'none';
+    showToast('🕵️ La taupe rejoint vos rangs ! +15 HS', '#6ddb9a', '🕵️', 5000);
+    const newHS = (ME.heures_sup || 0) + 15;
+    await dbPatch('users', { heures_sup: newHS }, 'id=eq.' + ME.id);
+    ME.heures_sup = newHS;
+    gainXP(XP_ADVENTURE);
+    try {
+      const existing = await dbGet('adventure_progress', 'user_id=eq.' + ME.id + '&shop_id=eq.' + taupeShopId);
+      if (existing.length) {
+        if (taupeStageNum > (existing[0].stage_number || 0))
+          await dbPatch('adventure_progress', { stage_number: taupeStageNum }, 'user_id=eq.' + ME.id + '&shop_id=eq.' + taupeShopId);
+      } else {
+        try { await dbPost('adventure_progress', { user_id: ME.id, shop_id: taupeShopId, stage_number: taupeStageNum, completed: false }); } catch(dup){}
+      }
+    } catch(e) {}
+    loadAdventureStages(currentBattleShop, taupeStageNum);
+  };
 }
 
-
-// ── VERSUS VOTE SYSTEM ────────────────────────────────────────────────────────
-function getVsPhase() {
-  const now = new Date();
-  const day = now.getDay(); // 0=Sun, 1=Mon...6=Sat
-  const hour = now.getHours();
-  // Sun after 18h = vote phase
-  if (day === 0 && hour >= 18) return 'vote';
-  // Mon-Tue = placement
-  if (day === 1 || day === 2) return 'placement';
-  // Wed-Sat = attack, Sun before 18h = attack
-  if (day >= 3 || (day === 0 && hour < 18)) return 'attack';
-  return 'attack';
-}
-
-async function loadVotePanel() {
-  const phase = getVsPhase();
-  const voteEl = document.getElementById('vs-vote-panel');
-  if (!voteEl) return;
-
-  if (phase !== 'vote') {
-    voteEl.style.display = 'none';
-    return;
-  }
-
-  voteEl.style.display = 'block';
-
-  // Load current votes
-  const votes = await dbGet('versus_votes', 'week_start=eq.' + getWeekStart() + '&select=*');
-  const voteCounts = {};
-  VS_REWARDS.forEach(r => { voteCounts[r.id] = 0; });
-  votes.forEach(v => { if (voteCounts[v.reward_id] !== undefined) voteCounts[v.reward_id]++; });
-
-  // Check if current user already voted
-  const myVote = votes.find(v => v.user_id === ME?.id);
-
-  const totalVotes = votes.length;
-  let html = '<div style="font-size:1.1rem;color:var(--gold);margin-bottom:8px;font-weight:bold">🗳️ Vote récompense</div>';
-  html += '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:12px">Vote pour la récompense de l\'équipe gagnante !</div>';
-  VS_REWARDS.forEach(r => {
-    const count = voteCounts[r.id] || 0;
-    const pct = totalVotes ? Math.round(count/totalVotes*100) : 0;
-    const voted = myVote && myVote.reward_id === r.id;
-    const clickFn = myVote ? '' : 'castVote(' + JSON.stringify(r.id) + ')';
-    html += '<div style="background:'+(voted?'rgba(201,168,76,.12)':'var(--surf)')+';border:1px solid '+(voted?'var(--gold)':'var(--bord)')+';border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:'+(myVote?'default':'pointer')+'" onclick="'+clickFn+'">';
-    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">';
-    html += '<span style="font-size:18px">'+r.icon+'</span>';
-    html += '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:#fff">'+r.title+'</div>';
-    html += '<div style="font-size:10px;color:rgba(255,255,255,.4)">'+r.desc+'</div></div>';
-    if(voted) html += '<span style="font-size:10px;color:var(--gold);font-weight:700">✓</span>';
-    html += '</div>';
-    html += '<div style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--gold);border-radius:2px"></div></div>';
-    html += '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">'+count+' vote'+(count>1?'s':'')+' ('+pct+'%)</div></div>';
-  });
-  voteEl.innerHTML = html;
-}
-
-async function castVote(rewardId) {
-  if (!ME) return;
-  const week = getWeekStart();
-  try {
-    // Check if already voted
-    const existing = await dbGet('versus_votes', 'user_id=eq.' + ME.id + '&week_start=eq.' + week + '&select=id');
-    if (existing.length) {
-      showToast('Tu as déjà voté cette semaine !', '#ff8800', '🗳️', 2000);
-      return;
-    }
-    await dbPost('versus_votes', {
-      id: 'vote_' + ME.id + '_' + week,
-      user_id: ME.id,
-      team_id: ME.team_id,
-      reward_id: rewardId,
-      week_start: week
-    });
-    showToast('✅ Vote enregistré !', '#6ddb9a', '🗳️', 3000);
-    await loadVotePanel();
-  } catch(e) { showToast('❌ ' + e.message, '#ff4444', '❌', 3000); }
-}
-
-async function applyWinnerReward(winnerTeamId, rewardId) {
-  if (!ME || ME.id !== OWNER_ID) return;
-  const reward = VS_REWARDS.find(r => r.id === rewardId);
-  if (!reward) return;
-  const members = await dbGet('users', 'team_id=eq.' + winnerTeamId + '&select=id,heures_sup,pseudo');
-
-  if (rewardId === 'r1') {
-    // +500 HS + set def boost flag
-    for (const u of members) {
-      await dbPatch('users', { heures_sup: (u.heures_sup||0) + 500 }, 'id=eq.' + u.id);
-    }
-    await postAutoNews('🛡️ ' + reward.title + ' : l\'équipe gagnante reçoit le boost DEF + 500 HS !');
-  } else if (rewardId === 'r2') {
-    for (const u of members) {
-      await dbPatch('users', { heures_sup: (u.heures_sup||0) + 1000 }, 'id=eq.' + u.id);
-    }
-    await postAutoNews('💰 ' + reward.title + ' : chaque membre reçoit 1000 HS !');
-  } else if (rewardId === 'r3') {
-    // Give booster extra to each member
-    for (const u of members) {
-      const existing = (await dbGet('inventory', 'user_id=eq.' + u.id + '&item_type=eq.booster&select=*'))[0];
-      if (existing) await dbPatch('inventory', { quantity: existing.quantity + 1 }, 'id=eq.' + existing.id);
-      else await dbPost('inventory', { id: 'inv_b_' + u.id + '_' + Date.now(), user_id: u.id, item_type: 'booster_nocommon', quantity: 1 });
-    }
-    await postAutoNews('🎁 ' + reward.title + ' : chaque membre reçoit un Booster Extra sans Commun !');
-  } else if (rewardId === 'r4') {
-    for (const u of members) {
-      await dbPatch('users', { heures_sup: (u.heures_sup||0) + 500 }, 'id=eq.' + u.id);
-    }
-    await postAutoNews('⚡ ' + reward.title + ' : double points ZRM + 500 HS pour l\'équipe gagnante !');
-  }
-  showToast('🏆 Récompense appliquée !', 'var(--gold)', '🏆', 5000);
-}
-
-
-function openRewardsPopup() {
-  const popup = document.getElementById('rewards-popup');
-  const box = document.getElementById('rewards-box');
-  const list = document.getElementById('rewards-list');
+async function taupeChooseKill() {
+  const choiceDiv = document.getElementById('taupe-choices');
+  if (choiceDiv) choiceDiv.style.display = 'none';
+  const ts = document.getElementById('taupe-screen');
+  if (ts) ts.style.display = 'none';
   
-  list.innerHTML = VS_REWARDS.map(r => 
-    '<div style="background:var(--surf);border:1px solid var(--bord);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start">' +
-      '<span style="font-size:28px;flex-shrink:0">' + r.icon + '</span>' +
-      '<div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">' + r.title + '</div>' +
-      '<div style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.5">' + r.desc + '</div></div>' +
-    '</div>'
-  ).join('');
+  // Override bountyVictory to also complete taupe stage
+  const _savedShopId = taupeShopId;
+  const _savedStageNum = taupeStageNum;
+  const _savedShop = currentBattleShop;
   
-  popup.style.display = 'flex';
-  setTimeout(() => { box.style.transform = 'translateY(0)'; }, 10);
+  currentBountyQuest = {
+    id: 'taupe_combat',
+    title: 'La Taupe',
+    icon: '🕵️',
+    enemy: { name: 'La Taupe', atk: 1200, def: 2000, hp: 6000 },
+    reward: 20
+  };
+  
+  // Monkey-patch bountyVictory for this fight
+  const _origVictory = window.bountyVictory;
+  window.bountyVictory = async function() {
+    window.bountyVictory = _origVictory;
+    document.getElementById('versus-battle').classList.remove('active');
+    document.getElementById('vb-attacker').onclick = vbTapAttack;
+    saveCardHP(bountyAttackerCard.id, Math.max(0, bountyPlayerHP));
+    showToast('💀 La Taupe éliminée ! +20 HS', '#ff4444', '🕵️', 4000);
+    const newHS = (ME.heures_sup || 0) + 20;
+    await dbPatch('users', { heures_sup: newHS }, 'id=eq.' + ME.id);
+    ME.heures_sup = newHS;
+    gainXP(XP_ADVENTURE);
+    try {
+      const existing = await dbGet('adventure_progress', 'user_id=eq.' + ME.id + '&shop_id=eq.' + _savedShopId);
+      if (existing.length) {
+        if (_savedStageNum > (existing[0].stage_number || 0))
+          await dbPatch('adventure_progress', { stage_number: _savedStageNum }, 'user_id=eq.' + ME.id + '&shop_id=eq.' + _savedShopId);
+      } else {
+        try { await dbPost('adventure_progress', { user_id: ME.id, shop_id: _savedShopId, stage_number: _savedStageNum, completed: false }); } catch(dup){}
+      }
+    } catch(e) {}
+    currentBountyQuest = null;
+    loadAdventureStages(_savedShop, _savedStageNum);
+  };
+  
+  startBountyCombat(currentBountyQuest);
 }
 
-function closeRewardsPopup() {
-  const box = document.getElementById('rewards-box');
-  box.style.transform = 'translateY(100%)';
-  setTimeout(() => { document.getElementById('rewards-popup').style.display = 'none'; }, 250);
+async function taupeFinish() {
+  document.getElementById('taupe-next').onclick = taupeNext;
+  // Force end
+  taupeIdx = TAUPE_MESSAGES.length - 1;
+  await taupeNext();
 }
 
 
-// ── NEWS POPUP (Undertale style) ──────────────────────────────────────────────
-async function checkNewsPopup() {
-  if (!ME) return;
-  try {
-    const news = await dbGet('news', 'type=eq.manual&select=*&order=created_at.desc&limit=1');
-    if (!news.length) return;
-    const latest = news[0];
-    const seenId = localStorage.getItem('cc_last_news_seen');
-    if (seenId === latest.id) return; // Already seen
-    // Show popup
-    showNewsPopup(latest);
-  } catch(e) {}
-}
-
-function showNewsPopup(newsItem) {
+// ── BOSS JORDAN CARAMBAR ─────────────────────────────────────────────────────
+function showBossDialogue(shop, stageNum, stage) {
   const ov = document.createElement('div');
-  ov.id = 'news-popup-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:950;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
-  ov.innerHTML =
-    '<div style="font-size:48px">📢</div>' +
-    '<div style="width:100%;max-width:400px;background:#000;border:4px solid #fff;padding:20px 22px;font-family:cursive;color:#fff;font-size:13px;line-height:1.8">' +
-      '<div style="color:var(--gold);font-size:10px;margin-bottom:10px;font-weight:bold">* MESSAGE DE LA DIRECTION</div>' +
-      '<div id="news-popup-text"></div>' +
-    '</div>' +
-    '<button id="news-popup-btn" style="background:#000;color:#fff;border:4px solid #fff;padding:12px 28px;font-family:cursive;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* OK !</button>';
-  document.getElementById('news-popup-text').textContent = newsItem.content;
-  document.getElementById('news-popup-btn').onclick = () => closeNewsPopup(newsItem.id);
+  ov.id = 'boss-intro-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:#0a0008;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+  ov.innerHTML = '<div style="font-size:64px;animation:float2px 2s ease-in-out infinite">&#128548;</div>' +
+    '<div style="width:100%;max-width:400px;background:#000;border:4px solid #ff4444;padding:20px 22px">' +
+    '<div style="color:#ff4444;font-size:9px;margin-bottom:10px;font-weight:bold">* JORDAN CARAMBAR</div>' +
+    '<div id="boss-intro-text" style="font-size:13px;color:#fff;line-height:1.8;font-weight:bold"></div></div>' +
+    '<button id="boss-intro-btn" style="background:#000;color:#ff4444;border:4px solid #ff4444;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* COMBATTRE !</button>';
   document.body.appendChild(ov);
+  document.getElementById("boss-intro-text").textContent = "* Vous ne savez pas dans quoi vous mettez les pieds bandes d'imbéciles !";
+  document.getElementById('boss-intro-btn').onclick = async function() {
+    ov.remove();
+    try {
+      const stageId = stage ? stage.id : ('st_' + shop.id.replace('sh_','') + '_' + stageNum);
+      const enemies = await dbGet('enemy_cards','stage_id=eq.'+stageId+'&select=*&order=position.asc');
+      if(!enemies.length){ alert('Aucun ennemi configuré !'); return; }
+      openBattleScreen(shop, stageNum, stage, enemies);
+    } catch(e) { alert('Erreur : ' + e.message); }
+  };
 }
 
-function closeNewsPopup(newsId) {
-  localStorage.setItem('cc_last_news_seen', newsId);
-  const ov = document.getElementById('news-popup-ov');
-  if (ov) ov.remove();
+function showBossDefeatDialogue() {
+  const ov = document.createElement('div');
+  ov.id = 'boss-defeat-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+  ov.innerHTML = '<div style="font-size:64px">&#128553;</div>' +
+    '<div style="width:100%;max-width:400px;background:#000;border:4px solid #fff;padding:20px 22px">' +
+    '<div style="color:var(--gold);font-size:9px;margin-bottom:10px;font-weight:bold">* JORDAN CARAMBAR</div>' +
+    '<div id="boss-defeat-text" style="font-size:13px;color:#fff;line-height:1.8;font-weight:bold"></div></div>' +
+    '<div id="boss-fin-text" style="font-size:9px;color:var(--gold);text-align:center;font-weight:bold"></div>' +
+    '<button id="boss-defeat-btn" style="background:#000;color:#fff;border:4px solid #fff;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* Continuer</button>';
+  document.body.appendChild(ov);
+  document.getElementById("boss-defeat-text").textContent = "* Mais d'où sort-il toute cette énergie ?";
+  document.getElementById("boss-fin-text").textContent = "— FIN DE LEROY MERLIN NICE CENTRE-VILLE —";
+  document.getElementById("boss-defeat-btn").onclick = function() { ov.remove(); };
 }
 
 init();
@@ -5419,6 +5320,14 @@ init();
     <div id="taupe-speaker" style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px"></div>
     <div id="taupe-text" style="font-size:17px;color:#fff;line-height:1.8;font-weight:bold;min-height:60px"></div>
   </div>
+  <div id="taupe-choices" style="display:none;flex-direction:column;gap:10px;width:100%;max-width:360px">
+    <button onclick="taupeChooseKill()" style="width:100%;padding:14px;background:#000;border:3px solid #ff4444;color:#ff4444;font-weight:700;font-size:12px;border-radius:12px;cursor:pointer;font-family:'Press Start 2P',monospace;line-height:1.5">* Peu importe, tu portes du vert, t'es mort mec.</button>
+    <button onclick="taupeChooseRecruit()" style="width:100%;padding:14px;background:#000;border:3px solid #6ddb9a;color:#6ddb9a;font-weight:700;font-size:12px;border-radius:12px;cursor:pointer;font-family:'Press Start 2P',monospace;line-height:1.5">* Ok vas-y, rejoins nos rangs la taupe.</button>
+  </div>
+  <div id="taupe-choices" style="display:none;flex-direction:column;gap:10px;width:100%;max-width:360px">
+    <button onclick="taupeChooseKill()" style="width:100%;padding:12px;background:#000;border:3px solid #ff4444;color:#ff4444;font-weight:700;font-size:10px;border-radius:12px;cursor:pointer;font-family:'Press Start 2P',monospace;line-height:1.6">* Peu importe, tu portes du vert,<br>t'es mort mec.</button>
+    <button onclick="taupeChooseRecruit()" style="width:100%;padding:12px;background:#000;border:3px solid #6ddb9a;color:#6ddb9a;font-weight:700;font-size:10px;border-radius:12px;cursor:pointer;font-family:'Press Start 2P',monospace;line-height:1.6">* Ok vas-y, rejoins nos rangs<br>la taupe.</button>
+  </div>
   <button id="taupe-next" onclick="taupeNext()" style="width:100%;max-width:360px;padding:14px;background:linear-gradient(135deg,var(--gold),#e0b840);color:#1a1209;font-weight:700;font-size:14px;border-radius:12px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Suite →</button>
 </div>
 
@@ -5427,27 +5336,6 @@ init();
 <div id="update-banner" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,var(--gold),#e0b840);padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;cursor:pointer" onclick="window.location.reload(true)">
   <div style="font-size:12px;color:#1a1209;font-weight:700;line-height:1.4">⚡ Des mises à jour ont peut-être été réalisées.<br>Appuie ici pour mettre à jour !</div>
   <button onclick="event.stopPropagation();document.getElementById('update-banner').style.display='none'" style="background:rgba(0,0,0,.15);border:none;color:#1a1209;font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0">✕</button>
-</div>
-
-
-<!-- REWARDS POPUP -->
-<div id="rewards-popup" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:800;display:none;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeRewardsPopup()">
-  <div id="rewards-box" style="background:linear-gradient(145deg,#13132a,#1a1a3e);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;border-top:1px solid var(--bord);max-height:80vh;overflow-y:auto;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)">🏆 Récompenses ce Versus</div>
-      <button onclick="closeRewardsPopup()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer">✕</button>
-    </div>
-    <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:16px">L'équipe gagnante vote pour sa récompense — Dimanche 18h</div>
-    <div id="rewards-list"></div>
-    <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--bord)">
-      <div style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.7">
-        🗳️ <strong style="color:#fff">Comment voter ?</strong><br>
-        Dimanche 18h → un panel de vote apparaît dans cet écran.<br>
-        Chaque membre de l'équipe gagnante vote pour sa récompense préférée.<br>
-        La plus votée est appliquée lundi à minuit.
-      </div>
-    </div>
-  </div>
 </div>
 
 </body>
