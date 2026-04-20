@@ -4808,7 +4808,8 @@ function showTaupeDialogue(shopId, stageNum) {
   taupeIdx = 0;
   taupeShopId = shopId;
   taupeStageNum = stageNum;
-  document.getElementById('taupe-screen').classList.add('active');
+  const ts = document.getElementById('taupe-screen');
+  if(ts) { ts.style.display = 'flex'; ts.style.flexDirection = 'column'; }
   showTaupeMsg(0);
 }
 
@@ -4855,7 +4856,7 @@ async function taupeNext() {
       }
     } catch(e) {}
     // Return to stage view and refresh
-    loadAdventureStages(currentBattleShop, taupeStageNum);
+    if(currentBattleShop){ openShop(currentBattleShop, taupeStageNum); }
   } else {
     showTaupeMsg(taupeIdx + 1);
   }
@@ -5098,7 +5099,7 @@ async function taupeChooseRecruit() {
         try { await dbPost('adventure_progress', { user_id: ME.id, shop_id: taupeShopId, stage_number: taupeStageNum, completed: false }); } catch(dup){}
       }
     } catch(e) {}
-    loadAdventureStages(currentBattleShop, taupeStageNum);
+    if(currentBattleShop){ openShop(currentBattleShop, taupeStageNum); }
   };
 }
 
@@ -5143,7 +5144,7 @@ async function taupeChooseKill() {
       }
     } catch(e) {}
     currentBountyQuest = null;
-    loadAdventureStages(_savedShop, _savedStageNum);
+    if(_savedShop){ openShop(_savedShop, _savedStageNum); }
   };
   
   startBountyCombat(currentBountyQuest);
