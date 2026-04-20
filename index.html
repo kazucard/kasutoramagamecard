@@ -707,10 +707,14 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
   <div class="screen" id="screen-versus">
   <div id="vs-vote-panel" style="width:100%;display:none;margin-bottom:16px"></div>
     <div id="versus-phase-banner" style="width:100%;padding:8px 14px;border-radius:10px;text-align:center;font-size:12px;font-weight:600;margin:10px 0;display:none"></div>
+    <!-- Rewards button -->
+    <div style="width:100%;display:flex;justify-content:flex-end;margin-bottom:6px">
+      <button onclick="openRewardsPopup()" style="background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);color:var(--gold);padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">🏆 Récompenses possibles</button>
+    </div>
     
     <!-- MAP -->
     <div id="versus-map-wrap" style="width:100%;position:relative;margin-bottom:12px">
-      <svg id="versus-map" viewBox="0 0 320 480" style="width:100%;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--bord)">
+      <svg id="versus-map" viewBox="0 0 320 580" style="width:100%;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--bord)">
         <!-- Background grid -->
         <defs>
           <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
@@ -796,6 +800,32 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
         <line x1="160" y1="268" x2="240" y2="285" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
         <line x1="80" y1="358" x2="100" y2="394" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
         <line x1="240" y1="338" x2="215" y2="394" stroke="rgba(255,255,255,.06)" stroke-width="1.5"/>
+
+        <!-- Lines to new arenas -->
+        <line x1="110" y1="448" x2="80" y2="510" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>
+        <line x1="220" y1="448" x2="220" y2="510" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>
+        <line x1="220" y1="448" x2="310" y2="510" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>
+
+        <!-- Arena 11: La Cave -->
+        <g id="arena-11" class="arena-node" onclick="openArena('arena_11')" style="cursor:pointer">
+          <circle cx="80" cy="530" r="28" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.15)" stroke-width="2" id="arena-11-circle"/>
+          <text x="80" y="525" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)" font-weight="600">La Cave</text>
+          <text x="80" y="538" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.4)" id="arena-11-count">0/3</text>
+        </g>
+
+        <!-- Arena 12: La Découpe -->
+        <g id="arena-12" class="arena-node" onclick="openArena('arena_12')" style="cursor:pointer">
+          <circle cx="220" cy="530" r="28" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.15)" stroke-width="2" id="arena-12-circle"/>
+          <text x="220" y="525" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)" font-weight="600">La Découpe</text>
+          <text x="220" y="538" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.4)" id="arena-12-count">0/3</text>
+        </g>
+
+        <!-- Arena 13: L'Outlet -->
+        <g id="arena-13" class="arena-node" onclick="openArena('arena_13')" style="cursor:pointer">
+          <circle cx="310" cy="530" r="28" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.15)" stroke-width="2" id="arena-13-circle"/>
+          <text x="310" y="525" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)" font-weight="600">L'Outlet</text>
+          <text x="310" y="538" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.4)" id="arena-13-count">0/3</text>
+        </g>
       </svg>
 
       <!-- Legend -->
@@ -5172,6 +5202,30 @@ async function applyWinnerReward(winnerTeamId, rewardId) {
   showToast('🏆 Récompense appliquée !', 'var(--gold)', '🏆', 5000);
 }
 
+
+function openRewardsPopup() {
+  const popup = document.getElementById('rewards-popup');
+  const box = document.getElementById('rewards-box');
+  const list = document.getElementById('rewards-list');
+  
+  list.innerHTML = VS_REWARDS.map(r => 
+    '<div style="background:var(--surf);border:1px solid var(--bord);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start">' +
+      '<span style="font-size:28px;flex-shrink:0">' + r.icon + '</span>' +
+      '<div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">' + r.title + '</div>' +
+      '<div style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.5">' + r.desc + '</div></div>' +
+    '</div>'
+  ).join('');
+  
+  popup.style.display = 'flex';
+  setTimeout(() => { box.style.transform = 'translateY(0)'; }, 10);
+}
+
+function closeRewardsPopup() {
+  const box = document.getElementById('rewards-box');
+  box.style.transform = 'translateY(100%)';
+  setTimeout(() => { document.getElementById('rewards-popup').style.display = 'none'; }, 250);
+}
+
 init();
 </script>
 
@@ -5336,6 +5390,27 @@ init();
 <div id="update-banner" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,var(--gold),#e0b840);padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;cursor:pointer" onclick="window.location.reload(true)">
   <div style="font-size:12px;color:#1a1209;font-weight:700;line-height:1.4">⚡ Des mises à jour ont peut-être été réalisées.<br>Appuie ici pour mettre à jour !</div>
   <button onclick="event.stopPropagation();document.getElementById('update-banner').style.display='none'" style="background:rgba(0,0,0,.15);border:none;color:#1a1209;font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0">✕</button>
+</div>
+
+
+<!-- REWARDS POPUP -->
+<div id="rewards-popup" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:800;display:none;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeRewardsPopup()">
+  <div id="rewards-box" style="background:linear-gradient(145deg,#13132a,#1a1a3e);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;border-top:1px solid var(--bord);max-height:80vh;overflow-y:auto;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)">🏆 Récompenses ce Versus</div>
+      <button onclick="closeRewardsPopup()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:16px">L'équipe gagnante vote pour sa récompense — Dimanche 18h</div>
+    <div id="rewards-list"></div>
+    <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--bord)">
+      <div style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.7">
+        🗳️ <strong style="color:#fff">Comment voter ?</strong><br>
+        Dimanche 18h → un panel de vote apparaît dans cet écran.<br>
+        Chaque membre de l'équipe gagnante vote pour sa récompense préférée.<br>
+        La plus votée est appliquée lundi à minuit.
+      </div>
+    </div>
+  </div>
 </div>
 
 </body>
