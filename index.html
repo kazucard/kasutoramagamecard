@@ -1258,6 +1258,7 @@ async function startApp(uid){
     await checkDailyReward();
     populateMsgSelect();
     showLoading(false);
+    setTimeout(checkNewsPopup, 1500);
   }catch(e){showLoading(false);alert('Erreur : '+e.message);}
 }
 function showLoading(v){document.getElementById('loading').style.display=v?'flex':'none';}
@@ -4498,11 +4499,14 @@ function saveActiveBounty(b) {
 
 function initBounties() {
   let state = getBountyState();
-  if (!state || !state.visible || state.visible.length < BOUNTY_VISIBLE) {
-    // Pick 5 random quests
+  if (!state || !state.visible) {
+    // First time - pick 5 random quests, none done
     const shuffled = [...BOUNTY_QUESTS].sort(() => Math.random() - 0.5);
     state = { visible: shuffled.slice(0, BOUNTY_VISIBLE).map(q => q.id), done: [] };
     saveBountyState(state);
+  } else if (state.visible.length < BOUNTY_VISIBLE) {
+    // Some quests were completed - fill up from available ones (not done)
+    state = refreshBounties();
   }
   return state;
 }
@@ -5220,6 +5224,43 @@ function closeRewardsPopup() {
   const box = document.getElementById('rewards-box');
   box.style.transform = 'translateY(100%)';
   setTimeout(() => { document.getElementById('rewards-popup').style.display = 'none'; }, 250);
+}
+
+
+// ── NEWS POPUP (Undertale style) ──────────────────────────────────────────────
+async function checkNewsPopup() {
+  if (!ME) return;
+  try {
+    const news = await dbGet('news', 'type=eq.manual&select=*&order=created_at.desc&limit=1');
+    if (!news.length) return;
+    const latest = news[0];
+    const seenId = localStorage.getItem('cc_last_news_seen');
+    if (seenId === latest.id) return; // Already seen
+    // Show popup
+    showNewsPopup(latest);
+  } catch(e) {}
+}
+
+function showNewsPopup(newsItem) {
+  const ov = document.createElement('div');
+  ov.id = 'news-popup-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:950;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+  ov.innerHTML =
+    '<div style="font-size:48px">📢</div>' +
+    '<div style="width:100%;max-width:400px;background:#000;border:4px solid #fff;padding:20px 22px;font-family:cursive;color:#fff;font-size:13px;line-height:1.8">' +
+      '<div style="color:var(--gold);font-size:10px;margin-bottom:10px;font-weight:bold">* MESSAGE DE LA DIRECTION</div>' +
+      '<div id="news-popup-text"></div>' +
+    '</div>' +
+    '<button id="news-popup-btn" style="background:#000;color:#fff;border:4px solid #fff;padding:12px 28px;font-family:cursive;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* OK !</button>';
+  document.getElementById('news-popup-text').textContent = newsItem.content;
+  document.getElementById('news-popup-btn').onclick = () => closeNewsPopup(newsItem.id);
+  document.body.appendChild(ov);
+}
+
+function closeNewsPopup(newsId) {
+  localStorage.setItem('cc_last_news_seen', newsId);
+  const ov = document.getElementById('news-popup-ov');
+  if (ov) ov.remove();
 }
 
 init();
