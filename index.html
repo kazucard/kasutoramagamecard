@@ -705,6 +705,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 
   <!-- VERSUS -->
   <div class="screen" id="screen-versus">
+  <div id="vs-vote-panel" style="width:100%;display:none;margin-bottom:16px"></div>
     <div id="versus-phase-banner" style="width:100%;padding:8px 14px;border-radius:10px;text-align:center;font-size:12px;font-weight:600;margin:10px 0;display:none"></div>
     
     <!-- MAP -->
@@ -2967,10 +2968,19 @@ const ARENA_NAMES = {
   arena_3:'ZRM', arena_4:'Réception',
   arena_5:'Les Caisses', arena_6:'Sanitaire',
   arena_7:'Chapiteau Jardin', arena_8:'Bureaux Admins',
-  arena_9:'Rangement', arena_10:'Peinture'
+  arena_9:'Rangement', arena_10:'Peinture',
+  arena_11:'La Cave', arena_12:'La Découpe', arena_13:'L\'Outlet'
 };
 const TEAM_COLORS = {};
 const VS_REWARD = 300;
+
+// Versus rewards system
+const VS_REWARDS = [
+  { id:'r1', icon:'🛡️', title:'Boost DEF + 500 HS', desc:'Toutes vos cartes en arène gagnent +25% DEF pendant une semaine, et chaque membre reçoit 500 HS' },
+  { id:'r2', icon:'💰', title:'1000 HS', desc:'Chaque membre de l\'équipe gagnante reçoit 1000 HS' },
+  { id:'r3', icon:'🎁', title:'Booster Extra sans Commun', desc:'Chaque membre reçoit un Booster Extra avec garantie sans carte Commune' },
+  { id:'r4', icon:'⚡', title:'Double points ZRM + 500 HS', desc:'La ZRM rapporte 2x plus de points la semaine suivante, et chaque membre reçoit 500 HS' },
+];
 
 let arenas = {};
 let currentArenaId = null;
@@ -3823,11 +3833,17 @@ async function handleVersusReset() {
       const winnerId = sorted[0][0];
       const winnerTeam = (await dbGet('teams', 'id=eq.' + winnerId + '&select=name'))[0];
       
-      // Give 300 HS to all members of winning team
-      const winners = await dbGet('users', 'team_id=eq.' + winnerId + '&select=id,heures_sup,pseudo');
-      for (const u of winners) {
-        await dbPatch('users', { heures_sup: (u.heures_sup || 0) + 300 }, 'id=eq.' + u.id);
+      // Apply voted reward
+      const weekVotes = await dbGet('versus_votes', 'week_start=eq.' + thisMonday + '&team_id=eq.' + winnerId + '&select=reward_id');
+      const voteTally = {};
+      weekVotes.forEach(v => { voteTally[v.reward_id] = (voteTally[v.reward_id]||0)+1; });
+      let chosenReward = 'r2'; // default 1000 HS
+      if (Object.keys(voteTally).length) {
+        const maxVotes = Math.max(...Object.values(voteTally));
+        const topRewards = Object.entries(voteTally).filter(([,c])=>c===maxVotes).map(([id])=>id);
+        chosenReward = topRewards[Math.floor(Math.random()*topRewards.length)];
       }
+      await applyWinnerReward(winnerId, chosenReward);
       
       // Post news
       await postAutoNews('🏆 ' + (winnerTeam?.name || '?') + ' remporte le Versus cette semaine avec ' + sorted[0][1] + ' zones ! (+300 HS pour tous les membres)');
@@ -5041,6 +5057,119 @@ function handleTitleTap() {
       showToast('🔧 Mode Admin activé', 'var(--gold)', '⚙️', 2000);
     }
   }
+}
+
+
+// ── VERSUS VOTE SYSTEM ────────────────────────────────────────────────────────
+function getVsPhase() {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun, 1=Mon...6=Sat
+  const hour = now.getHours();
+  // Sun after 18h = vote phase
+  if (day === 0 && hour >= 18) return 'vote';
+  // Mon-Tue = placement
+  if (day === 1 || day === 2) return 'placement';
+  // Wed-Sat = attack, Sun before 18h = attack
+  if (day >= 3 || (day === 0 && hour < 18)) return 'attack';
+  return 'attack';
+}
+
+async function loadVotePanel() {
+  const phase = getVsPhase();
+  const voteEl = document.getElementById('vs-vote-panel');
+  if (!voteEl) return;
+
+  if (phase !== 'vote') {
+    voteEl.style.display = 'none';
+    return;
+  }
+
+  voteEl.style.display = 'block';
+
+  // Load current votes
+  const votes = await dbGet('versus_votes', 'week_start=eq.' + getWeekStart() + '&select=*');
+  const voteCounts = {};
+  VS_REWARDS.forEach(r => { voteCounts[r.id] = 0; });
+  votes.forEach(v => { if (voteCounts[v.reward_id] !== undefined) voteCounts[v.reward_id]++; });
+
+  // Check if current user already voted
+  const myVote = votes.find(v => v.user_id === ME?.id);
+
+  const totalVotes = votes.length;
+  let html = '<div style="font-size:1.1rem;color:var(--gold);margin-bottom:8px;font-weight:bold">🗳️ Vote récompense</div>';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:12px">Vote pour la récompense de l\'équipe gagnante !</div>';
+  VS_REWARDS.forEach(r => {
+    const count = voteCounts[r.id] || 0;
+    const pct = totalVotes ? Math.round(count/totalVotes*100) : 0;
+    const voted = myVote && myVote.reward_id === r.id;
+    const clickFn = myVote ? '' : 'castVote(' + JSON.stringify(r.id) + ')';
+    html += '<div style="background:'+(voted?'rgba(201,168,76,.12)':'var(--surf)')+';border:1px solid '+(voted?'var(--gold)':'var(--bord)')+';border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:'+(myVote?'default':'pointer')+'" onclick="'+clickFn+'">';
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">';
+    html += '<span style="font-size:18px">'+r.icon+'</span>';
+    html += '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:#fff">'+r.title+'</div>';
+    html += '<div style="font-size:10px;color:rgba(255,255,255,.4)">'+r.desc+'</div></div>';
+    if(voted) html += '<span style="font-size:10px;color:var(--gold);font-weight:700">✓</span>';
+    html += '</div>';
+    html += '<div style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--gold);border-radius:2px"></div></div>';
+    html += '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">'+count+' vote'+(count>1?'s':'')+' ('+pct+'%)</div></div>';
+  });
+  voteEl.innerHTML = html;
+}
+
+async function castVote(rewardId) {
+  if (!ME) return;
+  const week = getWeekStart();
+  try {
+    // Check if already voted
+    const existing = await dbGet('versus_votes', 'user_id=eq.' + ME.id + '&week_start=eq.' + week + '&select=id');
+    if (existing.length) {
+      showToast('Tu as déjà voté cette semaine !', '#ff8800', '🗳️', 2000);
+      return;
+    }
+    await dbPost('versus_votes', {
+      id: 'vote_' + ME.id + '_' + week,
+      user_id: ME.id,
+      team_id: ME.team_id,
+      reward_id: rewardId,
+      week_start: week
+    });
+    showToast('✅ Vote enregistré !', '#6ddb9a', '🗳️', 3000);
+    await loadVotePanel();
+  } catch(e) { showToast('❌ ' + e.message, '#ff4444', '❌', 3000); }
+}
+
+async function applyWinnerReward(winnerTeamId, rewardId) {
+  if (!ME || ME.id !== OWNER_ID) return;
+  const reward = VS_REWARDS.find(r => r.id === rewardId);
+  if (!reward) return;
+  const members = await dbGet('users', 'team_id=eq.' + winnerTeamId + '&select=id,heures_sup,pseudo');
+
+  if (rewardId === 'r1') {
+    // +500 HS + set def boost flag
+    for (const u of members) {
+      await dbPatch('users', { heures_sup: (u.heures_sup||0) + 500 }, 'id=eq.' + u.id);
+    }
+    await postAutoNews('🛡️ ' + reward.title + ' : l\'équipe gagnante reçoit le boost DEF + 500 HS !');
+  } else if (rewardId === 'r2') {
+    for (const u of members) {
+      await dbPatch('users', { heures_sup: (u.heures_sup||0) + 1000 }, 'id=eq.' + u.id);
+    }
+    await postAutoNews('💰 ' + reward.title + ' : chaque membre reçoit 1000 HS !');
+  } else if (rewardId === 'r3') {
+    // Give booster extra to each member
+    for (const u of members) {
+      const existing = (await dbGet('inventory', 'user_id=eq.' + u.id + '&item_type=eq.booster&select=*'))[0];
+      if (existing) await dbPatch('inventory', { quantity: existing.quantity + 1 }, 'id=eq.' + existing.id);
+      else await dbPost('inventory', { id: 'inv_b_' + u.id + '_' + Date.now(), user_id: u.id, item_type: 'booster_nocommon', quantity: 1 });
+    }
+    await postAutoNews('🎁 ' + reward.title + ' : chaque membre reçoit un Booster Extra sans Commun !');
+  } else if (rewardId === 'r4') {
+    for (const u of members) {
+      await dbPatch('users', { heures_sup: (u.heures_sup||0) + 500 }, 'id=eq.' + u.id);
+    }
+    await postAutoNews('⚡ ' + reward.title + ' : double points ZRM + 500 HS pour l\'équipe gagnante !');
+  }
+  showToast('🏆 Récompense appliquée !', 'var(--gold)', '🏆', 5000);
 }
 
 init();
