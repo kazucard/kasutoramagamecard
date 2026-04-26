@@ -3052,9 +3052,17 @@ function getPhaseLabel() {
 
 async function loadVersusMap() {
   if (!ME) return;
+  loadVotePanel().catch(()=>{});
   // Calculate and display points
   await calcAndSaveVersusPoints();
   await loadVersusPointsDisplay();
+  // Show winner banner if vote phase
+  if (getVsPhase() === 'vote') {
+    const pts = await dbGet('versus_points', 'week_start=eq.' + getWeekStart() + '&select=*&order=points.desc');
+    if (pts.length && ME && pts[0].team_id === ME.team_id) {
+      showToast('🏆 Votre équipe mène ! Votez pour votre récompense ⬇️', 'var(--gold)', '🏆', 6000);
+    }
+  }
   try {
     const rows = await dbGet('arenas', 'select=*');
     arenas = {};
