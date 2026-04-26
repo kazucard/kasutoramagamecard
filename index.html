@@ -4275,10 +4275,28 @@ async function checkForUpdate() {
 
 // Reload data (not full page) when user comes back to the app
 document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'hidden') {
+    // Stop raid heartbeat and clear last_seen to remove from active slots
+    if (window.raidHeartbeat) { clearInterval(window.raidHeartbeat); window.raidHeartbeat = null; }
+    if (raidMySlot) {
+      try { await dbPatch('raid_slots', { last_seen: new Date(0).toISOString() }, 'id=eq.' + raidMySlot.id); } catch(e){}
+    }
+  }
   if (document.visibilityState === 'visible') {
     // Show update banner
     const banner = document.getElementById('update-banner');
     if (banner) banner.style.display = 'flex';
+    // Restart raid heartbeat if on raid screen
+    if (raidMySlot) {
+      if (window.raidHeartbeat) clearInterval(window.raidHeartbeat);
+      window.raidHeartbeat = setInterval(async () => {
+        if (raidMySlot) {
+          try { await dbPatch('raid_slots', { last_seen: new Date().toISOString() }, 'id=eq.' + raidMySlot.id); } catch(e){}
+        }
+      }, 30000);
+      // Immediately update last_seen
+      try { await dbPatch('raid_slots', { last_seen: new Date().toISOString() }, 'id=eq.' + raidMySlot.id); } catch(e){}
+    }
   }
   if (document.visibilityState === 'visible' && ME) {
     try {
@@ -5550,6 +5568,14 @@ async function loadRaidScreen() {
     if (raidPollInterval) clearInterval(raidPollInterval);
     raidPollInterval = setInterval(refreshRaidSlots, 3000);
 
+  // Heartbeat - update last_seen every 30s
+  if (window.raidHeartbeat) clearInterval(window.raidHeartbeat);
+  window.raidHeartbeat = setInterval(async () => {
+    if (raidMySlot) {
+      try { await dbPatch('raid_slots', { last_seen: new Date().toISOString() }, 'id=eq.' + raidMySlot.id); } catch(e){}
+    }
+  }, 30000);
+
   } catch(e) { console.error('loadRaidScreen:', e); }
 }
 
@@ -5596,8 +5622,9 @@ async function refreshRaidSlots() {
       document.getElementById('raid-my-dmg').textContent = raidMyTotalDmg.toLocaleString();
     }
 
-    // Render other slots (not mine)
-    const others = slots.filter(s => s.user_id !== ME.id);
+    // Render other slots (not mine, active in last 5 min)
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const others = slots.filter(s => s.user_id !== ME.id && (!s.last_seen || s.last_seen > fiveMinAgo));
     const slotsEl = document.getElementById('raid-slots');
     slotsEl.innerHTML = '';
 
@@ -5751,8 +5778,8 @@ async function raidTapAttack() {
   document.getElementById('raid-dmg-log').textContent = '-' + dmg + ' 💥';
 
   try {
-    // Update my slot damage
-    await dbPatch('raid_slots', { damage_dealt: raidMyTotalDmg }, 'id=eq.' + raidMySlot.id);
+    // Update my slot damage + last_seen
+    await dbPatch('raid_slots', { damage_dealt: raidMyTotalDmg, last_seen: new Date().toISOString() }, 'id=eq.' + raidMySlot.id);
 
     // Update boss HP
     const newHP = Math.max(0, raidData.boss_hp_current - dmg);
