@@ -850,48 +850,6 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
       <button class="btn btn-gold" onclick="checkAdminPw()">Entrer</button>
     </div>
 
-
-
-
-<!-- RAID SCREEN -->
-<div class="screen" id="screen-raid">
-  <div style="width:100%;padding:16px 0;color:red;font-size:20px">TEST RAID VISIBLE</div>
-  <div style="width:100%;padding:0 0 16px">
-    <!-- Boss header -->
-    <div id="raid-boss-header" style="background:linear-gradient(135deg,#1a0008,#2a0010);border:2px solid #ff4444;border-radius:16px;padding:16px;margin-bottom:16px;text-align:center">
-      <div id="raid-boss-emoji" style="font-size:56px;margin-bottom:8px">😤</div>
-      <div id="raid-boss-name" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:#ff4444;margin-bottom:4px">Chargement...</div>
-      <div id="raid-boss-lore" style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:12px"></div>
-      <!-- Boss HP bar -->
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:4px">
-        <span>PV du Boss</span><span id="raid-hp-txt">0 / 0</span>
-      </div>
-      <div style="height:12px;background:rgba(255,255,255,.1);border-radius:6px;overflow:hidden;border:1px solid rgba(255,68,68,.3)">
-        <div id="raid-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#ff4444,#ff8877);border-radius:6px;transition:width .5s"></div>
-      </div>
-      <div id="raid-status-badge" style="margin-top:8px;font-size:11px;color:var(--gold);font-weight:700"></div>
-    </div>
-
-    <!-- Participants -->
-    <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">⚔️ Participants en combat</div>
-    <div id="raid-slots" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
-
-    <!-- My slot -->
-    <div id="raid-my-slot" style="margin-bottom:16px"></div>
-
-    <!-- TAP button -->
-    <div id="raid-tap-area" style="display:none;text-align:center">
-      <div id="raid-dmg-log" style="font-size:11px;color:rgba(255,255,255,.4);min-height:20px;margin-bottom:8px"></div>
-      <button id="raid-tap-btn" onclick="raidTapAttack()" style="background:#000;color:#ff4444;border:4px solid #ff4444;padding:16px 48px;font-family:'Press Start 2P',monospace;font-size:14px;font-weight:bold;cursor:pointer;width:100%;max-width:400px;transition:transform 0.05s">* TAP</button>
-      <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,.3)">Mes dégâts : <span id="raid-my-dmg" style="color:var(--gold);font-weight:700">0</span></div>
-    </div>
-
-    <!-- Leaderboard -->
-    <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin:16px 0 8px">🏆 Dégâts infligés</div>
-    <div id="raid-leaderboard" style="display:flex;flex-direction:column;gap:6px"></div>
-  </div>
-</div>
-
 <!-- TAUPE SCREEN -->
 <div id="taupe-screen" style="position:fixed;inset:0;background:#000;z-index:700;display:none;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px">
   <div style="font-size:64px;animation:float2px 2s ease-in-out infinite">🕵️</div>
@@ -1091,6 +1049,48 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
       <div style="height:16px"></div>
     </div>
   </div>
+
+
+
+
+
+<!-- RAID SCREEN -->
+<div class="screen" id="screen-raid">
+  <div style="width:100%;padding:0 0 16px">
+    <!-- Boss header -->
+    <div id="raid-boss-header" style="background:linear-gradient(135deg,#1a0008,#2a0010);border:2px solid #ff4444;border-radius:16px;padding:16px;margin-bottom:16px;text-align:center">
+      <div id="raid-boss-emoji" style="font-size:56px;margin-bottom:8px">😤</div>
+      <div id="raid-boss-name" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:#ff4444;margin-bottom:4px">Chargement...</div>
+      <div id="raid-boss-lore" style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:12px"></div>
+      <!-- Boss HP bar -->
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:4px">
+        <span>PV du Boss</span><span id="raid-hp-txt">0 / 0</span>
+      </div>
+      <div style="height:12px;background:rgba(255,255,255,.1);border-radius:6px;overflow:hidden;border:1px solid rgba(255,68,68,.3)">
+        <div id="raid-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#ff4444,#ff8877);border-radius:6px;transition:width .5s"></div>
+      </div>
+      <div id="raid-status-badge" style="margin-top:8px;font-size:11px;color:var(--gold);font-weight:700"></div>
+    </div>
+
+    <!-- Participants -->
+    <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">⚔️ Participants en combat</div>
+    <div id="raid-slots" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
+
+    <!-- My slot -->
+    <div id="raid-my-slot" style="margin-bottom:16px"></div>
+
+    <!-- TAP button -->
+    <div id="raid-tap-area" style="display:none;text-align:center">
+      <div id="raid-dmg-log" style="font-size:11px;color:rgba(255,255,255,.4);min-height:20px;margin-bottom:8px"></div>
+      <button id="raid-tap-btn" onclick="raidTapAttack()" style="background:#000;color:#ff4444;border:4px solid #ff4444;padding:16px 48px;font-family:'Press Start 2P',monospace;font-size:14px;font-weight:bold;cursor:pointer;width:100%;max-width:400px;transition:transform 0.05s">* TAP</button>
+      <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,.3)">Mes dégâts : <span id="raid-my-dmg" style="color:var(--gold);font-weight:700">0</span></div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin:16px 0 8px">🏆 Dégâts infligés</div>
+    <div id="raid-leaderboard" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+</div>
 
   <!-- NAV -->
   <nav class="nav">
