@@ -1074,10 +1074,9 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 
     <!-- Participants -->
     <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">⚔️ Participants en combat</div>
-    <div id="raid-slots" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
+    <div id="raid-slots" style="display:grid;gap:10px;margin-bottom:16px"></div>
 
-    <!-- My slot -->
-    <div id="raid-my-slot" style="margin-bottom:16px"></div>
+    <div id="raid-my-slot" style="display:none;margin-bottom:16px"></div>
 
     <!-- TAP button -->
     <div id="raid-tap-area" style="display:none;text-align:center">
@@ -5435,6 +5434,9 @@ async function loadVotePanel() {
   if (!voteEl) return;
   if (phase !== 'vote') { voteEl.style.display = 'none'; return; }
   voteEl.style.display = 'block';
+  // Check if user is winner
+  const weekPts = await dbGet('versus_points', 'week_start=eq.' + getWeekStart() + '&select=*&order=points.desc&limit=1');
+  const isWinner = weekPts.length && ME && weekPts[0].team_id === ME.team_id;
   const votes = await dbGet('versus_votes', 'week_start=eq.' + getWeekStart() + '&select=*');
   // Fetch pseudos for voters
   const voterIds = [...new Set(votes.map(v => v.user_id))];
@@ -5451,8 +5453,8 @@ async function loadVotePanel() {
   VS_REWARDS.forEach(r => {
     const count = voteCounts[r.id] || 0, pct = totalVotes ? Math.round(count/totalVotes*100) : 0;
     const voted = myVote && myVote.reward_id === r.id;
-    const dataVote = (!myVote && !voted) ? ' data-vote-id="'+r.id+'"' : '';
-    html += '<div'+dataVote+' style="background:'+(voted?'rgba(201,168,76,.12)':'var(--surf)')+';border:1px solid '+(voted?'var(--gold)':'var(--bord)')+';border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:'+(myVote?'default':'pointer')+'">';
+    const dataVote = (!myVote && !voted && isWinner) ? ' data-vote-id="'+r.id+'"' : '';
+    html += '<div'+dataVote+' style="background:'+(voted?'rgba(201,168,76,.12)':'var(--surf)')+';border:1px solid '+(voted?'var(--gold)':'var(--bord)')+';border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:'+(myVote||!isWinner?'default':'pointer')+'">';
     html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="font-size:18px">'+r.icon+'</span>';
     html += '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:#fff">'+r.title+'</div>';
     html += '<div style="font-size:10px;color:rgba(255,255,255,.4)">'+r.desc+'</div></div>';
@@ -5474,8 +5476,14 @@ async function loadVotePanel() {
 async function castVote(rewardId) {
   if (!ME) { showToast('❌ Non connecté', '#ff4444', '❌', 2000); return; }
   const week = getWeekStart();
-  showToast('⏳ Vote en cours...', 'var(--gold)', '🗳️', 2000);
+  showToast('⏳ Vérification...', 'var(--gold)', '🗳️', 2000);
   try {
+    // Check if user's team is the winner
+    const pts = await dbGet('versus_points', 'week_start=eq.' + week + '&select=*&order=points.desc&limit=1');
+    if (!pts.length || pts[0].team_id !== ME.team_id) {
+      showToast("❌ Seule l'équipe gagnante peut voter !", "#ff4444", "🚫", 3000);
+      return;
+    }
     const existing = await dbGet('versus_votes', 'user_id=eq.' + ME.id + '&week_start=eq.' + week + '&select=id');
     if (existing.length) { showToast('Tu as déjà voté cette semaine !', '#ff8800', '🗳️', 3000); return; }
     const voteId = 'vote_' + ME.id + '_' + week;
@@ -5622,32 +5630,36 @@ async function refreshRaidSlots() {
       document.getElementById('raid-my-dmg').textContent = raidMyTotalDmg.toLocaleString();
     }
 
-    // Render other slots (not mine, active in last 5 min)
+    // Render ALL active slots in one unified grid
     const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const others = slots.filter(s => s.user_id !== ME.id && (!s.last_seen || s.last_seen > fiveMinAgo));
+    const activeSlots = slots.filter(s => !s.last_seen || s.last_seen > fiveMinAgo);
     const slotsEl = document.getElementById('raid-slots');
     slotsEl.innerHTML = '';
 
-    if (!others.length) {
-      slotsEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);font-size:12px;padding:16px">Aucun autre participant pour l\'instant...</div>';
+    const cols = activeSlots.length <= 1 ? 1 : activeSlots.length === 2 ? 2 : 3;
+    slotsEl.style.gridTemplateColumns = 'repeat('+cols+',1fr)';
+
+    if (!activeSlots.length) {
+      slotsEl.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.3);font-size:12px;padding:16px">Aucun participant actif...</div>';
     } else {
-      others.forEach(slot => {
+      activeSlots.forEach(slot => {
         const card = pool.find(p => p.id === slot.card_id);
         const user = userMap[slot.user_id];
+        const isMe = slot.user_id === ME.id;
         const isUrl = card && card.img_url && (card.img_url.startsWith('http') || card.img_url.startsWith('data:'));
         const curHP = card ? getCardCurrentHP(card) : 0;
         const maxHP = card ? getCardMaxHP(card) : 1;
         const hf = Math.round((curHP/maxHP)*5);
-        const hearts = Array(5).fill(0).map((_,i)=>'<span style="font-size:9px;color:'+(i<hf?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
-
+        const hearts = Array(5).fill(0).map((_,i)=>'<span style="font-size:11px;color:'+(i<hf?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
+        const imgH = cols === 1 ? '160px' : '110px';
         const d = document.createElement('div');
-        d.style.cssText = 'border-radius:10px;overflow:hidden;border:2px solid rgba(255,68,68,.3);background:#000;position:relative';
-        d.innerHTML = (isUrl ? '<img src="'+card.img_url+'" style="width:100%;height:90px;object-fit:cover;display:block">' : '<div style="height:90px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">🛒</div>') +
-          '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.92));padding:4px 6px">' +
-            '<div style="font-size:9px;color:var(--gold);font-weight:700;margin-bottom:1px">'+(user?.pseudo||'?')+'</div>' +
+        d.style.cssText = 'border-radius:10px;overflow:hidden;border:2px solid '+(isMe?'var(--gold)':'rgba(255,68,68,.3)')+';background:#000;position:relative';
+        d.innerHTML = (isUrl ? '<img src="'+card.img_url+'" style="width:100%;height:'+imgH+';object-fit:cover;display:block">' : '<div style="height:'+imgH+';display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">🛒</div>') +
+          '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.92));padding:5px 8px">' +
+            '<div style="font-size:9px;color:'+(isMe?'var(--gold)':'rgba(255,200,100,.9)')+';font-weight:700;margin-bottom:1px">'+(user?.pseudo||'?')+(isMe?' 👤':'')+'</div>' +
             '<div style="font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(card?.name||'?')+'</div>' +
             '<div style="display:flex;gap:1px;margin-bottom:2px">'+hearts+'</div>' +
-            '<div style="font-size:8px;color:rgba(255,100,100,.8)">💥 '+(slot.damage_dealt||0).toLocaleString()+' dégâts</div>' +
+            '<div style="font-size:8px;color:rgba(255,100,100,.8)">💥 '+(slot.damage_dealt||0).toLocaleString()+'</div>' +
           '</div>';
         slotsEl.appendChild(d);
       });
