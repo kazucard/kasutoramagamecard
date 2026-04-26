@@ -5301,15 +5301,20 @@ async function loadVotePanel() {
 }
 
 async function castVote(rewardId) {
-  if (!ME) return;
+  if (!ME) { showToast('❌ Non connecté', '#ff4444', '❌', 2000); return; }
   const week = getWeekStart();
+  showToast('⏳ Vote en cours...', 'var(--gold)', '🗳️', 2000);
   try {
     const existing = await dbGet('versus_votes', 'user_id=eq.' + ME.id + '&week_start=eq.' + week + '&select=id');
-    if (existing.length) { showToast('Tu as déjà voté !', '#ff8800', '🗳️', 2000); return; }
-    await dbPost('versus_votes', { id: 'vote_' + ME.id + '_' + week, user_id: ME.id, team_id: ME.team_id, reward_id: rewardId, week_start: week });
-    showToast('✅ Vote enregistré !', '#6ddb9a', '🗳️', 3000);
+    if (existing.length) { showToast('Tu as déjà voté cette semaine !', '#ff8800', '🗳️', 3000); return; }
+    const voteId = 'vote_' + ME.id + '_' + week;
+    await dbPost('versus_votes', { id: voteId, user_id: ME.id, team_id: ME.team_id || 'unknown', reward_id: rewardId, week_start: week });
+    showToast('✅ Vote enregistré !', '#6ddb9a', '🗳️', 4000);
     await loadVotePanel();
-  } catch(e) { showToast('❌ ' + e.message, '#ff4444', '❌', 3000); }
+  } catch(e) {
+    console.error('castVote error:', e);
+    showToast('❌ Erreur : ' + (e.message || e), '#ff4444', '❌', 4000);
+  }
 }
 
 // ── NEWS POPUP ────────────────────────────────────────────────────────────────
