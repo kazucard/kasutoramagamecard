@@ -3250,7 +3250,16 @@ async function openArena(arenaId) {
     const isEnemy = !isMyTeam && !isNeutral;
     const myCards = defCards.filter(c => c.user_id === ME.id);
 
-    if (phase === 'defense') {
+    if (phase === 'vote') {
+      // Sunday 18h to Monday 00h - no attacks, vote phase
+      const voteDiv = document.createElement('div');
+      voteDiv.style.cssText = 'text-align:center;padding:12px';
+      voteDiv.innerHTML = '<div style="font-size:24px;margin-bottom:6px">🗳️</div>' +
+        '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px">Phase de vote</div>' +
+        '<div style="font-size:11px;color:rgba(255,255,255,.4)">Combats suspendus — vote pour ta récompense !</div>';
+      actions.innerHTML = '';
+      actions.appendChild(voteDiv);
+    } else if (phase === 'defense') {
       if (isEnemy) {
         // Can't place in enemy zone during defense
         actions.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;padding:8px">Zone ennemie — attaque à partir de mercredi</div>';
@@ -3886,14 +3895,41 @@ async function handleVersusReset() {
       const winnerId = sorted[0][0];
       const winnerTeam = (await dbGet('teams', 'id=eq.' + winnerId + '&select=name'))[0];
       
-      // Give 300 HS to all members of winning team
-      const winners = await dbGet('users', 'team_id=eq.' + winnerId + '&select=id,heures_sup,pseudo');
-      for (const u of winners) {
-        await dbPatch('users', { heures_sup: (u.heures_sup || 0) + 300 }, 'id=eq.' + u.id);
+      // Get voted reward
+      const weekVotes = await dbGet('versus_votes', 'week_start=eq.' + thisMonday + '&team_id=eq.' + winnerId + '&select=reward_id');
+      const voteTally = {};
+      weekVotes.forEach(vt => { voteTally[vt.reward_id] = (voteTally[vt.reward_id]||0)+1; });
+      let chosenRewardId = 'r2'; // default 1000 HS
+      if (Object.keys(voteTally).length) {
+        const maxV = Math.max(...Object.values(voteTally));
+        const tops = Object.entries(voteTally).filter(([,c])=>c===maxV).map(([id])=>id);
+        chosenRewardId = tops[Math.floor(Math.random()*tops.length)];
       }
-      
-      // Post news
-      await postAutoNews('🏆 ' + (winnerTeam?.name || '?') + ' remporte le Versus cette semaine avec ' + sorted[0][1] + ' zones ! (+300 HS pour tous les membres)');
+      const chosenReward = VS_REWARDS.find(r => r.id === chosenRewardId);
+
+      // Store active reward for the week
+      const activeRewardData = { rewardId: chosenRewardId, teamId: winnerId, teamName: winnerTeam?.name || '?', weekStart: thisMonday };
+      localStorage.setItem('cc_active_reward', JSON.stringify(activeRewardData));
+      // Also post to news so everyone sees it
+      await postAutoNews('🏆 ' + (winnerTeam?.name||'?') + ' gagne le Versus ! Récompense : ' + (chosenReward?.title||'?'));
+
+      // Apply reward
+      const winners = await dbGet('users', 'team_id=eq.' + winnerId + '&select=id,heures_sup,pseudo');
+      if (chosenRewardId === 'r1') {
+        // Boost DEF + 500 HS
+        for (const u of winners) await dbPatch('users', { heures_sup: (u.heures_sup||0)+500 }, 'id=eq.'+u.id);
+      } else if (chosenRewardId === 'r2') {
+        // 1000 HS
+        for (const u of winners) await dbPatch('users', { heures_sup: (u.heures_sup||0)+1000 }, 'id=eq.'+u.id);
+      } else if (chosenRewardId === 'r3') {
+        // Booster extra sans commun
+        for (const u of winners) {
+          try { await dbPost('inventory', { id:'inv_nc_'+u.id+'_'+Date.now(), user_id:u.id, item_type:'booster_nocommon', quantity:1 }); } catch(e){}
+        }
+      } else if (chosenRewardId === 'r4') {
+        // Double ZRM + 500 HS (ZRM points doubled handled in calcAndSaveVersusPoints)
+        for (const u of winners) await dbPatch('users', { heures_sup: (u.heures_sup||0)+500 }, 'id=eq.'+u.id);
+      }
     }
     
     // Reset all arenas to neutral
@@ -4228,9 +4264,17 @@ async function calcAndSaveVersusPoints() {
       if (a.team_id) currentZones[a.team_id] = (currentZones[a.team_id] || 0) + 1;
     });
 
+    // Check active reward (ZRM double)
+    let activeReward = null;
+    try { activeReward = JSON.parse(localStorage.getItem('cc_active_reward') || 'null'); } catch(e){}
+    const zrmTeam = activeReward?.rewardId === 'r4' ? activeReward.teamId : null;
+
     // Add points for currently held zones
     for (const [teamId, zoneCount] of Object.entries(currentZones)) {
-      const newPts = zoneCount * hoursSinceCalc;
+      // Check if this team has ZRM (arena_3) and double reward active
+      const hasZRM = arenaRows.find(a => a.id === 'arena_3' && a.team_id === teamId);
+      const zrmBonus = (zrmTeam && zrmTeam === teamId && hasZRM) ? 1 : 0;
+      const newPts = (zoneCount + zrmBonus) * hoursSinceCalc;
       const existing = (await dbGet('versus_points',
         'team_id=eq.' + teamId + '&week_start=eq.' + weekStart + '&select=*'))[0];
       if (existing) {
@@ -5249,12 +5293,30 @@ function openRewardsPopup() {
   const popup = document.getElementById('rewards-popup');
   const box = document.getElementById('rewards-box');
   const list = document.getElementById('rewards-list');
-  list.innerHTML = VS_REWARDS.map(r =>
-    '<div style="background:var(--surf);border:1px solid var(--bord);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start">' +
-    '<span style="font-size:28px;flex-shrink:0">' + r.icon + '</span>' +
-    '<div><div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">' + r.title + '</div>' +
-    '<div style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.5">' + r.desc + '</div></div></div>'
-  ).join('');
+
+  // Show active reward if any
+  let activeHtml = '';
+  try {
+    const ar = JSON.parse(localStorage.getItem('cc_active_reward') || 'null');
+    if (ar) {
+      const r = VS_REWARDS.find(x => x.id === ar.rewardId);
+      activeHtml = '<div style="background:rgba(201,168,76,.15);border:2px solid var(--gold);border-radius:12px;padding:12px 14px;margin-bottom:16px">' +
+        '<div style="font-size:10px;color:var(--gold);font-weight:700;margin-bottom:6px">⚡ RÉCOMPENSE EN COURS</div>' +
+        '<div style="display:flex;gap:10px;align-items:center">' +
+        '<span style="font-size:24px">' + (r?.icon||'🏆') + '</span>' +
+        '<div><div style="font-size:13px;font-weight:700;color:#fff">' + (r?.title||'?') + '</div>' +
+        '<div style="font-size:11px;color:rgba(255,255,255,.5)">Équipe : <strong style="color:var(--gold)">' + ar.teamName + '</strong></div></div></div></div>';
+    }
+  } catch(e) {}
+
+  list.innerHTML = activeHtml +
+    '<div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:10px;font-weight:700">🗳️ RÉCOMPENSES DISPONIBLES AU PROCHAIN VOTE</div>' +
+    VS_REWARDS.map(r =>
+      '<div style="background:var(--surf);border:1px solid var(--bord);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start">' +
+      '<span style="font-size:24px;flex-shrink:0">' + r.icon + '</span>' +
+      '<div><div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px">' + r.title + '</div>' +
+      '<div style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.5">' + r.desc + '</div></div></div>'
+    ).join('');
   popup.style.display = 'flex';
   setTimeout(() => { box.style.transform = 'translateY(0)'; }, 10);
 }
@@ -5279,6 +5341,12 @@ async function loadVotePanel() {
   if (phase !== 'vote') { voteEl.style.display = 'none'; return; }
   voteEl.style.display = 'block';
   const votes = await dbGet('versus_votes', 'week_start=eq.' + getWeekStart() + '&select=*');
+  // Fetch pseudos for voters
+  const voterIds = [...new Set(votes.map(v => v.user_id))];
+  const voterUsers = voterIds.length ? await dbGet('users', 'id=in.(' + voterIds.join(',') + ')&select=id,pseudo') : [];
+  const pseudoMap = {};
+  voterUsers.forEach(u => { pseudoMap[u.id] = u.pseudo; });
+  votes.forEach(v => { v.pseudo = pseudoMap[v.user_id] || null; });
   const voteCounts = {}; VS_REWARDS.forEach(r => { voteCounts[r.id] = 0; });
   votes.forEach(v => { if (voteCounts[v.reward_id] !== undefined) voteCounts[v.reward_id]++; });
   const myVote = votes.find(v => v.user_id === ME?.id);
@@ -5295,7 +5363,11 @@ async function loadVotePanel() {
     html += '<div style="font-size:10px;color:rgba(255,255,255,.4)">'+r.desc+'</div></div>';
     if(voted) html += '<span style="font-size:10px;color:var(--gold);font-weight:700">✓</span>';
     html += '</div><div style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--gold);border-radius:2px"></div></div>';
-    html += '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">'+count+' vote'+(count>1?'s':'')+' ('+pct+'%)</div></div>';
+    const voters = votes.filter(vt => vt.reward_id === r.id);
+    const voterNames = voters.map(vt => vt.pseudo || '?').join(', ');
+    html += '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px">'+count+' vote'+(count>1?'s':'')+' ('+pct+'%)';
+    if (voterNames) html += ' — <span style="color:rgba(255,255,255,.65)">'+voterNames+'</span>';
+    html += '</div></div>';
   });
   voteEl.innerHTML = html;
   // Add click handlers via event delegation
