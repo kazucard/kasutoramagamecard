@@ -859,7 +859,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
     <!-- Boss header -->
     <div id="raid-boss-header" style="background:linear-gradient(135deg,#1a0008,#2a0010);border:2px solid #ff4444;border-radius:16px;padding:16px;margin-bottom:16px;text-align:center">
       <div id="raid-boss-emoji" style="font-size:56px;margin-bottom:8px">😤</div>
-      <div id="raid-boss-name" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:#ff4444;margin-bottom:4px">Chargement...</div>
+      <div id="raid-boss-name" style="font-size:1.4rem;letter-spacing:2px;color:#ff4444;margin-bottom:4px;font-weight:bold">Chargement...</div>
       <div id="raid-boss-lore" style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:12px"></div>
       <!-- Boss HP bar -->
       <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:4px">
@@ -5502,7 +5502,7 @@ const RAID_BOSS = {
   lore: 'Un incident à Antibes a mis le feu aux poudres. Des centaines de clients furieux débarquent sur Bron un dimanche. Seuls les jeunes sont là pour défendre le magasin. Sacrifie ton meilleur chariot !',
   emoji: '😤',
   hp_max: 500000,
-  week_start: '2026-04-27'
+  week_start: '2026-04-21'
 };
 
 let raidData = null;
@@ -5549,7 +5549,11 @@ async function loadRaidScreen() {
     if (raidPollInterval) clearInterval(raidPollInterval);
     raidPollInterval = setInterval(refreshRaidSlots, 3000);
 
-  } catch(e) { console.error('loadRaidScreen:', e); }
+  } catch(e) { 
+    console.error('loadRaidScreen:', e);
+    const h = document.getElementById('raid-boss-name');
+    if(h) h.textContent = 'Erreur: ' + e.message;
+  }
 }
 
 function updateRaidBossHP(boss) {
