@@ -1040,7 +1040,11 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
     <button class="nav-btn" id="nav-aventure"  onclick="showTab('aventure')"><span class="nav-icon" style="font-size:17px">⚔️</span>Aventure</button>
     <button class="nav-btn" id="nav-versus" onclick="showTab('versus')"><span class="nav-icon" style="font-size:17px">🏟️</span>Versus</button>
     <button class="nav-btn" id="nav-messages"   onclick="showTab('messages')" style="position:relative"><img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAwADADASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAYIBwEC/8QAMxAAAAUBBAcFCQEAAAAAAAAAAAECAwQFBgcRIQgSEyIxUZQXGCNVVhRBYXFyg6HS07H/xAAaAQABBQEAAAAAAAAAAAAAAAAEAgMFBgcB/8QAKhEAAQMCAwcEAwAAAAAAAAAAAQACAwQRBRJhBhMUFSFRUlNiktGBkbH/2gAMAwEAAhEDEQA/AIyAAOVgbsLcW8gyZtlKIqotRnSacPbtt7xljlrqIjwLDH6iCJJWRNzPIA16LoaXGwSaAat3db5fRbnXxf6g7ut8votzr4v9QNzGk9VvyH2l7p/iVlIA8W4umvBsTSSqtp7Orp8I1k2TpymXN4+BYIWZ/gI4IiljlbmjcCNDdILS3oQgWJoSJX2VVN2O5s5DdcdNJ8/AYyP4COxXWhZI2V2dTTjmdZcPD7LIr21cpiw8uHcI3DmZ5raKkqXWkzEKQrw5DeTjZ8SPn8h6qVYagsa61Gpaj1W2y4rPkQVJaFOPJksO7GSngsveXI+ZDkdtZyTly3ttI4JPDAkFyIhl3FMve/4U/wAOs00wzeduZfky1az7k+PulwQWJ5EIoFm6Xsja3PuIM8/b2P8ATEZDTtkZd7QF3uP8CgsSZkmtogN1ibx7WWNpzsCgT24zDrxvLSplK8VGRFjvEeGSSCiAWKeniqGZJWhw7EXCCZI6M5mGxWm9u95fnTHRtfqDt3vL86Y6Nr9RmQADyTDfQZ8R9J7jKjzP7TpbG8+2VraQdKrlRakRDWlzVTHQg9YuGZFiEsAAbT00NMzJC0NHYCyZkkfIbvNyv//Z" style="width:24px;height:24px;object-fit:contain">Messages<span id="msg-nav-dot" style="position:absolute;top:6px;right:calc(50% - 14px);width:7px;height:7px;border-radius:50%;background:#ff4444;display:none"></span></button>
-    <button class="nav-btn" id="nav-admin" onclick="showTab('admin')" style="display:none"><img src="data:image/png;base64,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" style="width:24px;height:24px;object-fit:contain">Admin</button>
+    <button class="nav-btn" id="nav-raid" onclick="showTab('raid')">
+        <div style="font-size:20px">⚔️</div>
+        <div>RAID</div>
+      </button>
+      <button class="nav-btn" id="nav-admin" onclick="showTab('admin')" style="display:none"><img src="data:image/png;base64,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" style="width:24px;height:24px;object-fit:contain">Admin</button>
   </nav>
   <!-- FLOATING INVENTORY BUTTON -->
   <div id="inventory-fab" onclick="openInventory()" style="position:fixed;bottom:80px;right:16px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#e0b840);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,.4);z-index:300;transition:transform .15s;display:none" id="inventory-fab">
@@ -5429,6 +5433,299 @@ async function checkNewsPopup() {
   } catch(e) {}
 }
 
+
+// ── RAID SYSTEM ───────────────────────────────────────────────────────────────
+const RAID_BOSS = {
+  id: 'raid_antibes_001',
+  name: 'La Horde de Clients Antibes',
+  lore: 'Un incident à Antibes a mis le feu aux poudres. Des centaines de clients furieux débarquent sur Bron un dimanche. Seuls les jeunes sont là pour défendre le magasin. Sacrifie ton meilleur chariot !',
+  emoji: '😤',
+  hp_max: 500000,
+  week_start: '2026-04-27'
+};
+
+let raidData = null;
+let raidMySlot = null;
+let raidMyCard = null;
+let raidPollInterval = null;
+let raidMyTotalDmg = 0;
+
+async function loadRaidScreen() {
+  if (!ME) return;
+  try {
+    // Get or create boss
+    let boss = (await dbGet('raids', 'id=eq.' + RAID_BOSS.id + '&select=*'))[0];
+    if (!boss) {
+      await dbPost('raids', {
+        id: RAID_BOSS.id,
+        boss_name: RAID_BOSS.name,
+        boss_hp_max: RAID_BOSS.hp_max,
+        boss_hp_current: RAID_BOSS.hp_max,
+        week_start: RAID_BOSS.week_start,
+        status: 'active'
+      });
+      boss = (await dbGet('raids', 'id=eq.' + RAID_BOSS.id + '&select=*'))[0];
+    }
+    raidData = boss;
+
+    // Update boss UI
+    document.getElementById('raid-boss-name').textContent = RAID_BOSS.name;
+    document.getElementById('raid-boss-lore').textContent = RAID_BOSS.lore;
+    document.getElementById('raid-boss-emoji').textContent = RAID_BOSS.emoji;
+    updateRaidBossHP(boss);
+
+    // Get my slot
+    raidMySlot = (await dbGet('raid_slots', 'raid_id=eq.' + RAID_BOSS.id + '&user_id=eq.' + ME.id + '&select=*'))[0];
+    if (raidMySlot) {
+      raidMyCard = pool.find(p => p.id === raidMySlot.card_id);
+      raidMyTotalDmg = raidMySlot.damage_dealt || 0;
+    }
+
+    renderRaidMySlot();
+    await refreshRaidSlots();
+
+    // Start polling
+    if (raidPollInterval) clearInterval(raidPollInterval);
+    raidPollInterval = setInterval(refreshRaidSlots, 3000);
+
+  } catch(e) { console.error('loadRaidScreen:', e); }
+}
+
+function updateRaidBossHP(boss) {
+  const pct = Math.max(0, Math.round(boss.boss_hp_current / boss.boss_hp_max * 100));
+  document.getElementById('raid-hp-bar').style.width = pct + '%';
+  document.getElementById('raid-hp-txt').textContent = Math.max(0, boss.boss_hp_current).toLocaleString() + ' / ' + boss.boss_hp_max.toLocaleString();
+  const badge = document.getElementById('raid-status-badge');
+  if (boss.status === 'defeated') {
+    badge.textContent = '💀 BOSS VAINCU !';
+    badge.style.color = '#6ddb9a';
+    document.getElementById('raid-tap-area').style.display = 'none';
+  } else {
+    badge.textContent = pct + '% PV restants';
+    badge.style.color = pct < 25 ? '#ff4444' : 'var(--gold)';
+  }
+}
+
+async function refreshRaidSlots() {
+  try {
+    // Refresh boss HP
+    const boss = (await dbGet('raids', 'id=eq.' + RAID_BOSS.id + '&select=*'))[0];
+    if (boss) {
+      raidData = boss;
+      updateRaidBossHP(boss);
+      if (boss.status === 'defeated') {
+        clearInterval(raidPollInterval);
+        return;
+      }
+    }
+
+    // Get all slots with user info
+    const slots = await dbGet('raid_slots', 'raid_id=eq.' + RAID_BOSS.id + '&select=*&order=damage_dealt.desc');
+    const userIds = [...new Set(slots.map(s => s.user_id))];
+    const users = userIds.length ? await dbGet('users', 'id=in.(' + userIds.join(',') + ')&select=id,pseudo,team_id') : [];
+    const userMap = {};
+    users.forEach(u => { userMap[u.id] = u; });
+
+    // Refresh my slot data
+    const mySlotFresh = slots.find(s => s.user_id === ME.id);
+    if (mySlotFresh) {
+      raidMySlot = mySlotFresh;
+      raidMyTotalDmg = mySlotFresh.damage_dealt || 0;
+      document.getElementById('raid-my-dmg').textContent = raidMyTotalDmg.toLocaleString();
+    }
+
+    // Render other slots (not mine)
+    const others = slots.filter(s => s.user_id !== ME.id);
+    const slotsEl = document.getElementById('raid-slots');
+    slotsEl.innerHTML = '';
+
+    if (!others.length) {
+      slotsEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);font-size:12px;padding:16px">Aucun autre participant pour l\'instant...</div>';
+    } else {
+      others.forEach(slot => {
+        const card = pool.find(p => p.id === slot.card_id);
+        const user = userMap[slot.user_id];
+        const isUrl = card && card.img_url && (card.img_url.startsWith('http') || card.img_url.startsWith('data:'));
+        const curHP = card ? getCardCurrentHP(card) : 0;
+        const maxHP = card ? getCardMaxHP(card) : 1;
+        const hf = Math.round((curHP/maxHP)*5);
+        const hearts = Array(5).fill(0).map((_,i)=>'<span style="font-size:9px;color:'+(i<hf?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
+
+        const d = document.createElement('div');
+        d.style.cssText = 'border-radius:10px;overflow:hidden;border:2px solid rgba(255,68,68,.3);background:#000;position:relative';
+        d.innerHTML = (isUrl ? '<img src="'+card.img_url+'" style="width:100%;height:90px;object-fit:cover;display:block">' : '<div style="height:90px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">🛒</div>') +
+          '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.92));padding:4px 6px">' +
+            '<div style="font-size:9px;color:var(--gold);font-weight:700;margin-bottom:1px">'+(user?.pseudo||'?')+'</div>' +
+            '<div style="font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(card?.name||'?')+'</div>' +
+            '<div style="display:flex;gap:1px;margin-bottom:2px">'+hearts+'</div>' +
+            '<div style="font-size:8px;color:rgba(255,100,100,.8)">💥 '+(slot.damage_dealt||0).toLocaleString()+' dégâts</div>' +
+          '</div>';
+        slotsEl.appendChild(d);
+      });
+    }
+
+    // Leaderboard
+    const lb = document.getElementById('raid-leaderboard');
+    lb.innerHTML = '';
+    slots.forEach((slot, i) => {
+      const user = userMap[slot.user_id];
+      const isMe = slot.user_id === ME.id;
+      const d = document.createElement('div');
+      d.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:'+(isMe?'rgba(201,168,76,.1)':'var(--surf)')+';border:1px solid '+(isMe?'var(--gold)':'var(--bord)')+';border-radius:8px';
+      d.innerHTML = '<span style="font-size:12px;color:var(--gold);font-weight:700;width:20px">'+(i+1)+'</span>' +
+        '<span style="flex:1;font-size:12px;color:#fff;font-weight:'+(isMe?700:400)+'">'+(user?.pseudo||'?')+'</span>' +
+        '<span style="font-size:12px;color:#ff8877;font-weight:700">💥 '+(slot.damage_dealt||0).toLocaleString()+'</span>';
+      lb.appendChild(d);
+    });
+
+  } catch(e) { console.error('refreshRaidSlots:', e); }
+}
+
+function renderRaidMySlot() {
+  const el = document.getElementById('raid-my-slot');
+  if (!raidMyCard || !raidMySlot) {
+    // No card placed yet
+    el.innerHTML = '<div style="background:rgba(255,255,255,.04);border:2px dashed rgba(255,255,255,.2);border-radius:12px;padding:20px;text-align:center">' +
+      '<div style="font-size:32px;margin-bottom:8px">⚔️</div>' +
+      '<div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:12px">Pose une carte pour rejoindre le RAID !</div>' +
+      '<button onclick="openRaidCardPicker()" style="background:linear-gradient(135deg,#ff4444,#cc0000);color:#fff;border:none;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Choisir ma carte</button>' +
+    '</div>';
+    document.getElementById('raid-tap-area').style.display = 'none';
+  } else {
+    // Card placed - show it + tap button
+    const c = raidMyCard;
+    const isUrl = c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
+    const curHP = getCardCurrentHP(c);
+    const maxHP = getCardMaxHP(c);
+    const hf = Math.round((curHP/maxHP)*5);
+    const hearts = Array(5).fill(0).map((_,i)=>'<span style="font-size:11px;color:'+(i<hf?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
+
+    el.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Ma carte</div>' +
+      '<div style="border-radius:10px;overflow:hidden;border:2px solid var(--gold);background:#000;position:relative;max-width:180px;margin:0 auto">' +
+        (isUrl ? '<img src="'+c.img_url+'" style="width:100%;height:120px;object-fit:cover;display:block">' : '<div style="height:120px;display:flex;align-items:center;justify-content:center;font-size:36px;background:#111">🛒</div>') +
+        '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.92));padding:6px 8px">' +
+          '<div style="font-size:11px;color:#fff;font-weight:700;margin-bottom:2px">'+c.name+'</div>' +
+          '<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:2px">' +
+            '<span style="color:#ff8877">⚔️'+c.atk+'</span><span style="color:var(--gold)">⚡'+(c.pa||1)+'PA</span><span style="color:#77aaff">🛡️'+c.def+'</span>' +
+          '</div>' +
+          '<div style="display:flex;gap:2px">'+hearts+'</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="text-align:center;margin-top:8px"><button onclick="openRaidCardPicker()" style="font-size:11px;color:rgba(255,255,255,.4);background:none;border:1px solid rgba(255,255,255,.15);padding:4px 12px;border-radius:8px;cursor:pointer">Changer de carte</button></div>';
+
+    document.getElementById('raid-tap-area').style.display = raidData?.status === 'defeated' ? 'none' : 'block';
+    document.getElementById('raid-my-dmg').textContent = raidMyTotalDmg.toLocaleString();
+  }
+}
+
+function openRaidCardPicker() {
+  const myCards = Object.keys(coll).filter(id => coll[id] > 0)
+    .map(id => pool.find(p => p.id === id))
+    .filter(c => c && getCardCurrentHP(c) > 0);
+
+  if (!myCards.length) { showToast('❌ Aucune carte disponible !', '#ff4444', '❌', 3000); return; }
+
+  const ov = document.createElement('div');
+  ov.id = 'raid-card-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:12px';
+
+  const grid = myCards.map(c => {
+    const isUrl = c.img_url && (c.img_url.startsWith('http') || c.img_url.startsWith('data:'));
+    const curHP = getCardCurrentHP(c); const maxHP = getCardMaxHP(c);
+    const hf = Math.round((curHP/maxHP)*5);
+    const hearts = Array(5).fill(0).map((_,i)=>'<span style="font-size:11px;color:'+(i<hf?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
+    const img = isUrl ? '<img src="'+c.img_url+'" style="width:100%;height:100px;object-fit:cover;display:block">' : '<div style="height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">🛒</div>';
+    return '<div data-cid="'+c.id+'" onclick="selectRaidCard(this.dataset.cid)" style="border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:pointer;background:#000;position:relative">'+
+      img+
+      '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.9));padding:5px 7px">'+
+        '<div style="font-size:10px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+c.name+'</div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:8px;margin-bottom:2px">'+
+          '<span style="color:#ff8877">⚔️'+c.atk+'</span><span style="color:var(--gold)">⚡'+(c.pa||1)+'PA</span><span style="color:#77aaff">🛡️'+c.def+'</span>'+
+        '</div>'+
+        '<div style="display:flex;gap:2px">'+hearts+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  ov.innerHTML = '<div style="font-size:1.4rem;letter-spacing:2px;color:#ff4444;font-weight:bold">⚔️ CHOISIR MA CARTE RAID</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-height:55vh;overflow-y:auto">'+grid+'</div>' +
+    '<button id="raid-card-cancel" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer">Annuler</button>';
+  document.body.appendChild(ov);
+  document.getElementById('raid-card-cancel').onclick = () => document.getElementById('raid-card-ov').remove();
+}
+
+async function selectRaidCard(cardId) {
+  document.getElementById('raid-card-ov')?.remove();
+  const card = pool.find(p => p.id === cardId);
+  if (!card) return;
+
+  try {
+    if (raidMySlot) {
+      // Update existing slot
+      await dbPatch('raid_slots', { card_id: cardId }, 'id=eq.' + raidMySlot.id);
+      raidMySlot.card_id = cardId;
+    } else {
+      // Create new slot
+      const slotId = 'rs_' + ME.id + '_' + RAID_BOSS.id;
+      await dbPost('raid_slots', { id: slotId, raid_id: RAID_BOSS.id, user_id: ME.id, card_id: cardId, damage_dealt: 0 });
+      raidMySlot = { id: slotId, raid_id: RAID_BOSS.id, user_id: ME.id, card_id: cardId, damage_dealt: 0 };
+    }
+    raidMyCard = card;
+    raidMyTotalDmg = raidMySlot.damage_dealt || 0;
+    renderRaidMySlot();
+    await refreshRaidSlots();
+    showToast('⚔️ '+card.name+' prête pour le RAID !', '#ff4444', '⚔️', 3000);
+  } catch(e) { showToast('❌ ' + e.message, '#ff4444', '❌', 3000); }
+}
+
+async function raidTapAttack() {
+  if (!raidMyCard || !raidMySlot || !raidData || raidData.status === 'defeated') return;
+  const btn = document.getElementById('raid-tap-btn');
+  if(btn){btn.style.transform='scale(0.9)';setTimeout(()=>{btn.style.transform='scale(1)'},80);}
+
+  const dmg = Math.max(1, Math.floor((raidMyCard.atk||50) / 15));
+  raidMyTotalDmg += dmg;
+  document.getElementById('raid-my-dmg').textContent = raidMyTotalDmg.toLocaleString();
+  document.getElementById('raid-dmg-log').textContent = '-' + dmg + ' 💥';
+
+  try {
+    // Update my slot damage
+    await dbPatch('raid_slots', { damage_dealt: raidMyTotalDmg }, 'id=eq.' + raidMySlot.id);
+
+    // Update boss HP
+    const newHP = Math.max(0, raidData.boss_hp_current - dmg);
+    raidData.boss_hp_current = newHP;
+    updateRaidBossHP(raidData);
+
+    if (newHP <= 0) {
+      await dbPatch('raids', { boss_hp_current: 0, status: 'defeated' }, 'id=eq.' + RAID_BOSS.id);
+      raidData.status = 'defeated';
+      updateRaidBossHP(raidData);
+      await raidVictory();
+    } else {
+      await dbPatch('raids', { boss_hp_current: newHP }, 'id=eq.' + RAID_BOSS.id);
+    }
+  } catch(e) { console.error('raidTapAttack:', e); }
+}
+
+async function raidVictory() {
+  clearInterval(raidPollInterval);
+  showToast('🏆 BOSS VAINCU ! +500 HS pour tous les participants !', 'var(--gold)', '🏆', 8000);
+  // Give 500 HS to all participants
+  try {
+    const slots = await dbGet('raid_slots', 'raid_id=eq.' + RAID_BOSS.id + '&select=user_id');
+    const userIds = [...new Set(slots.map(s => s.user_id))];
+    for (const uid of userIds) {
+      const users = await dbGet('users', 'id=eq.' + uid + '&select=id,heures_sup');
+      if (users.length) {
+        await dbPatch('users', { heures_sup: (users[0].heures_sup||0) + 500 }, 'id=eq.' + uid);
+      }
+    }
+    if (ME.id) ME.heures_sup = (ME.heures_sup||0) + 500;
+    await postAutoNews('🏆 La Horde de Clients Antibes a été vaincue ! +500 HS pour tous les participants !');
+  } catch(e) { console.error('raidVictory:', e); }
+}
+
 init();
 </script>
 
@@ -5577,6 +5874,45 @@ init();
   </div>
 </div>
 
+
+
+<!-- RAID SCREEN -->
+<div class="screen" id="screen-raid">
+  <div style="width:100%;padding:0 0 16px">
+    <!-- Boss header -->
+    <div id="raid-boss-header" style="background:linear-gradient(135deg,#1a0008,#2a0010);border:2px solid #ff4444;border-radius:16px;padding:16px;margin-bottom:16px;text-align:center">
+      <div id="raid-boss-emoji" style="font-size:56px;margin-bottom:8px">😤</div>
+      <div id="raid-boss-name" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:#ff4444;margin-bottom:4px">Chargement...</div>
+      <div id="raid-boss-lore" style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:12px"></div>
+      <!-- Boss HP bar -->
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:4px">
+        <span>PV du Boss</span><span id="raid-hp-txt">0 / 0</span>
+      </div>
+      <div style="height:12px;background:rgba(255,255,255,.1);border-radius:6px;overflow:hidden;border:1px solid rgba(255,68,68,.3)">
+        <div id="raid-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#ff4444,#ff8877);border-radius:6px;transition:width .5s"></div>
+      </div>
+      <div id="raid-status-badge" style="margin-top:8px;font-size:11px;color:var(--gold);font-weight:700"></div>
+    </div>
+
+    <!-- Participants -->
+    <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">⚔️ Participants en combat</div>
+    <div id="raid-slots" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
+
+    <!-- My slot -->
+    <div id="raid-my-slot" style="margin-bottom:16px"></div>
+
+    <!-- TAP button -->
+    <div id="raid-tap-area" style="display:none;text-align:center">
+      <div id="raid-dmg-log" style="font-size:11px;color:rgba(255,255,255,.4);min-height:20px;margin-bottom:8px"></div>
+      <button id="raid-tap-btn" onclick="raidTapAttack()" style="background:#000;color:#ff4444;border:4px solid #ff4444;padding:16px 48px;font-family:'Press Start 2P',monospace;font-size:14px;font-weight:bold;cursor:pointer;width:100%;max-width:400px;transition:transform 0.05s">* TAP</button>
+      <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,.3)">Mes dégâts : <span id="raid-my-dmg" style="color:var(--gold);font-weight:700">0</span></div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin:16px 0 8px">🏆 Dégâts infligés</div>
+    <div id="raid-leaderboard" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+</div>
 
 <!-- TAUPE SCREEN -->
 <div id="taupe-screen" style="position:fixed;inset:0;background:#000;z-index:700;display:none;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px">
