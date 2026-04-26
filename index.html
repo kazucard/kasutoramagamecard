@@ -5288,8 +5288,8 @@ async function loadVotePanel() {
   VS_REWARDS.forEach(r => {
     const count = voteCounts[r.id] || 0, pct = totalVotes ? Math.round(count/totalVotes*100) : 0;
     const voted = myVote && myVote.reward_id === r.id;
-    const clickFn = myVote ? '' : 'castVote(' + JSON.stringify(r.id) + ')';
-    html += '<div style="background:'+(voted?'rgba(201,168,76,.12)':'var(--surf)')+';border:1px solid '+(voted?'var(--gold)':'var(--bord)')+';border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:'+(myVote?'default':'pointer')+'" onclick="'+clickFn+'">';
+    const dataVote = (!myVote && !voted) ? ' data-vote-id="'+r.id+'"' : '';
+    html += '<div'+dataVote+' style="background:'+(voted?'rgba(201,168,76,.12)':'var(--surf)')+';border:1px solid '+(voted?'var(--gold)':'var(--bord)')+';border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:'+(myVote?'default':'pointer')+'">';
     html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="font-size:18px">'+r.icon+'</span>';
     html += '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:#fff">'+r.title+'</div>';
     html += '<div style="font-size:10px;color:rgba(255,255,255,.4)">'+r.desc+'</div></div>';
@@ -5298,6 +5298,10 @@ async function loadVotePanel() {
     html += '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">'+count+' vote'+(count>1?'s':'')+' ('+pct+'%)</div></div>';
   });
   voteEl.innerHTML = html;
+  // Add click handlers via event delegation
+  voteEl.querySelectorAll('[data-vote-id]').forEach(el => {
+    el.addEventListener('click', () => castVote(el.dataset.voteId));
+  });
 }
 
 async function castVote(rewardId) {
