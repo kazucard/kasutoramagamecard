@@ -3036,9 +3036,11 @@ let vbDefenderSlot = null;
 // Phase detection
 function getVersusPhase() {
   const now = new Date();
-  const day = now.getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
-  if (day === 1 || day === 2) return 'defense'; // Mon-Tue
-  if (day >= 3 || day === 0) return 'attack';   // Wed-Sun
+  const day = now.getDay();
+  const hour = now.getHours();
+  if (day === 0 && hour >= 18) return 'vote';   // Sun 18h+ = vote
+  if (day === 1 || day === 2) return 'defense'; // Mon-Tue = placement
+  if (day >= 3 || day === 0) return 'attack';   // Wed-Sun before 18h
   return 'attack';
 }
 
