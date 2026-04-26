@@ -3038,9 +3038,9 @@ function getVersusPhase() {
   const now = new Date();
   const day = now.getDay();
   const hour = now.getHours();
-  if (day === 0 && hour >= 18) return 'vote';   // Sun 18h+ = vote
-  if (day === 1 || day === 2) return 'defense'; // Mon-Tue = placement
-  if (day >= 3 || day === 0) return 'attack';   // Wed-Sun before 18h
+  if (day === 0 && hour >= 18) return 'vote';
+  if (day === 1 || day === 2) return 'defense';
+  if (day >= 3 || day === 0) return 'attack';
   return 'attack';
 }
 
@@ -4074,12 +4074,21 @@ async function showCardPickerForItem(itemType) {
       if (itemType === 'resurrect') blocked = blocked || !isDead;
       else blocked = blocked || isDead || full;
 
+      const heartsFull = Math.round((curHP/maxHP)*5);
+      const heartsHtml = Array(5).fill(0).map((_,i)=>'<span style="font-size:11px;color:'+(i<heartsFull?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
+      const imgHtml = isUrl ? '<img src="'+c.img_url+'" style="width:100%;height:110px;object-fit:cover;display:block">' : '<div style="height:110px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">'+(c.img_url||'🛒')+'</div>';
       const d = document.createElement('div');
-      d.style.cssText = 'border-radius:10px;overflow:hidden;border:2px solid var(--bord);background:rgba(255,255,255,.04);cursor:' + (blocked?'not-allowed':'pointer') + ';opacity:' + (blocked?'0.35':'1');
-      d.innerHTML = (isUrl ? `<img src="${c.img_url}" style="width:100%;height:80px;object-fit:cover;display:block">` : `<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111">${c.img_url||'🛒'}</div>`) +
-        `<div style="height:3px;background:rgba(255,255,255,.1)"><div style="height:100%;width:${hpPct}%;background:${hpCol}"></div></div>
-        <div style="font-size:9px;padding:3px 4px;text-align:center;color:rgba(255,255,255,.6);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}${owned>1?' x'+owned:''}</div>
-        <div style="font-size:8px;text-align:center;padding:0 4px 4px;color:${hpCol}">❤️${Math.ceil(curHP)}/${maxHP}${allInArena?' 🏟️':''}</div>`;
+      d.style.cssText = 'border-radius:10px;overflow:hidden;border:2px solid '+(blocked?'rgba(255,68,68,.3)':'var(--bord)')+';background:#000;cursor:'+(blocked?'not-allowed':'pointer')+';opacity:'+(blocked?'0.35':'1')+';position:relative';
+      d.innerHTML = imgHtml +
+        '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.92));padding:5px 8px">' +
+        '<div style="font-size:10px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">'+(allInArena?'🏟️ ':'')+(isDead?'💀 ':'')+c.name+(owned>1?' x'+owned:'')+'</div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:2px">'+
+          '<span style="color:#ff8877">⚔️'+(c.atk||0)+'</span>'+
+          '<span style="color:var(--gold)">⚡'+(c.pa||1)+'PA</span>'+
+          '<span style="color:#77aaff">🛡️'+(c.def||0)+'</span>'+
+        '</div>'+
+        '<div style="display:flex;gap:2px">'+heartsHtml+'</div>'+
+        '</div>';
       if (!blocked) d.onclick = () => doApplyRTT(c);
       grid.appendChild(d);
     });
@@ -5542,7 +5551,7 @@ init();
 <!-- CARD PICKER (for using items) -->
 <div id="item-card-picker" style="position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:900;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:14px">
   <div id="item-card-picker-title" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)">Sur quelle carte ?</div>
-  <div id="item-card-picker-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-height:55vh;overflow-y:auto"></div>
+  <div id="item-card-picker-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-height:55vh;overflow-y:auto"></div>
   <button onclick="closeCardPicker()" style="padding:12px 32px;background:rgba(255,255,255,.07);border:1px solid var(--bord);border-radius:10px;color:#eee;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Annuler</button>
 </div>
 
