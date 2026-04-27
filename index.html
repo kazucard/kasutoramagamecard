@@ -3812,8 +3812,8 @@ function loadVersusCountdown() {
     const next = getNextMonday();
     const diff = next - now;
     if (diff <= 0) {
-      document.getElementById('home-vs-countdown').textContent = 'RESET !';
-      handleVersusReset();
+      document.getElementById('home-vs-countdown').textContent = 'RESET EN COURS...';
+      handleVersusReset().catch(()=>{});
       return;
     }
     const d = Math.floor(diff / 86400000);
@@ -3946,10 +3946,22 @@ async function handleVersusReset() {
   const lastReset = localStorage.getItem('cc_last_vs_reset');
   const thisMonday = getNextMonday().getTime() - 7 * 24 * 3600000; // last monday
   if (lastReset && parseInt(lastReset) >= thisMonday) return; // Already reset this week
-  localStorage.setItem('cc_last_vs_reset', Date.now());
   
-  // Only owner triggers the reset
-  if (!OWNER_ID || ME.id !== OWNER_ID) return;
+  // Check DB to avoid double reset (another user might have already done it)
+  try {
+    const resetFlag = await dbGet('versus_points', 'week_start=eq.reset_done_' + thisMonday + '&select=*');
+    if (resetFlag.length) {
+      localStorage.setItem('cc_last_vs_reset', Date.now());
+      return; // Already reset by someone else
+    }
+    // Mark reset as in progress in DB immediately
+    await dbPost('versus_points', { team_id: 'reset_lock', week_start: 'reset_done_' + thisMonday, points: 1 });
+  } catch(e) {
+    // If post fails, another user beat us to it
+    localStorage.setItem('cc_last_vs_reset', Date.now());
+    return;
+  }
+  localStorage.setItem('cc_last_vs_reset', Date.now());
   
   try {
     // Calculate winners
@@ -5720,11 +5732,13 @@ function renderRaidMySlot() {
 }
 
 function openRaidCardPicker() {
+  if (!pool || !pool.length) { showToast('❌ Cartes pas encore chargées, réessaie !', '#ff4444', '❌', 3000); return; }
+  if (!coll) { showToast('❌ Collection non chargée !', '#ff4444', '❌', 3000); return; }
   const myCards = Object.keys(coll).filter(id => coll[id] > 0)
     .map(id => pool.find(p => p.id === id))
     .filter(c => c && getCardCurrentHP(c) > 0);
 
-  if (!myCards.length) { showToast('❌ Aucune carte disponible !', '#ff4444', '❌', 3000); return; }
+  if (!myCards.length) { showToast('❌ Aucune carte disponible ! Ouvre des boosters d\'abord.', '#ff4444', '❌', 3000); return; }
 
   const ov = document.createElement('div');
   ov.id = 'raid-card-ov';
@@ -5758,7 +5772,9 @@ function openRaidCardPicker() {
 async function selectRaidCard(cardId) {
   document.getElementById('raid-card-ov')?.remove();
   const card = pool.find(p => p.id === cardId);
-  if (!card) return;
+  if (!card) { showToast('❌ Carte introuvable !', '#ff4444', '❌', 3000); return; }
+  if (!ME) { showToast('❌ Non connecté !', '#ff4444', '❌', 3000); return; }
+  showToast('⏳ Enregistrement...', 'var(--gold)', '⚔️', 2000);
 
   try {
     if (raidMySlot) {
@@ -5780,7 +5796,10 @@ async function selectRaidCard(cardId) {
 }
 
 async function raidTapAttack() {
-  if (!raidMyCard || !raidMySlot || !raidData || raidData.status === 'defeated') return;
+  if (!raidMyCard) { showToast('❌ Pose une carte d\'abord !', '#ff8800', '⚠️', 2000); return; }
+  if (!raidMySlot) { showToast('❌ Slot non trouvé, recharge l\'appli', '#ff4444', '❌', 2000); return; }
+  if (!raidData) { showToast('❌ Données boss manquantes, recharge', '#ff4444', '❌', 2000); return; }
+  if (raidData.status === 'defeated') { showToast('💀 Boss déjà vaincu !', '#6ddb9a', '🏆', 2000); return; }
   const btn = document.getElementById('raid-tap-btn');
   if(btn){btn.style.transform='scale(0.9)';setTimeout(()=>{btn.style.transform='scale(1)'},80);}
 
