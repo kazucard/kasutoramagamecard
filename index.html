@@ -1076,7 +1076,7 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
     <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">⚔️ Participants en combat</div>
     <div id="raid-slots" style="display:grid;gap:10px;margin-bottom:16px"></div>
 
-    <div id="raid-my-slot" style="display:none;margin-bottom:16px"></div>
+    <div id="raid-my-slot" style="margin-bottom:16px"></div>
 
     <!-- TAP button -->
     <div id="raid-tap-area" style="display:none;text-align:center">
@@ -5696,6 +5696,8 @@ async function refreshRaidSlots() {
 
 function renderRaidMySlot() {
   const el = document.getElementById('raid-my-slot');
+  if (!el) return;
+  el.style.display = 'block';
   if (!raidMyCard || !raidMySlot) {
     // No card placed yet
     el.innerHTML = '<div style="background:rgba(255,255,255,.04);border:2px dashed rgba(255,255,255,.2);border-radius:12px;padding:20px;text-align:center">' +
