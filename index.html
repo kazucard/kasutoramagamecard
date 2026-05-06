@@ -588,15 +588,10 @@ body.tab-collection #screen-collection{padding-top:4px!important}
 
   <!-- COLLECTION -->
   <div class="screen" id="screen-collection">
-    <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px;flex-shrink:0">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--gold)">Ma Collection</div>
-      <div id="coll-hs-mini" style="font-size:11px;color:var(--gold);background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:3px 10px">⏰ <span id="hs-display">0</span> HS</div>
-    </div>
-    <div class="stats-row">
-      <div class="stat-box"><div class="stat-val" id="s-unique">0</div><div class="stat-lbl">Uniques</div></div>
-      <div class="stat-box"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Total</div></div>
-      <div class="stat-box"><div class="stat-val" id="s-pct">0%</div><div class="stat-lbl">Complété</div></div>
-    </div>
+    <div id="hs-display" style="display:none"></div>
+    <div id="s-unique" style="display:none"></div>
+    <div id="s-total" style="display:none"></div>
+    <div id="s-pct" style="display:none"></div>
     <div class="coll-grid" id="coll-grid"></div>
     <div class="coll-pagination" id="coll-pagination" style="display:none">
       <button class="page-btn" id="page-prev" onclick="changePage(-1)">◀</button>
