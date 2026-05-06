@@ -2396,6 +2396,7 @@ let currentBattleShop=null,currentBattleStage=null,currentBattleStageNum=0;
 let selectedCard=null;
 
 function openBattleScreen(shop,stageNum,stage,enemies){
+  startHealButtons();
   currentBattleShop=shop;currentBattleStage=stage;currentBattleStageNum=stageNum;
   battleEnemies=enemies;battleIdx=0;
   // Pick player card - use highest ATK card in collection
@@ -2602,6 +2603,7 @@ async function enemyDefeated(){
 
 async function stageCleared(){
   stopComboSystem();
+  stopHealButtons();
   const bs=document.getElementById('battle-screen');if(bs)bs.remove();
   clearInterval(battleInterval);battleInterval=null;
   const stage=currentBattleStage;
@@ -5892,6 +5894,42 @@ function stopComboSystem() {
   comboCount = 0;
   const wrap = document.getElementById('combo-bar-wrap');
   if (wrap) wrap.style.display = 'none';
+}
+
+
+// ── HP HEAL BUTTONS ───────────────────────────────────────────────────────────
+let healButtonTimer = null;
+function startHealButtons() { stopHealButtons(); scheduleNextHealButton(); }
+function stopHealButtons() {
+  if (healButtonTimer) { clearTimeout(healButtonTimer); healButtonTimer = null; }
+  document.getElementById('heal-btn-container')?.remove();
+}
+function scheduleNextHealButton() {
+  healButtonTimer = setTimeout(showHealButton, 8000 + Math.random() * 12000);
+}
+function showHealButton() {
+  if (!document.getElementById('battle-screen')) return;
+  document.getElementById('heal-btn-container')?.remove();
+  const c = document.createElement('div');
+  c.id = 'heal-btn-container';
+  c.style.cssText = 'position:fixed;z-index:600;left:'+(15+Math.random()*55)+'%;top:'+(25+Math.random()*40)+'%;transform:translate(-50%,-50%)';
+  const icons = ['💊','🍎','💉','🔋','⚡','🌟'];
+  c.innerHTML = '<button onclick="claimHealButton()" style="background:#000;border:3px solid #6ddb9a;color:#6ddb9a;padding:10px 16px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:8px;box-shadow:0 0 12px rgba(109,219,154,.5)">'+icons[Math.floor(Math.random()*icons.length)]+' +15% PV</button>';
+  document.body.appendChild(c);
+  setTimeout(() => { c.remove(); scheduleNextHealButton(); }, 4000);
+}
+function claimHealButton() {
+  document.getElementById('heal-btn-container')?.remove();
+  if (!selectedCard) { scheduleNextHealButton(); return; }
+  const maxHP = playerMaxHP || getCardMaxHP(selectedCard);
+  const heal = Math.floor(maxHP * 0.15);
+  playerHP = Math.min(maxHP, playerHP + heal);
+  const bar = document.getElementById('player-hp-bar');
+  if (bar) bar.style.width = Math.round(playerHP/maxHP*100) + '%';
+  const lbl = document.getElementById('player-hp-txt');
+  if (lbl) lbl.textContent = Math.ceil(playerHP) + '/' + maxHP;
+  showToast('💊 +' + heal + ' PV récupérés !', '#6ddb9a', '💊', 2500);
+  scheduleNextHealButton();
 }
 
 init();
