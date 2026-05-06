@@ -2448,7 +2448,7 @@ function showCardSelectModal(myCards,shop,stageNum,stage,enemies){
         const hearts=Array(5).fill(0).map((_,i)=>'<span style="font-size:12px;color:'+(i<hf?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
         const img=isUrl?'<img src="'+c.img_url+'" style="width:100%;height:110px;object-fit:cover;display:block">':'<div style="height:110px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">'+(c.img_url||'🛒')+'</div>';
         return '<div data-cid="'+c.id+'" onclick="selectBattleCard(this.dataset.cid)" style="border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:pointer;background:#000;position:relative" id="bcs-'+c.id+'">'+
-          img+
+          '<div style="overflow:hidden;border-radius:8px 8px 0 0">'+img+'</div>'+
           '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.9));padding:5px 7px 5px">'+
             '<div style="font-size:11px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">'+c.name+'</div>'+
             '<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:3px">'+
@@ -3584,8 +3584,8 @@ function showVsCardSelect(myCards, slot, defCard, arenaId) {
         const hearts = Array(5).fill(0).map((_,i) => '<span style="font-size:12px;color:'+(i<hf?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
         const img = isUrl ? '<img src="'+c.img_url+'" style="width:100%;height:100px;object-fit:cover;display:block">' : '<div style="height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">'+(c.img_url||'🛒')+'</div>';
         const clickFn = blocked ? '' : "launchVsBattle('"+c.id+"','"+slot.id+"','"+arenaId+"')";
-        return '<div onclick="'+clickFn+'" style="border-radius:10px;border:2px solid '+(blocked?'rgba(255,68,68,.3)':'var(--bord)')+';cursor:'+(blocked?'not-allowed':'pointer')+';background:#000;opacity:'+(blocked?.4:1)+';position:relative;overflow:hidden">'+
-          img+
+        return '<div onclick="'+clickFn+'" style="border-radius:10px;border:2px solid '+(blocked?'rgba(255,68,68,.3)':'var(--bord)')+';cursor:'+(blocked?'not-allowed':'pointer')+';background:#000;opacity:'+(blocked?.4:1)+';position:relative">'+
+          '<div style="overflow:hidden;border-radius:8px 8px 0 0">'+img+'</div>'+
           '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent 0%,rgba(0,0,0,.7) 30%,rgba(0,0,0,.95) 100%);padding:6px 8px">'+
             '<div style="font-size:11px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">'+(dead?'💀 ':inAr?'🏟️ ':'')+c.name+'</div>'+
             '<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:3px">'+
