@@ -2396,6 +2396,7 @@ let currentBattleShop=null,currentBattleStage=null,currentBattleStageNum=0;
 let selectedCard=null;
 
 function openBattleScreen(shop,stageNum,stage,enemies){
+  startHealButtons();
   currentBattleShop=shop;currentBattleStage=stage;currentBattleStageNum=stageNum;
   battleEnemies=enemies;battleIdx=0;
   // Pick player card - use highest ATK card in collection
@@ -2519,13 +2520,19 @@ function startBattleUI(){
           <div id="player-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,var(--gold),#e0b840);border-radius:5px;transition:width .3s"></div>
         </div>
       </div>
-      <div style="width:90px;height:130px;border-radius:12px;overflow:hidden;border:2px solid rgba(201,168,76,.5);cursor:pointer;user-select:none;active:transform:scale(.95)" id="player-card-img" onclick="tapAttack()">
+      <div style="width:90px;height:130px;border-radius:12px;overflow:hidden;border:2px solid rgba(201,168,76,.5);cursor:pointer;user-select:none;active:transform:scale(.95)" id="player-card-img" onclick="tapAttack()" ontouchstart="comboSwipeStartY=event.touches[0].clientY" ontouchend="if(comboSwipeStartY-event.changedTouches[0].clientY>40&&comboCount>=15)triggerSuperAttack()">
         ${isPlayerUrl?`<img src="${selectedCard.img_url}" style="width:100%;height:100%;object-fit:cover;display:block">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:#111">${selectedCard.img_url||'🛒'}</div>`}
       </div>
       <div style="font-size:11px;font-weight:600;color:#fff">${selectedCard.name}</div>
       <div style="font-size:10px;color:rgba(255,255,255,.35)">⚔️ ${selectedCard.atk||0} · 🛡️ ${selectedCard.def||0}</div>
     </div>
     <div id="battle-log" style="font-size:12px;color:rgba(255,255,255,.5);text-align:center;min-height:20px;animation:blinkCTA 1s ease-in-out infinite">Tape sur ta carte pour attaquer !</div>
+    <div id="combo-bar-wrap" style="display:none;width:100%;margin:6px 0;padding:0 8px">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.4);margin-bottom:2px"><span>COMBO</span><span id="combo-count-lbl">0/50</span></div>
+      <div id="combo-bar-bg" style="height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden"><div id="combo-bar-fill" style="height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#666,#999);transition:width .1s"></div></div>
+      <div id="combo-label" style="font-size:9px;text-align:center;color:rgba(255,255,255,.4);margin-top:2px">⚡15=x1.5 ⚡⚡30=x3 ⚡⚡⚡50=x5</div>
+      <div id="combo-ready" style="display:none;font-size:11px;text-align:center;font-weight:700;color:#ffcc00;margin-top:2px">▲ SWIPE VERS LE HAUT ▲</div>
+    </div>
     <button onclick="surrenderBattle()" style="padding:8px 20px;background:rgba(255,255,255,.06);border:1px solid var(--bord);border-radius:8px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Abandonner</button>`;
   document.body.appendChild(ov);
   // Auto damage every 2s
@@ -2593,6 +2600,7 @@ async function enemyDefeated(){
 }
 
 async function stageCleared(){
+  stopHealButtons();
   const bs=document.getElementById('battle-screen');if(bs)bs.remove();
   clearInterval(battleInterval);battleInterval=null;
   const stage=currentBattleStage;
@@ -5812,6 +5820,54 @@ async function raidVictory() {
     if (ME.id) ME.heures_sup = (ME.heures_sup||0) + 500;
     await postAutoNews('🏆 La Horde de Clients Antibes a été vaincue ! +500 HS pour tous les participants !');
   } catch(e) { console.error('raidVictory:', e); }
+}
+
+
+// ── HP HEAL BUTTONS ───────────────────────────────────────────────────────────
+let healButtonTimer = null;
+
+function startHealButtons() {
+  stopHealButtons();
+  scheduleNextHealButton();
+}
+
+function stopHealButtons() {
+  if (healButtonTimer) { clearTimeout(healButtonTimer); healButtonTimer = null; }
+  document.getElementById('heal-btn-container')?.remove();
+}
+
+function scheduleNextHealButton() {
+  const delay = 8000 + Math.random() * 12000;
+  healButtonTimer = setTimeout(showHealButton, delay);
+}
+
+function showHealButton() {
+  const bs = document.getElementById('battle-screen');
+  if (!bs || !document.body.contains(bs)) { return; }
+  document.getElementById('heal-btn-container')?.remove();
+  const container = document.createElement('div');
+  container.id = 'heal-btn-container';
+  container.style.cssText = 'position:fixed;z-index:600;left:'+(15+Math.random()*55)+'%;top:'+(25+Math.random()*40)+'%;transform:translate(-50%,-50%)';
+  const icons = ['💊','🍎','💉','🔋','⚡','🌟'];
+  const icon = icons[Math.floor(Math.random()*icons.length)];
+  container.innerHTML = '<button onclick="claimHealButton()" style="background:#000;border:3px solid #6ddb9a;color:#6ddb9a;padding:10px 16px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:8px;box-shadow:0 0 12px rgba(109,219,154,.4)">' + icon + ' +15% PV</button>';
+  document.body.appendChild(container);
+  setTimeout(() => { container.remove(); scheduleNextHealButton(); }, 4000);
+}
+
+function claimHealButton() {
+  document.getElementById('heal-btn-container')?.remove();
+  if (!selectedCard) { scheduleNextHealButton(); return; }
+  const maxHP = playerMaxHP || getCardMaxHP(selectedCard);
+  const heal = Math.floor(maxHP * 0.15);
+  playerHP = Math.min(maxHP, playerHP + heal);
+  const pct = Math.round(playerHP / maxHP * 100);
+  const bar = document.getElementById('player-hp-bar');
+  if (bar) bar.style.width = pct + '%';
+  const lbl = document.getElementById('player-hp-txt');
+  if (lbl) lbl.textContent = Math.ceil(playerHP) + '/' + maxHP;
+  showToast('💊 +' + heal + ' PV récupérés !', '#6ddb9a', '💊', 2500);
+  scheduleNextHealButton();
 }
 
 init();
