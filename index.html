@@ -592,7 +592,7 @@ body.tab-collection #site-title{display:none!important}
     <div id="s-unique" style="display:none"></div>
     <div id="s-total" style="display:none"></div>
     <div id="s-pct" style="display:none"></div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:var(--gold);text-align:center;padding:4px 0 8px;width:100%;flex-shrink:0">Ma Collection</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:var(--gold);text-align:center;padding:4px 0 8px;width:100%;flex-shrink:0">Ma Collection &nbsp;<span id="coll-dust-count" style="font-size:0.95rem;letter-spacing:1px;color:rgba(255,220,120,.8)">🐀 0</span></div>
     <div class="coll-grid" id="coll-grid" style="flex:1;align-content:start"></div>
     <div class="coll-pagination" id="coll-pagination" style="display:none;flex-shrink:0;margin-top:10px">
       <button class="page-btn" id="page-prev" onclick="changePage(-1)">◀</button>
@@ -1213,7 +1213,7 @@ body.tab-collection #site-title{display:none!important}
     </div>
     <div class="cd-info-row">
       <div class="cd-info"><div class="cd-info-val" id="cd-count">0</div><div class="cd-info-lbl">Exemplaires</div></div>
-      <div class="cd-info"><div class="cd-info-val" id="cd-sell-val">0</div><div class="cd-info-lbl">Valeur HS</div></div>
+      <div class="cd-info"><div class="cd-info-val" id="cd-sell-val">0</div><div class="cd-info-lbl">Poussières 🐀</div></div>
     </div>
     <button class="mbtn mbtn-gold" style="margin-top:4px" id="cd-sell-btn" onclick="openSellFromDetail()">Vendre une copie</button>
     <button class="mbtn mbtn-grey" style="margin-top:0" id="cd-trade-btn" onclick="openTradeFromDetail()">🔄 Proposer un échange</button>
@@ -1226,9 +1226,9 @@ body.tab-collection #site-title{display:none!important}
   <div class="modal-box">
     <div class="modal-ttl">Vendre</div>
     <div id="sell-sub" style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;margin-bottom:12px"></div>
-    <div class="sell-price"><span>Prix</span><span class="sell-price-val" id="sell-price-val">— HS</span></div>
-    <div class="sell-price"><span>Tes Heures Sup</span><span id="sell-pts-cur">0 HS</span></div>
-    <div class="sell-price"><span>Après vente</span><span class="sell-price-val" id="sell-pts-after">— HS</span></div>
+    <div class="sell-price"><span>Poussières gagnées</span><span class="sell-price-val" id="sell-price-val">— 🐀</span></div>
+    <div class="sell-price"><span>Tes Poussières de Rat</span><span id="sell-pts-cur">0 🐀</span></div>
+    <div class="sell-price"><span>Après vente</span><span class="sell-price-val" id="sell-pts-after">— 🐀</span></div>
     <button class="mbtn mbtn-gold" style="margin-top:16px" onclick="confirmSell()">Confirmer</button>
     <button class="mbtn mbtn-grey" onclick="closeModal('sell-modal')">Annuler</button>
   </div>
@@ -1274,6 +1274,7 @@ const RARITY_LABEL={common:'Commun',uncommon:'UnCommun',rare:'Rare',superrare:'S
 const RARITY_W={common:50,uncommon:25,rare:12,superrare:6,sec:3,raralt:2,superrarealt:1.5,secalt:0.5};
 const RARITY_BG={common:'rgba(80,80,80,.4)',uncommon:'rgba(100,200,100,.4)',rare:'rgba(55,138,221,.4)',superrare:'rgba(180,100,255,.45)',sec:'rgba(255,180,0,.5)',raralt:'rgba(55,138,221,.4)',superrarealt:'rgba(180,100,255,.45)',secalt:'rgba(255,140,0,.55)'};
 const SELL_PRICES={common:10,uncommon:25,rare:60,superrare:150,sec:300,raralt:80,superrarealt:200,secalt:500};
+const DUST_PRICES={common:10,uncommon:30,rare:80,superrare:200,sec:500,raralt:100,superrarealt:250,secalt:600};
 const BOOSTER_COST=500;
 const ADMIN_PW='castor2024';
 const OWNER_ID='u_1775485568956_t1x52';
@@ -1674,6 +1675,8 @@ function renderColl(){
   document.getElementById('s-total').textContent=tot;
   document.getElementById('s-pct').textContent=(pool.length>0?Math.round(ids.length/pool.length*100):0)+'%';
   document.getElementById('hs-display').textContent=ME?(ME.heures_sup||0):0;
+  const dustEl=document.getElementById('coll-dust-count');
+  if(dustEl)dustEl.textContent='🐀 '+(ME?ME.rat_dust||0:0);
   collFiltered=ids;
   collPage=0;
   renderCollPage();
@@ -1794,7 +1797,7 @@ function openCardDetail(c){
   rar.style.cssText='background:rgba(0,0,0,.3);padding:3px 10px;border-radius:5px;display:inline-block';
   const cnt=coll[c.id]||0;
   document.getElementById('cd-count').textContent=cnt;
-  document.getElementById('cd-sell-val').textContent=(SELL_PRICES[c.rarity||'common']||10)+' HS';
+  document.getElementById('cd-sell-val').textContent=(DUST_PRICES[c.rarity||'common']||10)+' 🐀';
   document.getElementById('cd-sell-btn').style.display=cnt>0?'flex':'none';
   document.getElementById('cd-trade-btn').style.display=cnt>0?'flex':'none';
   // ATK / DEF
@@ -1812,24 +1815,27 @@ function closeCardDetail(){document.getElementById('card-detail-modal').classLis
 function openSellFromDetail(){if(!detailCard)return;closeCardDetail();openSell(detailCard);}
 function openSell(c){
   sellCardId=c.id;
-  const price=SELL_PRICES[c.rarity||'common']||10,pts=ME?(ME.heures_sup||0):0;
+  const price=DUST_PRICES[c.rarity||'common']||10,pts=ME?(ME.rat_dust||0):0;
   document.getElementById('sell-sub').textContent=c.name+' — '+(RARITY_LABEL[c.rarity]||c.rarity);
-  document.getElementById('sell-price-val').textContent=price+' HS';
-  document.getElementById('sell-pts-cur').textContent=pts+' HS';
-  document.getElementById('sell-pts-after').textContent=(pts+price)+' HS';
+  document.getElementById('sell-price-val').textContent=price+' 🐀';
+  document.getElementById('sell-pts-cur').textContent=pts+' 🐀';
+  document.getElementById('sell-pts-after').textContent=(pts+price)+' 🐀';
   openModal('sell-modal');
 }
 async function confirmSell(){
   if(!sellCardId||!ME)return;
   const c=pool.find(p=>p.id===sellCardId);if(!c)return;
   const cnt=coll[sellCardId]||0;if(cnt<=0){closeModal('sell-modal');return;}
-  const price=SELL_PRICES[c.rarity||'common']||10,newCnt=cnt-1,newPts=(ME.heures_sup||0)+price;
+  const price=DUST_PRICES[c.rarity||'common']||10,newCnt=cnt-1,newDust=(ME.rat_dust||0)+price;
   try{
     if(newCnt===0)await dbDel('collections','user_id=eq.'+ME.id+'&card_id=eq.'+sellCardId);
     else await dbPatch('collections',{count:newCnt},'user_id=eq.'+ME.id+'&card_id=eq.'+sellCardId);
-    await dbPatch('users',{heures_sup:newPts},'id=eq.'+ME.id);
-    coll[sellCardId]=newCnt;ME.heures_sup=newPts;
+    await dbPatch('users',{rat_dust:newDust},'id=eq.'+ME.id);
+    coll[sellCardId]=newCnt;ME.rat_dust=newDust;
     closeModal('sell-modal');renderColl();
+    showToast('🐀 +'+price+' poussières ! Total : '+(newDust)+' 🐀');
+    const dustEl=document.getElementById('coll-dust-count');
+    if(dustEl)dustEl.textContent='🐀 '+newDust;
   }catch(e){alert('Erreur : '+e.message);}
 }
 
