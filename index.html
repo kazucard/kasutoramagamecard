@@ -2283,7 +2283,8 @@ async function loadAdventureMap(){
       const pct=Math.round((stageReached/shop.stages)*100);
       // Lock if previous shop not completed (stage_number < stages)
       const prevShop = shopIdx > 0 ? sortedShops[shopIdx-1] : null;
-      const prevCompleted = prevShop ? (shopProgress[prevShop.id] >= prevShop.stages) : true;
+      const prevProg = prevShop ? progressMap[prevShop.id] : null;
+      const prevCompleted = prevShop ? (prevProg?.completed || (shopProgress[prevShop.id] >= prevShop.stages)) : true;
       const locked = !prevCompleted;
       const d=document.createElement('div');
       d.style.cssText='background:var(--surf);border:1px solid var(--bord);border-radius:14px;overflow:hidden;cursor:' + (locked?'not-allowed':'pointer') + ';transition:transform .15s;opacity:' + (locked?'0.5':'1');
