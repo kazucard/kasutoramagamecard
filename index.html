@@ -1437,8 +1437,6 @@ function showTab(name){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
-  // Show header only on vestiaire (booster)
-
   if(name==='collection')renderColl();
   if(name==='classement')renderClassement();
   if(name==='messages'){loadInbox();setTimeout(()=>loadMsgUserSelect(),100);}
@@ -2399,9 +2397,9 @@ async function startBattle(shop,stageNum,stage){
     showBossDialogue(shop, stageNum, stage);
     return;
   }
-  if(shop.id==='sh_lm_vallauris' && stageNum===23){ currentBattleShop=shop; showCthulhuDialogue(shop,stageNum,stage); return; }
-  if(shop.id==='sh_lm_puget' && stageNum===30){ currentBattleShop=shop; showGenericBossDialogue(shop,stageNum,stage,'👔','DIRECTEUR LM PUGET','Vous pensez vraiment pouvoir me battre ?','#4444ff'); return; }
-  if(shop.id==='sh_lm_valette' && stageNum===30){ currentBattleShop=shop; showGenericBossDialogue(shop,stageNum,stage,'🐭','MICKEY MOUSE',"Ha ha ! Vous avez osé m'attaquer ??","#ff0000"); return; }
+  if(shop.id==='sh_lm_vallauris'&&stageNum===23){currentBattleShop=shop;showCthulhuDialogue(shop,stageNum,stage);return;}
+  if(shop.id==='sh_lm_puget'&&stageNum===30){currentBattleShop=shop;showGenericBossDialogue(shop,stageNum,stage,'👔','DIRECTEUR LM PUGET','Vous pensez vraiment pouvoir me battre ?','#4444ff');return;}
+  if(shop.id==='sh_lm_valette'&&stageNum===30){currentBattleShop=shop;showGenericBossDialogue(shop,stageNum,stage,'🐭','MICKEY MOUSE',"Ha ha ! Vous avez osé m'attaquer ??",'#ff0000');return;}
   try{
     // Build stage_id from pattern if stage exists
     const stageId=stage?stage.id:('st_'+shop.id.replace('sh_','')+'_'+stageNum);
@@ -2672,12 +2670,12 @@ async function stageCleared(){
       await dbPost('adventure_progress',{user_id:ME.id,shop_id:currentBattleShop.id,stage_number:newStage,completed});
     }
     // Boss defeat dialogues
-    if(currentBattleShop && completed){
-      const _sid=currentBattleShop.id,_sn=currentBattleStageNum;
-      if(_sid==='sh_lm_nice2'&&_sn===20) setTimeout(showBossDefeatDialogue,500);
-      if(_sid==='sh_lm_vallauris'&&_sn===23) setTimeout(showCthulhuDefeatDialogue,500);
-      if(_sid==='sh_lm_puget'&&_sn===30) setTimeout(()=>showGenericBossDefeat('👔','DIRECTEUR LM PUGET','...Je reviendrai.','#4444ff','LM Puget-sur-Argens'),500);
-      if(_sid==='sh_lm_valette'&&_sn===30) setTimeout(()=>showGenericBossDefeat('🐭','MICKEY MOUSE',"Oh boy... C'est pas possible...",'#ff0000','LM La Valette-du-Var'),500);
+    if(currentBattleShop&&completed){
+      const _s=currentBattleShop.id,_n=currentBattleStageNum;
+      if(_s==='sh_lm_nice2'&&_n===20)setTimeout(showBossDefeatDialogue,500);
+      if(_s==='sh_lm_vallauris'&&_n===23)setTimeout(showCthulhuDefeatDialogue,500);
+      if(_s==='sh_lm_puget'&&_n===30)setTimeout(()=>showGenericBossDefeat('👔','DIRECTEUR LM PUGET','...Je reviendrai.','#4444ff','LM Puget-sur-Argens'),500);
+      if(_s==='sh_lm_valette'&&_n===30)setTimeout(()=>showGenericBossDefeat('🐭','MICKEY MOUSE',"Oh boy... C'est pas possible...",'#ff0000','LM La Valette-du-Var'),500);
     }
     // Boss defeat dialogue for Jordan Carambar
     if(currentBattleShop && currentBattleShop.id==='sh_lm_nice2' && currentBattleStageNum===20 && completed){
@@ -6101,69 +6099,6 @@ function resetShields() {
   enemyShield = 0;
   updateShieldBar('player');
   updateShieldBar('enemy');
-}
-
-
-function showCthulhuDialogue(shop, stageNum, stage) {
-  const ov = document.createElement('div');
-  ov.id = 'boss-intro-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:#000508;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
-  ov.innerHTML = '<div style="font-size:64px;animation:float2px 2s ease-in-out infinite">🐙</div>' +
-    '<div style="width:100%;max-width:400px;background:#000;border:4px solid #4444ff;padding:20px 22px">' +
-    '<div style="color:#4444ff;font-size:9px;margin-bottom:10px;font-weight:bold">* CTHULHU</div>' +
-    '<div id="boss-intro-text" style="font-size:13px;color:#fff;font-weight:bold;line-height:1.8"></div></div>' +
-    '<button id="boss-intro-btn" style="background:#000;color:#4444ff;border:4px solid #4444ff;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* COMBATTRE !</button>';
-  document.body.appendChild(ov);
-  document.getElementById("boss-intro-text").textContent = "Ph'nglui mglw'nafh... Vous osez entrer dans mon domaine ?";
-  document.getElementById("boss-intro-btn").onclick = async function() {
-    ov.remove();
-    try { const sid=stage?stage.id:('st_'+shop.id.replace('sh_','')+'_'+stageNum); const enemies=await dbGet('enemy_cards','stage_id=eq.'+sid+'&select=*&order=position.asc'); if(!enemies.length){alert('Aucun ennemi configuré !');return;} openBattleScreen(shop,stageNum,stage,enemies); } catch(e){alert(e.message);}
-  };
-}
-function showCthulhuDefeatDialogue() {
-  const ov = document.createElement('div');
-  ov.id = 'boss-defeat-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
-  ov.innerHTML = '<div style="font-size:64px">🐙</div>' +
-    '<div style="width:100%;max-width:400px;background:#000;border:4px solid #4444ff;padding:20px 22px">' +
-    '<div style="color:#4444ff;font-size:9px;margin-bottom:10px;font-weight:bold">* CTHULHU</div>' +
-    '<div id="cthulhu-txt" style="font-size:11px;color:#fff;font-weight:bold;line-height:1.8"></div></div>' +
-    '<div style="font-size:9px;color:var(--gold);text-align:center;font-weight:bold">— FIN DE LM VALLAURIS-ANTIBES —</div>' +
-    '<button id="cthulhu-btn" style="background:#000;color:#fff;border:4px solid #fff;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* Continuer</button>';
-  document.body.appendChild(ov);
-  document.getElementById("cthulhu-txt").textContent = "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn";
-  document.getElementById("cthulhu-btn").onclick = function() { ov.remove(); };
-}
-function showGenericBossDialogue(shop, stageNum, stage, emoji, bossName, introText, color) {
-  const ov = document.createElement('div');
-  ov.id = 'boss-intro-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:#0a0008;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
-  ov.innerHTML = '<div style="font-size:64px;animation:float2px 2s ease-in-out infinite">'+emoji+'</div>' +
-    '<div style="width:100%;max-width:400px;background:#000;border:4px solid '+color+';padding:20px 22px">' +
-    '<div style="color:'+color+';font-size:9px;margin-bottom:10px;font-weight:bold">* '+bossName+'</div>' +
-    '<div id="boss-intro-text" style="font-size:13px;color:#fff;font-weight:bold;line-height:1.8"></div></div>' +
-    '<button id="boss-intro-btn" style="background:#000;color:'+color+';border:4px solid '+color+';padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* COMBATTRE !</button>';
-  document.body.appendChild(ov);
-  document.getElementById("boss-intro-text").textContent = introText;
-  document.getElementById("boss-intro-btn").onclick = async function() {
-    ov.remove();
-    try { const sid=stage?stage.id:('st_'+shop.id.replace('sh_','')+'_'+stageNum); const enemies=await dbGet('enemy_cards','stage_id=eq.'+sid+'&select=*&order=position.asc'); if(!enemies.length){alert('Aucun ennemi configuré !');return;} openBattleScreen(shop,stageNum,stage,enemies); } catch(e){alert(e.message);}
-  };
-}
-function showGenericBossDefeat(emoji, bossName, text, color, shopName) {
-  const ov = document.createElement('div');
-  ov.id = 'boss-defeat-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
-  ov.innerHTML = '<div style="font-size:64px">'+emoji+'</div>' +
-    '<div style="width:100%;max-width:400px;background:#000;border:4px solid '+color+';padding:20px 22px">' +
-    '<div style="color:'+color+';font-size:9px;margin-bottom:10px;font-weight:bold">* '+bossName+'</div>' +
-    '<div id="generic-txt" style="font-size:13px;color:#fff;font-weight:bold;line-height:1.8"></div></div>' +
-    '<div id="generic-fin" style="font-size:9px;color:var(--gold);text-align:center;font-weight:bold"></div>' +
-    '<button id="generic-btn" style="background:#000;color:#fff;border:4px solid #fff;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* Continuer</button>';
-  document.body.appendChild(ov);
-  document.getElementById("generic-txt").textContent = text;
-  document.getElementById("generic-fin").textContent = "— FIN DE "+shopName.toUpperCase()+" —";
-  document.getElementById("generic-btn").onclick = function() { ov.remove(); };
 }
 
 init();
