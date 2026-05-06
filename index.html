@@ -2536,6 +2536,7 @@ function startBattleUI(){
     </div>
     <button onclick="surrenderBattle()" style="padding:8px 20px;background:rgba(255,255,255,.06);border:1px solid var(--bord);border-radius:8px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Abandonner</button>`;
   document.body.appendChild(ov);
+  initComboSystem();
   // Auto damage every 2s
   battleInterval=setInterval(autoBattleTick,500);
 }
