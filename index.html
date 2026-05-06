@@ -1439,10 +1439,12 @@ function showTab(name){
   document.getElementById('nav-'+name).classList.add('active');
   // Show header only on vestiaire (booster)
   const isVestiaire = name === 'booster';
-  const profileBar = document.getElementById('profile-bar');
-  const siteTitle = document.getElementById('site-title');
-  if (profileBar) profileBar.style.display = isVestiaire ? '' : 'none';
-  if (siteTitle) siteTitle.style.display = isVestiaire ? '' : 'none';
+  // Hide header elements except PA on non-vestiaire tabs
+  const els = ['av-btn','profile-center','level-row','site-title'];
+  els.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isVestiaire ? '' : 'none';
+  });
   if(name==='collection')renderColl();
   if(name==='classement')renderClassement();
   if(name==='messages'){loadInbox();setTimeout(()=>loadMsgUserSelect(),100);}
