@@ -579,20 +579,20 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 
   <!-- COLLECTION -->
   <div class="screen" id="screen-collection">
-    <div class="stats-row">
-      <div class="stat-box"><div class="stat-val" id="s-unique">0</div><div class="stat-lbl">Uniques</div></div>
-      <div class="stat-box"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Total</div></div>
-      <div class="stat-box"><div class="stat-val" id="s-pct">0%</div><div class="stat-lbl">Complété</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:6px;flex-shrink:0;gap:8px">
+      <div class="stats-row" style="margin:0;flex:1">
+        <div class="stat-box"><div class="stat-val" id="s-unique">0</div><div class="stat-lbl">Uniques</div></div>
+        <div class="stat-box"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Total</div></div>
+        <div class="stat-box"><div class="stat-val" id="s-pct">0%</div><div class="stat-lbl">%</div></div>
+      </div>
+      <div id="coll-pagination" style="display:none;flex-direction:row;align-items:center;gap:4px">
+        <button class="page-btn" id="page-prev" onclick="changePage(-1)">◀</button>
+        <span id="page-info" style="font-size:11px;white-space:nowrap;color:rgba(255,255,255,.6)">1/1</span>
+        <button class="page-btn" id="page-next" onclick="changePage(1)">▶</button>
+      </div>
     </div>
-    <div id="points-bar">⏰ <span id="hs-display">0</span> points</div>
+    <div id="points-bar" style="display:none"><span id="hs-display">0</span></div>
     <div class="coll-grid" id="coll-grid"></div>
-    <div class="coll-pagination" id="coll-pagination" style="display:none">
-      <button class="page-btn" id="page-prev" onclick="changePage(-1)">◀</button>
-      <span class="page-info" id="page-info">Page 1 / 1</span>
-      <button class="page-btn" id="page-next" onclick="changePage(1)">▶</button>
-    </div>
-  </div>
-
   <!-- CLASSEMENT -->
   <div class="screen" id="screen-classement">
     <div style="width:100%;margin:10px 0 14px;display:flex;flex-direction:column;gap:4px" id="rank-list">
@@ -1437,6 +1437,12 @@ function showTab(name){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
+  // Show header only on vestiaire (booster)
+  const isVestiaire = name === 'booster';
+  const profileBar = document.getElementById('profile-bar');
+  const siteTitle = document.getElementById('site-title');
+  if (profileBar) profileBar.style.display = isVestiaire ? '' : 'none';
+  if (siteTitle) siteTitle.style.display = isVestiaire ? '' : 'none';
   if(name==='collection')renderColl();
   if(name==='classement')renderClassement();
   if(name==='messages'){loadInbox();setTimeout(()=>loadMsgUserSelect(),100);}
@@ -1688,18 +1694,6 @@ function renderCollPage(){
     d.style.opacity=isDead||inArena?'0.45':'1';
     const rCls=getRarityClass(c.rarity||'');
     if(rCls)d.classList.add(rCls);
-    // Stacked effect for duplicates
-    if(coll[id]>1){
-      const stackCount=Math.min(coll[id]-1,3);
-      for(let s=stackCount;s>=1;s--){
-        const shadow=document.createElement('div');
-        shadow.style.cssText='position:absolute;inset:0;border-radius:10px;border:2px solid var(--bord);background:var(--surf);transform:translate('+(s*3)+'px,'+(s*3)+'px);z-index:'+(stackCount-s)+';';
-        d.style.position='relative';
-        d.insertBefore(shadow,d.firstChild);
-      }
-      d.style.marginRight=(Math.min(coll[id]-1,3)*3)+'px';
-      d.style.marginBottom=(Math.min(coll[id]-1,3)*3)+'px';
-    }
     d.innerHTML=(coll[id]>1?`<div class="cc-count">x${coll[id]}</div>`:'')+
       (isDead?'<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:2;display:flex;align-items:center;justify-content:center;font-size:24px;border-radius:8px;flex-direction:column;gap:4px"><span>💀</span></div>':'')+
       (inArena&&!isDead?'<div style="position:absolute;inset:0;background:rgba(68,136,255,.15);z-index:2;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#88aaff;border-radius:8px;flex-direction:column;gap:2px"><span>🏟️</span><span>En arène</span></div>':'')+
@@ -1713,6 +1707,7 @@ function renderCollPage(){
   const pag=document.getElementById('coll-pagination');
   if(totalPages>1){
     pag.style.display='flex';
+    pag.style.flexDirection='row';
     document.getElementById('page-info').textContent=(collPage+1)+'/'+totalPages;
     document.getElementById('page-prev').disabled=collPage===0;
     document.getElementById('page-next').disabled=collPage===totalPages-1;
@@ -2408,6 +2403,9 @@ async function startBattle(shop,stageNum,stage){
     showBossDialogue(shop, stageNum, stage);
     return;
   }
+  if(shop.id==='sh_lm_vallauris' && stageNum===23){ currentBattleShop=shop; showCthulhuDialogue(shop,stageNum,stage); return; }
+  if(shop.id==='sh_lm_puget' && stageNum===30){ currentBattleShop=shop; showGenericBossDialogue(shop,stageNum,stage,'👔','DIRECTEUR LM PUGET','Vous pensez vraiment pouvoir me battre ?','#4444ff'); return; }
+  if(shop.id==='sh_lm_valette' && stageNum===30){ currentBattleShop=shop; showGenericBossDialogue(shop,stageNum,stage,'🐭','MICKEY MOUSE',"Ha ha ! Vous avez osé m'attaquer ??","#ff0000"); return; }
   try{
     // Build stage_id from pattern if stage exists
     const stageId=stage?stage.id:('st_'+shop.id.replace('sh_','')+'_'+stageNum);
@@ -2561,15 +2559,6 @@ function startBattleUI(){
         <div style="height:10px;background:rgba(255,255,255,.1);border-radius:5px;overflow:hidden">
           <div id="player-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,var(--gold),#e0b840);border-radius:5px;transition:width .3s"></div>
         </div>
-        <div id="player-shield-bar-wrap" style="display:none;margin-top:2px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:1px">
-            <span style="font-size:7px;color:#4499ff;font-weight:700">🛡️</span>
-            <span id="player-shield-lbl" style="font-size:7px;color:#4499ff">0</span>
-          </div>
-          <div style="height:4px;background:rgba(68,153,255,.15);border-radius:2px;overflow:hidden;border:1px solid rgba(68,153,255,.4)">
-            <div id="player-shield-bar-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#4499ff,#88ccff);border-radius:2px;transition:width .3s"></div>
-          </div>
-        </div>
       </div>
       <div style="width:90px;height:130px;border-radius:12px;overflow:hidden;border:2px solid rgba(201,168,76,.5);cursor:pointer;user-select:none;active:transform:scale(.95)" id="player-card-img" onclick="tapAttack()" ontouchstart="comboSwipeStartY=event.touches[0].clientY" ontouchend="handleCardSwipe(event)">
         ${isPlayerUrl?`<img src="${selectedCard.img_url}" style="width:100%;height:100%;object-fit:cover;display:block">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:#111">${selectedCard.img_url||'🛒'}</div>`}
@@ -2581,7 +2570,7 @@ function startBattleUI(){
     <div id="combo-bar-wrap" style="display:none;width:100%;margin:6px 0;padding:0 4px">
       <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.4);margin-bottom:2px"><span>COMBO</span><span id="combo-count-lbl">0/50</span></div>
       <div style="height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden"><div id="combo-bar-fill" style="height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#666,#999);transition:width .15s"></div></div>
-      <div id="combo-label" style="font-size:9px;text-align:center;color:rgba(255,255,255,.4);margin-top:2px">⚡30=x1.5 &nbsp; ⚡⚡60=x3 &nbsp; ⚡⚡⚡90=x5</div>
+      <div id="combo-label" style="font-size:9px;text-align:center;color:rgba(255,255,255,.4);margin-top:2px">⚡15=x1.5 &nbsp; ⚡⚡30=x3 &nbsp; ⚡⚡⚡50=x5</div>
       <button id="combo-ready" onclick="triggerSuperAttack()" style="display:none;width:100%;padding:8px;background:#000;border:3px solid #ffcc00;color:#ffcc00;font-size:11px;font-weight:bold;cursor:pointer;border-radius:6px;margin-top:4px">⚡ SUPER ATTAQUE ⚡</button>
     </div>
     <button onclick="surrenderBattle()" style="padding:8px 20px;background:rgba(255,255,255,.06);border:1px solid var(--bord);border-radius:8px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Abandonner</button>`;
@@ -2608,7 +2597,7 @@ function autoBattleTick(){
     showFloatingDmg(specDmg, pos.x - 10, pos.y - 30, '#ff8800', '💥');
   }
   // Enemy may gain shield randomly ~8% chance
-  if (Math.random() < 0.08 && enemyShield === 0) {
+  if (Math.random() < 0.20 && enemyShield === 0) {
     applyShield(0.05, false);
   }
   updateBattleUI();
@@ -2686,9 +2675,13 @@ async function stageCleared(){
     }else{
       await dbPost('adventure_progress',{user_id:ME.id,shop_id:currentBattleShop.id,stage_number:newStage,completed});
     }
-    // Boss defeat dialogue for Jordan Carambar
-    if(currentBattleShop.id==='sh_lm_nice2' && currentBattleStageNum===20 && completed){
-      showBossDefeatDialogue();
+    // Boss defeat dialogues
+    if(currentBattleShop && completed){
+      const _sid=currentBattleShop.id,_sn=currentBattleStageNum;
+      if(_sid==='sh_lm_nice2'&&_sn===20) setTimeout(showBossDefeatDialogue,500);
+      if(_sid==='sh_lm_vallauris'&&_sn===23) setTimeout(showCthulhuDefeatDialogue,500);
+      if(_sid==='sh_lm_puget'&&_sn===30) setTimeout(()=>showGenericBossDefeat('👔','DIRECTEUR LM PUGET','...Je reviendrai.','#4444ff','LM Puget-sur-Argens'),500);
+      if(_sid==='sh_lm_valette'&&_sn===30) setTimeout(()=>showGenericBossDefeat('🐭','MICKEY MOUSE',"Oh boy... C'est pas possible...",'#ff0000','LM La Valette-du-Var'),500);
     }
     // Boss defeat dialogue for Jordan Carambar
     if(currentBattleShop && currentBattleShop.id==='sh_lm_nice2' && currentBattleStageNum===20 && completed){
@@ -5955,7 +5948,6 @@ function triggerSuperAttack() {
   const bs = document.getElementById('battle-screen');
   if (bs) { bs.style.transform = 'translateX(-6px)'; setTimeout(() => { bs.style.transform = 'translateX(6px)'; setTimeout(() => { bs.style.transform = ''; }, 100); }, 100); }
 
-  showToast(label + ' -' + superDmg + ' dégâts !', '#ffcc00', '⚡', 3000);
   comboCount = 0;
   updateComboBar();
   updateBattleUI();
@@ -5986,7 +5978,7 @@ function showHealButton() {
   c.id = 'heal-btn-container';
   c.style.cssText = 'position:fixed;z-index:600;left:'+(15+Math.random()*55)+'%;top:'+(25+Math.random()*40)+'%;transform:translate(-50%,-50%)';
   const icons = ['💊','🍎','💉','🔋','⚡','🌟'];
-  const isShield = Math.random() < 0.3; // 30% chance of shield button
+  const isShield = Math.random() < 0.5; // 30% chance of shield button
   if (isShield) {
     c.innerHTML = '<button onclick="claimShieldButton()" style="background:#000;border:3px solid #4499ff;color:#4499ff;padding:10px 16px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:8px;box-shadow:0 0 12px rgba(68,153,255,.5)">🛡️ +5% Bouclier</button>';
   } else {
@@ -6012,6 +6004,7 @@ function claimHealButton() {
   if (bar) bar.style.width = Math.round(playerHP/maxHP*100) + '%';
   const lbl = document.getElementById('player-hp-txt');
   if (lbl) lbl.textContent = Math.ceil(playerHP) + '/' + maxHP;
+  showToast('💊 +' + heal + ' PV récupérés !', '#6ddb9a', '💊', 2500);
   scheduleNextHealButton();
 }
 
@@ -6059,7 +6052,6 @@ function applyShield(amount, isPlayer) {
     updateShieldBar('enemy');
   }
 }
-
 function updateShieldBar(who) {
   const shield = who === 'player' ? playerShield : enemyShield;
   const maxHP = who === 'player' ? (playerMaxHP||1) : (enemyMaxHP||1);
@@ -6068,9 +6060,7 @@ function updateShieldBar(who) {
   const lbl  = document.getElementById(who + '-shield-lbl');
   if (!wrap) return;
   wrap.style.display = shield > 0 ? 'block' : 'none';
-  // Show shield as % of max possible shield (20% of maxHP = 100%)
-  const maxShield = Math.max(1, maxHP * 0.20);
-  if (fill) fill.style.width = Math.min(100, Math.round(shield/maxShield*100)) + '%';
+  if (fill) fill.style.width = Math.min(100, Math.round(shield/maxHP*100)) + '%';
   if (lbl)  lbl.textContent  = '🛡️' + Math.ceil(shield);
 }
 
@@ -6115,6 +6105,69 @@ function resetShields() {
   enemyShield = 0;
   updateShieldBar('player');
   updateShieldBar('enemy');
+}
+
+
+function showCthulhuDialogue(shop, stageNum, stage) {
+  const ov = document.createElement('div');
+  ov.id = 'boss-intro-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:#000508;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+  ov.innerHTML = '<div style="font-size:64px;animation:float2px 2s ease-in-out infinite">🐙</div>' +
+    '<div style="width:100%;max-width:400px;background:#000;border:4px solid #4444ff;padding:20px 22px">' +
+    '<div style="color:#4444ff;font-size:9px;margin-bottom:10px;font-weight:bold">* CTHULHU</div>' +
+    '<div id="boss-intro-text" style="font-size:13px;color:#fff;font-weight:bold;line-height:1.8"></div></div>' +
+    '<button id="boss-intro-btn" style="background:#000;color:#4444ff;border:4px solid #4444ff;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* COMBATTRE !</button>';
+  document.body.appendChild(ov);
+  document.getElementById("boss-intro-text").textContent = "Ph'nglui mglw'nafh... Vous osez entrer dans mon domaine ?";
+  document.getElementById("boss-intro-btn").onclick = async function() {
+    ov.remove();
+    try { const sid=stage?stage.id:('st_'+shop.id.replace('sh_','')+'_'+stageNum); const enemies=await dbGet('enemy_cards','stage_id=eq.'+sid+'&select=*&order=position.asc'); if(!enemies.length){alert('Aucun ennemi configuré !');return;} openBattleScreen(shop,stageNum,stage,enemies); } catch(e){alert(e.message);}
+  };
+}
+function showCthulhuDefeatDialogue() {
+  const ov = document.createElement('div');
+  ov.id = 'boss-defeat-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+  ov.innerHTML = '<div style="font-size:64px">🐙</div>' +
+    '<div style="width:100%;max-width:400px;background:#000;border:4px solid #4444ff;padding:20px 22px">' +
+    '<div style="color:#4444ff;font-size:9px;margin-bottom:10px;font-weight:bold">* CTHULHU</div>' +
+    '<div id="cthulhu-txt" style="font-size:11px;color:#fff;font-weight:bold;line-height:1.8"></div></div>' +
+    '<div style="font-size:9px;color:var(--gold);text-align:center;font-weight:bold">— FIN DE LM VALLAURIS-ANTIBES —</div>' +
+    '<button id="cthulhu-btn" style="background:#000;color:#fff;border:4px solid #fff;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* Continuer</button>';
+  document.body.appendChild(ov);
+  document.getElementById("cthulhu-txt").textContent = "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn";
+  document.getElementById("cthulhu-btn").onclick = function() { ov.remove(); };
+}
+function showGenericBossDialogue(shop, stageNum, stage, emoji, bossName, introText, color) {
+  const ov = document.createElement('div');
+  ov.id = 'boss-intro-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:#0a0008;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+  ov.innerHTML = '<div style="font-size:64px;animation:float2px 2s ease-in-out infinite">'+emoji+'</div>' +
+    '<div style="width:100%;max-width:400px;background:#000;border:4px solid '+color+';padding:20px 22px">' +
+    '<div style="color:'+color+';font-size:9px;margin-bottom:10px;font-weight:bold">* '+bossName+'</div>' +
+    '<div id="boss-intro-text" style="font-size:13px;color:#fff;font-weight:bold;line-height:1.8"></div></div>' +
+    '<button id="boss-intro-btn" style="background:#000;color:'+color+';border:4px solid '+color+';padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* COMBATTRE !</button>';
+  document.body.appendChild(ov);
+  document.getElementById("boss-intro-text").textContent = introText;
+  document.getElementById("boss-intro-btn").onclick = async function() {
+    ov.remove();
+    try { const sid=stage?stage.id:('st_'+shop.id.replace('sh_','')+'_'+stageNum); const enemies=await dbGet('enemy_cards','stage_id=eq.'+sid+'&select=*&order=position.asc'); if(!enemies.length){alert('Aucun ennemi configuré !');return;} openBattleScreen(shop,stageNum,stage,enemies); } catch(e){alert(e.message);}
+  };
+}
+function showGenericBossDefeat(emoji, bossName, text, color, shopName) {
+  const ov = document.createElement('div');
+  ov.id = 'boss-defeat-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+  ov.innerHTML = '<div style="font-size:64px">'+emoji+'</div>' +
+    '<div style="width:100%;max-width:400px;background:#000;border:4px solid '+color+';padding:20px 22px">' +
+    '<div style="color:'+color+';font-size:9px;margin-bottom:10px;font-weight:bold">* '+bossName+'</div>' +
+    '<div id="generic-txt" style="font-size:13px;color:#fff;font-weight:bold;line-height:1.8"></div></div>' +
+    '<div id="generic-fin" style="font-size:9px;color:var(--gold);text-align:center;font-weight:bold"></div>' +
+    '<button id="generic-btn" style="background:#000;color:#fff;border:4px solid #fff;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* Continuer</button>';
+  document.body.appendChild(ov);
+  document.getElementById("generic-txt").textContent = text;
+  document.getElementById("generic-fin").textContent = "— FIN DE "+shopName.toUpperCase()+" —";
+  document.getElementById("generic-btn").onclick = function() { ov.remove(); };
 }
 
 init();
