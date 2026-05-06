@@ -2521,7 +2521,7 @@ function startBattleUI(){
           <div id="player-hp-bar" style="height:100%;width:100%;background:linear-gradient(90deg,var(--gold),#e0b840);border-radius:5px;transition:width .3s"></div>
         </div>
       </div>
-      <div style="width:90px;height:130px;border-radius:12px;overflow:hidden;border:2px solid rgba(201,168,76,.5);cursor:pointer;user-select:none;active:transform:scale(.95)" id="player-card-img" onclick="tapAttack()" ontouchstart="comboSwipeStartY=event.touches[0].clientY" ontouchend="if(comboSwipeStartY-event.changedTouches[0].clientY>40&&comboCount>=15)triggerSuperAttack()">
+      <div style="width:90px;height:130px;border-radius:12px;overflow:hidden;border:2px solid rgba(201,168,76,.5);cursor:pointer;user-select:none;active:transform:scale(.95)" id="player-card-img" onclick="tapAttack()" ontouchstart="comboSwipeStartY=event.touches[0].clientY" ontouchend="handleCardSwipe(event)">
         ${isPlayerUrl?`<img src="${selectedCard.img_url}" style="width:100%;height:100%;object-fit:cover;display:block">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:#111">${selectedCard.img_url||'🛒'}</div>`}
       </div>
       <div style="font-size:11px;font-weight:600;color:#fff">${selectedCard.name}</div>
@@ -2532,7 +2532,7 @@ function startBattleUI(){
       <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.4);margin-bottom:2px"><span>COMBO</span><span id="combo-count-lbl">0/50</span></div>
       <div style="height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden"><div id="combo-bar-fill" style="height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#666,#999);transition:width .15s"></div></div>
       <div id="combo-label" style="font-size:9px;text-align:center;color:rgba(255,255,255,.4);margin-top:2px">⚡15=x1.5 &nbsp; ⚡⚡30=x3 &nbsp; ⚡⚡⚡50=x5</div>
-      <div id="combo-ready" style="display:none;font-size:10px;text-align:center;font-weight:700;color:#ffcc00;margin-top:2px">▲ SWIPE VERS LE HAUT ▲</div>
+      <button id="combo-ready" onclick="triggerSuperAttack()" style="display:none;width:100%;padding:8px;background:#000;border:3px solid #ffcc00;color:#ffcc00;font-size:11px;font-weight:bold;cursor:pointer;border-radius:6px;margin-top:4px">⚡ SUPER ATTAQUE ⚡</button>
     </div>
     <button onclick="surrenderBattle()" style="padding:8px 20px;background:rgba(255,255,255,.06);border:1px solid var(--bord);border-radius:8px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Abandonner</button>`;
   document.body.appendChild(ov);
@@ -5863,6 +5863,11 @@ function updateComboBar() {
     else if (comboCount >= 15) clbl.textContent = '⚡ x1.5 prêt — continue pour x3';
     else clbl.textContent = '⚡15=x1.5  ⚡⚡30=x3  ⚡⚡⚡50=x5';
   }
+}
+
+function handleCardSwipe(event) {
+  const dy = comboSwipeStartY - event.changedTouches[0].clientY;
+  if (dy > 30 && comboCount >= 15) triggerSuperAttack();
 }
 
 function triggerSuperAttack() {
