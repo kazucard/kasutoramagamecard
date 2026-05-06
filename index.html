@@ -2446,6 +2446,7 @@ function showCardSelectModal(myCards,shop,stageNum,stage,enemies){
       <button id="start-battle-btn" onclick="launchBattle()" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--gold),#e0b840);color:#1a1209;font-weight:700;font-size:13px;border-radius:10px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif">Combattre !</button>
     </div>`;
   document.body.appendChild(ov);
+  initComboSystem();
   // Pre-select highest ATK card
   selectBattleCard(selectedCard.id);
 }
@@ -2472,7 +2473,6 @@ function launchBattle(){
 }
 
 function startBattleUI(){
-  initComboSystem();
   const enemy=battleEnemies[battleIdx];
   playerMaxHP=getCardMaxHP(selectedCard);
   const savedHP=getCardCurrentHP(selectedCard);
