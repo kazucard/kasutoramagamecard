@@ -437,6 +437,9 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 .hp-heart.full { filter:none; }
 .hp-heart.empty { opacity:0.25; }
 
+
+@keyframes pulse { from { transform:scale(1); } to { transform:scale(1.1); } }
+@keyframes fadeIn { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
@@ -2375,6 +2378,24 @@ async function startBattle(shop,stageNum,stage){
     showBossDialogue(shop, stageNum, stage);
     return;
   }
+  // Special: Boss Cthulhu (LM Vallauris stage 23)
+  if(shop.id==='sh_lm_vallauris' && stageNum===23){
+    currentBattleShop=shop;
+    showCthulhuDialogue(shop, stageNum, stage);
+    return;
+  }
+  // Special: Boss Directeur Puget (LM Puget stage 30)
+  if(shop.id==='sh_lm_puget' && stageNum===30){
+    currentBattleShop=shop;
+    showGenericBossDialogue(shop, stageNum, stage, '👔', 'DIRECTEUR LM PUGET', 'Vous pensez vraiment pouvoir me battre ?', '#4444ff');
+    return;
+  }
+  // Special: Boss Mickey Mouse (LM La Valette stage 30)
+  if(shop.id==='sh_lm_valette' && stageNum===30){
+    currentBattleShop=shop;
+    showGenericBossDialogue(shop, stageNum, stage, '🐭', 'MICKEY MOUSE', 'Ha ha ! Vous avez osé m\'attaquer ??', '#ff0000');
+    return;
+  }
   try{
     // Build stage_id from pattern if stage exists
     const stageId=stage?stage.id:('st_'+shop.id.replace('sh_','')+'_'+stageNum);
@@ -2395,6 +2416,7 @@ let currentBattleShop=null,currentBattleStage=null,currentBattleStageNum=0;
 let selectedCard=null;
 
 function openBattleScreen(shop,stageNum,stage,enemies){
+  startHealButtons();
   currentBattleShop=shop;currentBattleStage=stage;currentBattleStageNum=stageNum;
   battleEnemies=enemies;battleIdx=0;
   // Pick player card - use highest ATK card in collection
@@ -2592,6 +2614,7 @@ async function enemyDefeated(){
 }
 
 async function stageCleared(){
+  stopHealButtons();
   const bs=document.getElementById('battle-screen');if(bs)bs.remove();
   clearInterval(battleInterval);battleInterval=null;
   const stage=currentBattleStage;
@@ -2611,16 +2634,15 @@ async function stageCleared(){
     }else{
       await dbPost('adventure_progress',{user_id:ME.id,shop_id:currentBattleShop.id,stage_number:newStage,completed});
     }
-    // Boss defeat dialogue for Jordan Carambar
-    if(currentBattleShop.id==='sh_lm_nice2' && currentBattleStageNum===20 && completed){
-      showBossDefeatDialogue();
+    // Boss defeat dialogues
+    if(currentBattleShop && completed){
+      const sid = currentBattleShop.id;
+      const sn = currentBattleStageNum;
+      if(sid==='sh_lm_nice2' && sn===20) setTimeout(showBossDefeatDialogue, 500);
+      if(sid==='sh_lm_vallauris' && sn===23) setTimeout(showCthulhuDefeatDialogue, 500);
+      if(sid==='sh_lm_puget' && sn===30) setTimeout(()=>showGenericBossDefeat('👔','DIRECTEUR LM PUGET','...Je reviendrai.','#4444ff','LM Puget-sur-Argens'), 500);
+      if(sid==='sh_lm_valette' && sn===30) setTimeout(()=>showGenericBossDefeat('🐭','MICKEY MOUSE',"Oh boy... C'est pas possible...",'#ff0000','LM La Valette-du-Var'), 500);
     }
-    // Boss defeat dialogue for Jordan Carambar
-    if(currentBattleShop && currentBattleShop.id==='sh_lm_nice2' && currentBattleStageNum===20 && completed){
-      setTimeout(showBossDefeatDialogue, 500);
-    }
-    // Boss defeat dialogue
-    if(currentBattleShop && currentBattleShop.id==='sh_lm_nice2' && currentBattleStageNum===20 && completed){ setTimeout(showBossDefeatDialogue,500); }
     // Show result
     const ov=document.createElement('div');
     ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px';
@@ -5063,6 +5085,34 @@ const SW_MESSAGES_2 = [
   {text:"Bref, on va leur montrer qu'on veut pas de FAF ici. Je compte sur toi le nouveau !"},
 ];
 
+const SW_MESSAGES_3 = [
+  {text:"Ok le nouveau, t'es vraiment border."},
+  {text:"Heureusement que t'es pas filmé mon p'tit gars !"},
+  {text:"Tu me diras, ils ont que ce qu'ils méritent !"},
+  {text:"Pour le prochain Leroy Merlin Cthulhu en est le directeur.", action:'arrive'},
+  {text:"Fais attention, ça sent la poiscaille là bas."},
+];
+
+const SW_MESSAGES_4 = [
+  {text:"On a perdu pas mal de gars face à Cthulhu..."},
+  {text:"Mais toi le nouveau t'as bien tenu enfin..."},
+  {text:"Tu t'es surtout bien amusé !"},
+  {text:"D'ailleurs je pense qu'il est grand temps de cesser de t'appeler le nouveau."},
+  {text:"T'es un rookie maintenant !", action:'arrive'},
+  {text:"Dégomme moi ce Leroy Merlin comme tu sais si bien le faire."},
+];
+
+const SW_MESSAGES_5 = [
+  {text:"Pouah, on s'est mis une sale caisse hier !"},
+  {text:"Fallait bien fêter ça le rookie !"},
+  {text:"Je suis vraiment fier de toi !"},
+  {text:"Par contre évite de faire ce que tu as fais quand tu te mets derrière les gens, ça se fait pas."},
+  {text:"Bon, moi je suis trop torché pour, mais le prochain Leroy Merlin a pour directeur Mickey Mouse, ces enfoirés ont pourris la suite de Star Wars."},
+  {text:"Sors ton grand sabre à laser et fais un carnage."},
+  {text:"Tu vois Anakin dans Star Wars 3 ?", action:'arrive'},
+  {text:"Ben imagine que c'est toi et vas-y le rookie !!"},
+];
+
 
 // ── ROAD ANIMATION ────────────────────────────────────────────────────────────
 const VAN_IMG_SRC = "data:image/png;base64,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";
@@ -5551,33 +5601,36 @@ let raidPollInterval = null;
 let raidMyTotalDmg = 0;
 
 async function loadRaidScreen() {
-  if (!ME) return;
+  if (!ME) { showToast('❌ Non connecté !', '#ff4444', '❌', 2000); return; }
+
+  // Set static content immediately
+  document.getElementById('raid-boss-name').textContent = RAID_BOSS.name;
+  document.getElementById('raid-boss-lore').textContent = RAID_BOSS.lore;
+  document.getElementById('raid-boss-emoji').textContent = RAID_BOSS.emoji;
+
   try {
     // Get or create boss
     let boss = (await dbGet('raids', 'id=eq.' + RAID_BOSS.id + '&select=*'))[0];
     if (!boss) {
-      await dbPost('raids', {
-        id: RAID_BOSS.id,
-        boss_name: RAID_BOSS.name,
-        boss_hp_max: RAID_BOSS.hp_max,
-        boss_hp_current: RAID_BOSS.hp_max,
-        week_start: RAID_BOSS.week_start,
-        status: 'active'
-      });
+      try {
+        await dbPost('raids', { id: RAID_BOSS.id, boss_name: RAID_BOSS.name, boss_hp_max: RAID_BOSS.hp_max, boss_hp_current: RAID_BOSS.hp_max, week_start: RAID_BOSS.week_start, status: 'active' });
+      } catch(e) {}
       boss = (await dbGet('raids', 'id=eq.' + RAID_BOSS.id + '&select=*'))[0];
     }
+    if (!boss) { showToast('❌ Impossible de charger le boss', '#ff4444', '❌', 3000); return; }
     raidData = boss;
-
-    // Update boss UI
-    document.getElementById('raid-boss-name').textContent = RAID_BOSS.name;
-    document.getElementById('raid-boss-lore').textContent = RAID_BOSS.lore;
-    document.getElementById('raid-boss-emoji').textContent = RAID_BOSS.emoji;
     updateRaidBossHP(boss);
 
+    // Reset my slot state
+    raidMySlot = null;
+    raidMyCard = null;
+    raidMyTotalDmg = 0;
+
     // Get my slot
-    raidMySlot = (await dbGet('raid_slots', 'raid_id=eq.' + RAID_BOSS.id + '&user_id=eq.' + ME.id + '&select=*'))[0];
-    if (raidMySlot) {
-      raidMyCard = pool.find(p => p.id === raidMySlot.card_id);
+    const mySlots = await dbGet('raid_slots', 'raid_id=eq.' + RAID_BOSS.id + '&user_id=eq.' + ME.id + '&select=*');
+    if (mySlots.length) {
+      raidMySlot = mySlots[0];
+      raidMyCard = pool.find(p => p.id === raidMySlot.card_id) || null;
       raidMyTotalDmg = raidMySlot.damage_dealt || 0;
     }
 
@@ -5588,15 +5641,18 @@ async function loadRaidScreen() {
     if (raidPollInterval) clearInterval(raidPollInterval);
     raidPollInterval = setInterval(refreshRaidSlots, 3000);
 
-  // Heartbeat - update last_seen every 30s
-  if (window.raidHeartbeat) clearInterval(window.raidHeartbeat);
-  window.raidHeartbeat = setInterval(async () => {
-    if (raidMySlot) {
-      try { await dbPatch('raid_slots', { last_seen: new Date().toISOString() }, 'id=eq.' + raidMySlot.id); } catch(e){}
-    }
-  }, 30000);
+    // Heartbeat
+    if (window.raidHeartbeat) clearInterval(window.raidHeartbeat);
+    window.raidHeartbeat = setInterval(async () => {
+      if (raidMySlot) {
+        try { await dbPatch('raid_slots', { last_seen: new Date().toISOString() }, 'id=eq.' + raidMySlot.id); } catch(e){}
+      }
+    }, 30000);
 
-  } catch(e) { console.error('loadRaidScreen:', e); }
+  } catch(e) {
+    console.error('loadRaidScreen error:', e);
+    showToast('❌ Erreur RAID: ' + e.message, '#ff4444', '❌', 5000);
+  }
 }
 
 function updateRaidBossHP(boss) {
@@ -5846,6 +5902,157 @@ async function raidVictory() {
     if (ME.id) ME.heures_sup = (ME.heures_sup||0) + 500;
     await postAutoNews('🏆 La Horde de Clients Antibes a été vaincue ! +500 HS pour tous les participants !');
   } catch(e) { console.error('raidVictory:', e); }
+}
+
+
+// ── CTHULHU BOSS ──────────────────────────────────────────────────────────────
+function showCthulhuDialogue(shop, stageNum, stage) {
+  const ov = document.createElement('div');
+  ov.id = 'boss-intro-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:#000508;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+  ov.innerHTML =
+    '<div style="font-size:64px;animation:float2px 2s ease-in-out infinite">🐙</div>' +
+    '<div style="width:100%;max-width:400px;background:#000;border:4px solid #4444ff;padding:20px 22px">' +
+      '<div style="color:#4444ff;font-size:9px;margin-bottom:10px;font-weight:bold">* CTHULHU</div>' +
+      '<div id="boss-intro-text" style="font-size:13px;color:#fff;font-weight:bold;line-height:1.8"></div>' +
+    '</div>' +
+    '<button id="boss-intro-btn" style="background:#000;color:#4444ff;border:4px solid #4444ff;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* COMBATTRE !</button>';
+  document.body.appendChild(ov);
+  document.getElementById('boss-intro-text').textContent = "Ph'nglui mglw'nafh... Vous osez entrer dans mon domaine ?";
+  document.getElementById('boss-intro-btn').onclick = async function() {
+    ov.remove();
+    try {
+      const stageId = stage ? stage.id : ('st_' + shop.id.replace('sh_','') + '_' + stageNum);
+      const enemies = await dbGet('enemy_cards','stage_id=eq.'+stageId+'&select=*&order=position.asc');
+      if(!enemies.length){ alert('Aucun ennemi configuré !'); return; }
+      openBattleScreen(shop, stageNum, stage, enemies);
+    } catch(e) { alert('Erreur : ' + e.message); }
+  };
+}
+
+function showCthulhuDefeatDialogue() {
+  const ov = document.createElement('div');
+  ov.id = 'boss-defeat-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+  ov.innerHTML =
+    '<div style="font-size:64px">🐙</div>' +
+    '<div style="width:100%;max-width:400px;background:#000;border:4px solid #4444ff;padding:20px 22px">' +
+      '<div style="color:#4444ff;font-size:9px;margin-bottom:10px;font-weight:bold">* CTHULHU</div>' +
+      '<div id="cthulhu-defeat-text" style="font-size:11px;color:#fff;font-weight:bold;line-height:1.8"></div>' +
+    '</div>' +
+    '<div style="font-size:9px;color:var(--gold);text-align:center;font-weight:bold">— FIN DE LM VALLAURIS-ANTIBES —</div>' +
+    '<button id="cthulhu-defeat-btn" style="background:#000;color:#fff;border:4px solid #fff;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* Continuer</button>';
+  document.body.appendChild(ov);
+  document.getElementById('cthulhu-defeat-text').textContent = "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn";
+  document.getElementById('cthulhu-defeat-btn').onclick = function() { ov.remove(); };
+}
+
+function showGenericBossDialogue(shop, stageNum, stage, emoji, bossName, introText, color) {
+  const ov = document.createElement('div');
+  ov.id = 'boss-intro-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:#0a0008;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+  ov.innerHTML =
+    '<div style="font-size:64px;animation:float2px 2s ease-in-out infinite">' + emoji + '</div>' +
+    '<div style="width:100%;max-width:400px;background:#000;border:4px solid ' + color + ';padding:20px 22px">' +
+      '<div style="color:' + color + ';font-size:9px;margin-bottom:10px;font-weight:bold">* ' + bossName + '</div>' +
+      '<div id="boss-intro-text" style="font-size:13px;color:#fff;font-weight:bold;line-height:1.8"></div>' +
+    '</div>' +
+    '<button id="boss-intro-btn" style="background:#000;color:' + color + ';border:4px solid ' + color + ';padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* COMBATTRE !</button>';
+  document.body.appendChild(ov);
+  document.getElementById('boss-intro-text').textContent = introText;
+  document.getElementById('boss-intro-btn').onclick = async function() {
+    ov.remove();
+    try {
+      const stageId = stage ? stage.id : ('st_' + shop.id.replace('sh_','') + '_' + stageNum);
+      const enemies = await dbGet('enemy_cards','stage_id=eq.'+stageId+'&select=*&order=position.asc');
+      if(!enemies.length){ alert('Aucun ennemi configuré !'); return; }
+      openBattleScreen(shop, stageNum, stage, enemies);
+    } catch(e) { alert('Erreur : ' + e.message); }
+  };
+}
+
+function showGenericBossDefeat(emoji, bossName, text, color, shopName) {
+  const ov = document.createElement('div');
+  ov.id = 'boss-defeat-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px;gap:16px';
+  ov.innerHTML =
+    '<div style="font-size:64px">' + emoji + '</div>' +
+    '<div style="width:100%;max-width:400px;background:#000;border:4px solid ' + color + ';padding:20px 22px">' +
+      '<div style="color:' + color + ';font-size:9px;margin-bottom:10px;font-weight:bold">* ' + bossName + '</div>' +
+      '<div id="generic-defeat-text" style="font-size:13px;color:#fff;font-weight:bold;line-height:1.8"></div>' +
+    '</div>' +
+    '<div id="generic-fin-text" style="font-size:9px;color:var(--gold);text-align:center;font-weight:bold"></div>' +
+    '<button id="generic-defeat-btn" style="background:#000;color:#fff;border:4px solid #fff;padding:12px 28px;font-size:13px;font-weight:bold;cursor:pointer;width:100%;max-width:400px">* Continuer</button>';
+  document.body.appendChild(ov);
+  document.getElementById('generic-defeat-text').textContent = text;
+  document.getElementById('generic-fin-text').textContent = '— FIN DE ' + shopName.toUpperCase() + ' —';
+  document.getElementById('generic-defeat-btn').onclick = function() { ov.remove(); };
+}
+
+// ── HP HEAL BUTTONS during combat ─────────────────────────────────────────────
+let healButtonInterval = null;
+
+function startHealButtons() {
+  if (healButtonInterval) clearInterval(healButtonInterval);
+  scheduleNextHealButton();
+}
+
+function stopHealButtons() {
+  if (healButtonInterval) { clearInterval(healButtonInterval); healButtonInterval = null; }
+  document.getElementById('heal-btn-container')?.remove();
+}
+
+function scheduleNextHealButton() {
+  // Random delay 8-20 seconds
+  const delay = 8000 + Math.random() * 12000;
+  healButtonInterval = setTimeout(() => {
+    showHealButton();
+  }, delay);
+}
+
+function showHealButton() {
+  const bs = document.getElementById('battle-screen');
+  if (!bs || !document.body.contains(bs)) return;
+
+  // Remove existing if any
+  document.getElementById('heal-btn-container')?.remove();
+
+  const container = document.createElement('div');
+  container.id = 'heal-btn-container';
+  container.style.cssText = 'position:fixed;z-index:600;animation:fadeIn .3s ease';
+
+  // Random position on screen
+  const x = 10 + Math.random() * 60;
+  const y = 30 + Math.random() * 40;
+  container.style.left = x + '%';
+  container.style.top = y + '%';
+
+  const healItems = ['💊','🍎','💉','🔋','⚡','🌟'];
+  const icon = healItems[Math.floor(Math.random() * healItems.length)];
+
+  container.innerHTML = '<button onclick="claimHealButton()" style="background:#000;border:3px solid #6ddb9a;color:#6ddb9a;padding:10px 16px;font-size:13px;font-weight:bold;cursor:pointer;border-radius:8px;animation:pulse 0.5s ease infinite alternate">' + icon + ' +15% PV</button>';
+  document.body.appendChild(container);
+
+  // Auto-disappear after 4 seconds
+  setTimeout(() => { container.remove(); scheduleNextHealButton(); }, 4000);
+}
+
+function claimHealButton() {
+  document.getElementById('heal-btn-container')?.remove();
+  if (!currentPlayerCard) { scheduleNextHealButton(); return; }
+  const maxHP = getCardMaxHP(currentPlayerCard);
+  const heal = Math.floor(maxHP * 0.15);
+  const curHP = getCardCurrentHP(currentPlayerCard);
+  const newHP = Math.min(maxHP, curHP + heal);
+  saveCardHP(currentPlayerCard.id, newHP);
+  currentPlayerHP = newHP;
+  // Update HP bar if visible
+  const bar = document.getElementById('player-hp-bar');
+  if (bar) bar.style.width = Math.round(newHP/maxHP*100) + '%';
+  const lbl = document.getElementById('player-hp-label');
+  if (lbl) lbl.textContent = Math.ceil(newHP) + '/' + maxHP;
+  showToast('💊 +' + heal + ' PV récupérés !', '#6ddb9a', '💊', 2500);
+  scheduleNextHealButton();
 }
 
 init();
