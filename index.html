@@ -134,13 +134,14 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 .stat-val{font-size:20px;font-weight:600;color:#fff}
 .stat-lbl{font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 #points-bar{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--gold);background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:4px 14px;margin-bottom:8px;align-self:center}
-.coll-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%}
+.coll-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
 .cc{border-radius:10px;overflow:visible;border:2px solid var(--bord);background:rgba(255,255,255,.04);display:flex;flex-direction:column;position:relative;cursor:pointer;transition:transform .15s}
 .cc:active{transform:scale(.95)}
 
-body.tab-collection #profile-bar,
-body.tab-collection #site-title{display:none!important}
-body.tab-collection #screen-collection{padding-top:4px!important}
+/* COLLECTION screen fixed layout — no scroll */
+#screen-collection{overflow:hidden!important;padding:0 12px 80px!important;justify-content:flex-start}
+#screen-collection .coll-grid{flex:1;min-height:0}
+#screen-collection .coll-pagination{flex-shrink:0;margin-top:10px}
 
 /* Duplicate stack shadows */
 .cc-stack-shadow{position:absolute;inset:0;border-radius:10px;border:2px solid;pointer-events:none}
@@ -160,8 +161,8 @@ body.tab-collection #screen-collection{padding-top:4px!important}
 .cc.r-superrarealt{animation:borderPulseP 2.5s ease-in-out infinite}
 @keyframes borderPulse{0%,100%{box-shadow:0 0 6px rgba(255,180,0,.2)}50%{box-shadow:0 0 18px rgba(255,180,0,.6),0 0 30px rgba(255,180,0,.2)}}
 @keyframes borderPulseP{0%,100%{box-shadow:0 0 6px rgba(180,100,255,.2)}50%{box-shadow:0 0 18px rgba(180,100,255,.6),0 0 30px rgba(180,100,255,.2)}}
-.cc img,.cc-ph{width:100%;height:140px;object-fit:cover;display:block;border-radius:8px 8px 0 0}
-.cc-ph{display:flex;align-items:center;justify-content:center;font-size:32px;background:#111;height:140px;border-radius:8px 8px 0 0}
+.cc img,.cc-ph{width:100%;height:100px;object-fit:cover;display:block;border-radius:8px 8px 0 0}
+.cc-ph{display:flex;align-items:center;justify-content:center;font-size:28px;background:#111;height:100px;border-radius:8px 8px 0 0}
 /* dead card overlay */
 .cc.dead::after{content:'💀';position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;font-size:28px;border-radius:8px;filter:grayscale(1)}
 .cc.dead{filter:grayscale(.8)}
@@ -587,13 +588,14 @@ body.tab-collection #screen-collection{padding-top:4px!important}
   </div>
 
   <!-- COLLECTION -->
-  <div class="screen" id="screen-collection">
+  <div class="screen" id="screen-collection" style="display:none;flex-direction:column;padding:8px 12px 80px">
     <div id="hs-display" style="display:none"></div>
     <div id="s-unique" style="display:none"></div>
     <div id="s-total" style="display:none"></div>
     <div id="s-pct" style="display:none"></div>
-    <div class="coll-grid" id="coll-grid"></div>
-    <div class="coll-pagination" id="coll-pagination" style="display:none">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:3px;color:var(--gold);text-align:center;padding:6px 0 8px;flex-shrink:0">Ma Collection</div>
+    <div class="coll-grid" id="coll-grid" style="flex:1;align-content:start"></div>
+    <div class="coll-pagination" id="coll-pagination" style="display:none;flex-shrink:0">
       <button class="page-btn" id="page-prev" onclick="changePage(-1)">◀</button>
       <span class="page-info" id="page-info">Page 1 / 1</span>
       <button class="page-btn" id="page-next" onclick="changePage(1)">▶</button>
@@ -1662,7 +1664,7 @@ function buildDots(){const el=document.getElementById('reveal-dots');el.innerHTM
 function finishReveal(){document.getElementById('reveal-screen').classList.remove('active');document.getElementById('card-stage').className='';document.getElementById('reveal-screen').ontouchstart=null;document.getElementById('reveal-screen').ontouchend=null;}
 
 // ── COLLECTION ────────────────────────────────────────────────────────────────
-const CARDS_PER_PAGE=12;
+const CARDS_PER_PAGE=9;
 let collPage=0;
 let collFiltered=[];
 
