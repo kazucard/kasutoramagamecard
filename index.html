@@ -2572,7 +2572,7 @@ function startBattleUI(){
     <div id="combo-bar-wrap" style="display:none;width:100%;margin:6px 0;padding:0 4px">
       <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.4);margin-bottom:2px"><span>COMBO</span><span id="combo-count-lbl">0/50</span></div>
       <div style="height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden"><div id="combo-bar-fill" style="height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#666,#999);transition:width .15s"></div></div>
-      <div id="combo-label" style="font-size:9px;text-align:center;color:rgba(255,255,255,.4);margin-top:2px">⚡15=x1.5 &nbsp; ⚡⚡30=x3 &nbsp; ⚡⚡⚡50=x5</div>
+      <div id="combo-label" style="font-size:9px;text-align:center;color:rgba(255,255,255,.4);margin-top:2px">⚡30=x1.5 &nbsp; ⚡⚡60=x3 &nbsp; ⚡⚡⚡90=x5</div>
       <button id="combo-ready" onclick="triggerSuperAttack()" style="display:none;width:100%;padding:8px;background:#000;border:3px solid #ffcc00;color:#ffcc00;font-size:11px;font-weight:bold;cursor:pointer;border-radius:6px;margin-top:4px">⚡ SUPER ATTAQUE ⚡</button>
     </div>
     <button onclick="surrenderBattle()" style="padding:8px 20px;background:rgba(255,255,255,.06);border:1px solid var(--bord);border-radius:8px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Abandonner</button>`;
@@ -5904,32 +5904,32 @@ function updateComboBar() {
   const ready = document.getElementById('combo-ready');
   const clbl = document.getElementById('combo-label');
   if (!fill) return;
-  const pct = Math.min(100, (comboCount / 50) * 100);
+  const pct = Math.min(100, (comboCount / 90) * 100);
   fill.style.width = pct + '%';
-  if (comboCount >= 50) fill.style.background = 'linear-gradient(90deg,#ff2200,#ff6600)';
-  else if (comboCount >= 30) fill.style.background = 'linear-gradient(90deg,#ff6600,#ff9900)';
-  else if (comboCount >= 15) fill.style.background = 'linear-gradient(90deg,#ff9900,#ffcc00)';
+  if (comboCount >= 90) fill.style.background = 'linear-gradient(90deg,#ff2200,#ff6600)';
+  else if (comboCount >= 60) fill.style.background = 'linear-gradient(90deg,#ff6600,#ff9900)';
+  else if (comboCount >= 30) fill.style.background = 'linear-gradient(90deg,#ff9900,#ffcc00)';
   else fill.style.background = 'linear-gradient(90deg,#666,#999)';
   if (lbl) lbl.textContent = comboCount + '/50';
-  if (ready) ready.style.display = comboCount >= 15 ? 'block' : 'none';
+  if (ready) ready.style.display = comboCount >= 30 ? 'block' : 'none';
   if (clbl) {
-    if (comboCount >= 50) clbl.textContent = '⚡⚡⚡ MAX — SWIPE !';
-    else if (comboCount >= 30) clbl.textContent = '⚡⚡ x3 prêt — continue pour x5';
-    else if (comboCount >= 15) clbl.textContent = '⚡ x1.5 prêt — continue pour x3';
-    else clbl.textContent = '⚡15=x1.5  ⚡⚡30=x3  ⚡⚡⚡50=x5';
+    if (comboCount >= 90) clbl.textContent = '⚡⚡⚡ MAX — SWIPE !';
+    else if (comboCount >= 60) clbl.textContent = '⚡⚡ x3 prêt — continue pour x5';
+    else if (comboCount >= 30) clbl.textContent = '⚡ x1.5 prêt — continue pour x3';
+    else clbl.textContent = '⚡30=x1.5  ⚡⚡60=x3  ⚡⚡⚡90=x5';
   }
 }
 
 function handleCardSwipe(event) {
   const dy = comboSwipeStartY - event.changedTouches[0].clientY;
-  if (dy > 30 && comboCount >= 15) triggerSuperAttack();
+  if (dy > 30 && comboCount >= 30) triggerSuperAttack();
 }
 
 function triggerSuperAttack() {
-  if (comboCount < 15) return;
+  if (comboCount < 30) return;
   let mult, label;
-  if (comboCount >= 50) { mult = 5; label = '⚡⚡⚡ SUPER x5 !'; }
-  else if (comboCount >= 30) { mult = 3; label = '⚡⚡ SUPER x3 !'; }
+  if (comboCount >= 90) { mult = 5; label = '⚡⚡⚡ SUPER x5 !'; }
+  else if (comboCount >= 60) { mult = 3; label = '⚡⚡ SUPER x3 !'; }
   else { mult = 1.5; label = '⚡ SUPER x1.5 !'; }
 
   const baseDmg = Math.max(1, Math.floor((selectedCard?.atk || 50) / 20));
@@ -6003,7 +6003,6 @@ function claimHealButton() {
   if (bar) bar.style.width = Math.round(playerHP/maxHP*100) + '%';
   const lbl = document.getElementById('player-hp-txt');
   if (lbl) lbl.textContent = Math.ceil(playerHP) + '/' + maxHP;
-  showToast('💊 +' + heal + ' PV récupérés !', '#6ddb9a', '💊', 2500);
   scheduleNextHealButton();
 }
 
@@ -6059,7 +6058,9 @@ function updateShieldBar(who) {
   const lbl  = document.getElementById(who + '-shield-lbl');
   if (!wrap) return;
   wrap.style.display = shield > 0 ? 'block' : 'none';
-  if (fill) fill.style.width = Math.min(100, Math.round(shield/maxHP*100)) + '%';
+  // Show shield as % of max possible shield (20% of maxHP = 100%)
+  const maxShield = Math.max(1, maxHP * 0.20);
+  if (fill) fill.style.width = Math.min(100, Math.round(shield/maxShield*100)) + '%';
   if (lbl)  lbl.textContent  = '🛡️' + Math.ceil(shield);
 }
 
