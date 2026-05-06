@@ -140,7 +140,9 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 
 body.tab-collection #profile-bar,
 body.tab-collection #site-title{display:none!important}
-#screen-collection{overflow:hidden!important;padding:6px 16px 80px!important}
+#screen-collection{overflow:hidden!important;padding:6px 12px 80px!important;justify-content:flex-start!important}
+#screen-collection .coll-grid{justify-items:center;justify-content:center}
+#screen-collection .coll-pagination{margin-top:auto!important;padding-top:10px}
 
 /* Duplicate stack shadows */
 .cc-stack-shadow{position:absolute;inset:0;border-radius:10px;border:2px solid;pointer-events:none}
@@ -587,14 +589,15 @@ body.tab-collection #site-title{display:none!important}
   </div>
 
   <!-- COLLECTION -->
-  <div class="screen" id="screen-collection">
+  <div class="screen" id="screen-collection" style="flex-direction:column">
     <div id="hs-display" style="display:none"></div>
     <div id="s-unique" style="display:none"></div>
     <div id="s-total" style="display:none"></div>
     <div id="s-pct" style="display:none"></div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:var(--gold);text-align:center;padding:4px 0 8px;width:100%;flex-shrink:0">Ma Collection &nbsp;<span id="coll-dust-count" style="font-size:0.95rem;letter-spacing:1px;color:rgba(255,220,120,.8)">🐀 0</span></div>
-    <div class="coll-grid" id="coll-grid" style="flex:1;align-content:start"></div>
-    <div class="coll-pagination" id="coll-pagination" style="display:none;flex-shrink:0;margin-top:10px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:var(--gold);text-align:center;padding:4px 0 6px;width:100%;flex-shrink:0">Ma Collection &nbsp;<span id="coll-dust-count" style="font-size:0.95rem;letter-spacing:1px;color:rgba(255,220,120,.8)">🐀 0</span></div>
+    <div id="coll-rarity-stats" style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;width:100%;margin-bottom:8px;flex-shrink:0"></div>
+    <div class="coll-grid" id="coll-grid" style="flex:0 0 auto;align-content:start;margin:0 auto"></div>
+    <div class="coll-pagination" id="coll-pagination" style="display:none;flex-shrink:0;margin-top:auto;padding-top:10px">
       <button class="page-btn" id="page-prev" onclick="changePage(-1)">◀</button>
       <span class="page-info" id="page-info">Page 1 / 1</span>
       <button class="page-btn" id="page-next" onclick="changePage(1)">▶</button>
@@ -1677,6 +1680,20 @@ function renderColl(){
   document.getElementById('hs-display').textContent=ME?(ME.heures_sup||0):0;
   const dustEl=document.getElementById('coll-dust-count');
   if(dustEl)dustEl.textContent='🐀 '+(ME?ME.rat_dust||0:0);
+
+  // Rarity breakdown
+  const rarCount={};
+  ids.forEach(id=>{
+    const c=pool.find(p=>p.id===id);if(!c)return;
+    const r=c.rarity||'common';
+    rarCount[r]=(rarCount[r]||0)+coll[id];
+  });
+  const rarOrder=[{k:'common',l:'C',col:'rgba(200,196,185,.8)'},{k:'uncommon',l:'UC',col:'rgba(100,200,100,.9)'},{k:'rare',l:'R',col:'#85c5ff'},{k:'superrare',l:'SR',col:'#d490ff'},{k:'raralt',l:'R Alt',col:'#60b0ff'},{k:'superrarealt',l:'SR Alt',col:'#c060ff'},{k:'sec',l:'SEC',col:'#ffd060'},{k:'secalt',l:'SEC Alt',col:'#ffb040'}];
+  const statsEl=document.getElementById('coll-rarity-stats');
+  if(statsEl){
+    statsEl.innerHTML=rarOrder.filter(r=>rarCount[r.k]).map(r=>`<span style="font-size:11px;font-weight:700;color:${r.col};background:rgba(0,0,0,.3);padding:2px 8px;border-radius:20px;border:1px solid ${r.col}40">${rarCount[r.k]} ${r.l}</span>`).join('');
+  }
+
   collFiltered=ids;
   collPage=0;
   renderCollPage();
