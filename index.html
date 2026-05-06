@@ -1688,6 +1688,18 @@ function renderCollPage(){
     d.style.opacity=isDead||inArena?'0.45':'1';
     const rCls=getRarityClass(c.rarity||'');
     if(rCls)d.classList.add(rCls);
+    // Stacked effect for duplicates
+    if(coll[id]>1){
+      const stackCount=Math.min(coll[id]-1,3);
+      for(let s=stackCount;s>=1;s--){
+        const shadow=document.createElement('div');
+        shadow.style.cssText='position:absolute;inset:0;border-radius:10px;border:2px solid var(--bord);background:var(--surf);transform:translate('+(s*3)+'px,'+(s*3)+'px);z-index:'+(stackCount-s)+';';
+        d.style.position='relative';
+        d.insertBefore(shadow,d.firstChild);
+      }
+      d.style.marginRight=(Math.min(coll[id]-1,3)*3)+'px';
+      d.style.marginBottom=(Math.min(coll[id]-1,3)*3)+'px';
+    }
     d.innerHTML=(coll[id]>1?`<div class="cc-count">x${coll[id]}</div>`:'')+
       (isDead?'<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:2;display:flex;align-items:center;justify-content:center;font-size:24px;border-radius:8px;flex-direction:column;gap:4px"><span>💀</span></div>':'')+
       (inArena&&!isDead?'<div style="position:absolute;inset:0;background:rgba(68,136,255,.15);z-index:2;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#88aaff;border-radius:8px;flex-direction:column;gap:2px"><span>🏟️</span><span>En arène</span></div>':'')+
@@ -1701,7 +1713,7 @@ function renderCollPage(){
   const pag=document.getElementById('coll-pagination');
   if(totalPages>1){
     pag.style.display='flex';
-    document.getElementById('page-info').textContent='Page '+(collPage+1)+' / '+totalPages;
+    document.getElementById('page-info').textContent=(collPage+1)+'/'+totalPages;
     document.getElementById('page-prev').disabled=collPage===0;
     document.getElementById('page-next').disabled=collPage===totalPages-1;
   }else{pag.style.display='none';}
@@ -2447,9 +2459,9 @@ function showCardSelectModal(myCards,shop,stageNum,stage,enemies){
         const hf=Math.round((curHP/maxHP)*5);
         const hearts=Array(5).fill(0).map((_,i)=>'<span style="font-size:12px;color:'+(i<hf?'#ff4444':'rgba(255,255,255,.2)')+'">♥</span>').join('');
         const img=isUrl?'<img src="'+c.img_url+'" style="width:100%;height:110px;object-fit:cover;display:block">':'<div style="height:110px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">'+(c.img_url||'🛒')+'</div>';
-        return '<div data-cid="'+c.id+'" onclick="selectBattleCard(this.dataset.cid)" style="border-radius:10px;overflow:hidden;border:2px solid var(--bord);cursor:pointer;background:#000;position:relative" id="bcs-'+c.id+'">'+
+        return '<div data-cid="'+c.id+'" onclick="selectBattleCard(this.dataset.cid)" style="border-radius:10px;border:2px solid var(--bord);cursor:pointer;background:#000;position:relative" id="bcs-'+c.id+'">'+
           '<div style="overflow:hidden;border-radius:8px 8px 0 0">'+img+'</div>'+
-          '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.9));padding:5px 7px 5px">'+
+          '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent 0%,rgba(0,0,0,.75) 25%,rgba(0,0,0,.95) 100%);padding:8px 8px">'+
             '<div style="font-size:11px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">'+c.name+'</div>'+
             '<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:3px">'+
               '<span style="color:#ff8877">⚔️'+(c.atk||0)+'</span>'+
@@ -3585,6 +3597,8 @@ function showVsCardSelect(myCards, slot, defCard, arenaId) {
         const img = isUrl ? '<img src="'+c.img_url+'" style="width:100%;height:100px;object-fit:cover;display:block">' : '<div style="height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#111">'+(c.img_url||'🛒')+'</div>';
         const clickFn = blocked ? '' : "launchVsBattle('"+c.id+"','"+slot.id+"','"+arenaId+"')";
         return '<div onclick="'+clickFn+'" style="border-radius:10px;border:2px solid '+(blocked?'rgba(255,68,68,.3)':'var(--bord)')+';cursor:'+(blocked?'not-allowed':'pointer')+';background:#000;opacity:'+(blocked?.4:1)+';position:relative">'+
+          '<div style="overflow:hidden;border-radius:8px 8px 0 0">'+img+'</div>'+
+          '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent 0%,rgba(0,0,0,.75) 25%,rgba(0,0,0,.95) 100%);padding:8px">'+
           '<div style="overflow:hidden;border-radius:8px 8px 0 0">'+img+'</div>'+
           '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent 0%,rgba(0,0,0,.7) 30%,rgba(0,0,0,.95) 100%);padding:6px 8px">'+
             '<div style="font-size:11px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">'+(dead?'💀 ':inAr?'🏟️ ':'')+c.name+'</div>'+
