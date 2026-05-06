@@ -437,6 +437,26 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 .hp-heart.full { filter:none; }
 .hp-heart.empty { opacity:0.25; }
 
+
+/* FLOATING DAMAGE */
+.dmg-float {
+  position:fixed;
+  font-weight:900;
+  pointer-events:none;
+  z-index:999;
+  animation:floatUp 1.2s ease forwards;
+  text-shadow:0 2px 8px rgba(0,0,0,.8);
+}
+@keyframes floatUp {
+  0%   { opacity:1; transform:translateY(0) scale(1); }
+  60%  { opacity:1; transform:translateY(-60px) scale(1.1); }
+  100% { opacity:0; transform:translateY(-90px) scale(0.8); }
+}
+
+/* SHIELD */
+#player-shield-bar-wrap { display:none; }
+#enemy-shield-bar-wrap  { display:none; }
+
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
@@ -2545,11 +2565,22 @@ function autoBattleTick(){
   const enemy=battleEnemies[battleIdx];
   // Player auto-attacks
   const playerDmg=Math.max(1,Math.floor((selectedCard.atk||50)/60));
-  enemyHP=Math.max(0,enemyHP-playerDmg);
+  damageWithShield(playerDmg, false);
   // Enemy auto-attacks player
   const rawAdv = (enemy.atk||50)*0.4 - (selectedCard.def||0)*0.4;
   const enemyDmg=Math.max(10,Math.floor(rawAdv/2));
-  playerHP=Math.max(0,playerHP-enemyDmg);
+  damageWithShield(enemyDmg, true);
+  // Enemy may use special attack (x1.5) randomly ~10% chance
+  if (Math.random() < 0.10) {
+    const specDmg = Math.floor(enemyDmg * 1.5);
+    damageWithShield(specDmg, true);
+    const pos = getEnemyCardPos();
+    showFloatingDmg(specDmg, pos.x - 10, pos.y - 30, '#ff8800', '💥');
+  }
+  // Enemy may gain shield randomly ~8% chance
+  if (Math.random() < 0.08 && enemyShield === 0) {
+    applyShield(0.05, false);
+  }
   updateBattleUI();
   if(enemyHP<=0){clearInterval(battleInterval);battleInterval=null;enemyDefeated();}
   else if(playerHP<=0){clearInterval(battleInterval);battleInterval=null;battleLost();}
@@ -2559,10 +2590,10 @@ function tapAttack(){
   if(!battleInterval&&enemyHP>0)return;
   const enemy=battleEnemies[battleIdx];
   const tapDmg=Math.max(1,Math.floor((selectedCard.atk||50)/20));
-  enemyHP=Math.max(0,enemyHP-tapDmg);
+  damageWithShield(tapDmg, false);
   addCombo();
-  const log=document.getElementById('battle-log');
-  if(log){log.textContent='⚔️ +'+tapDmg+' dégâts !';setTimeout(()=>{if(log)log.textContent='Tape sur ta carte pour attaquer !';},600);}
+  const pos=getEnemyCardPos();
+  showFloatingDmg(tapDmg, pos.x, pos.y, '#ffcc00', '-');
   updateBattleUI();
   if(enemyHP<=0){clearInterval(battleInterval);battleInterval=null;enemyDefeated();}
 }
@@ -2605,6 +2636,7 @@ async function enemyDefeated(){
 async function stageCleared(){
   stopComboSystem();
   stopHealButtons();
+  resetShields();
   const bs=document.getElementById('battle-screen');if(bs)bs.remove();
   clearInterval(battleInterval);battleInterval=null;
   const stage=currentBattleStage;
@@ -5879,7 +5911,9 @@ function triggerSuperAttack() {
 
   const baseDmg = Math.max(1, Math.floor((selectedCard?.atk || 50) / 20));
   const superDmg = Math.floor(baseDmg * mult * 25);
-  enemyHP = Math.max(0, enemyHP - superDmg);
+  damageWithShield(superDmg, false);
+  const spos = getEnemyCardPos();
+  showFloatingDmg(superDmg, spos.x - 15, spos.y - 20, '#ffcc00', '⚡');
 
   // Flash effect
   const lo = document.getElementById('lightning-overlay');
@@ -5920,10 +5954,22 @@ function showHealButton() {
   c.id = 'heal-btn-container';
   c.style.cssText = 'position:fixed;z-index:600;left:'+(15+Math.random()*55)+'%;top:'+(25+Math.random()*40)+'%;transform:translate(-50%,-50%)';
   const icons = ['💊','🍎','💉','🔋','⚡','🌟'];
-  c.innerHTML = '<button onclick="claimHealButton()" style="background:#000;border:3px solid #6ddb9a;color:#6ddb9a;padding:10px 16px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:8px;box-shadow:0 0 12px rgba(109,219,154,.5)">'+icons[Math.floor(Math.random()*icons.length)]+' +15% PV</button>';
+  const isShield = Math.random() < 0.3; // 30% chance of shield button
+  if (isShield) {
+    c.innerHTML = '<button onclick="claimShieldButton()" style="background:#000;border:3px solid #4499ff;color:#4499ff;padding:10px 16px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:8px;box-shadow:0 0 12px rgba(68,153,255,.5)">🛡️ +5% Bouclier</button>';
+  } else {
+    c.innerHTML = '<button onclick="claimHealButton()" style="background:#000;border:3px solid #6ddb9a;color:#6ddb9a;padding:10px 16px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:8px;box-shadow:0 0 12px rgba(109,219,154,.5)">'+icons[Math.floor(Math.random()*icons.length)]+' +15% PV</button>';
+  }
   document.body.appendChild(c);
   setTimeout(() => { c.remove(); scheduleNextHealButton(); }, 4000);
 }
+function claimShieldButton() {
+  document.getElementById('heal-btn-container')?.remove();
+  applyShield(0.05, true);
+  showToast('🛡️ Bouclier +5% activé !', '#4499ff', '🛡️', 2000);
+  scheduleNextHealButton();
+}
+
 function claimHealButton() {
   document.getElementById('heal-btn-container')?.remove();
   if (!selectedCard) { scheduleNextHealButton(); return; }
@@ -5936,6 +5982,108 @@ function claimHealButton() {
   if (lbl) lbl.textContent = Math.ceil(playerHP) + '/' + maxHP;
   showToast('💊 +' + heal + ' PV récupérés !', '#6ddb9a', '💊', 2500);
   scheduleNextHealButton();
+}
+
+
+// ── FLOATING DAMAGE ──────────────────────────────────────────────────────────
+function showFloatingDmg(amount, x, y, color, prefix) {
+  const el = document.createElement('div');
+  el.className = 'dmg-float';
+  el.textContent = (prefix||'-') + amount;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.fontSize = amount > 500 ? '22px' : '16px';
+  el.style.color = color || '#ff4444';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+function getEnemyCardPos() {
+  const el = document.getElementById('enemy-card-img');
+  if (!el) return { x: window.innerWidth * 0.7, y: window.innerHeight * 0.3 };
+  const r = el.getBoundingClientRect();
+  return { x: r.left + r.width/2 - 20, y: r.top + r.height/3 };
+}
+
+function getPlayerCardPos() {
+  const el = document.getElementById('player-card-img');
+  if (!el) return { x: window.innerWidth * 0.3, y: window.innerHeight * 0.5 };
+  const r = el.getBoundingClientRect();
+  return { x: r.left + r.width/2 - 20, y: r.top + r.height/3 };
+}
+
+// ── SHIELD SYSTEM ─────────────────────────────────────────────────────────────
+let playerShield = 0;
+let enemyShield = 0;
+
+function applyShield(amount, isPlayer) {
+  if (isPlayer) {
+    playerShield = Math.floor((playerMaxHP || 100) * amount);
+    updateShieldBar('player');
+    const pos = getPlayerCardPos();
+    showFloatingDmg(playerShield, pos.x, pos.y, '#4499ff', '+');
+  } else {
+    const emaxHP = enemyMaxHP || 1000;
+    enemyShield = Math.floor(emaxHP * amount);
+    updateShieldBar('enemy');
+    const pos = getEnemyCardPos();
+    showFloatingDmg(enemyShield, pos.x, pos.y, '#4499ff', '🛡️');
+  }
+}
+
+function updateShieldBar(who) {
+  const shield = who === 'player' ? playerShield : enemyShield;
+  const maxHP = who === 'player' ? (playerMaxHP||1) : (enemyMaxHP||1);
+  const wrap = document.getElementById(who + '-shield-bar-wrap');
+  const fill = document.getElementById(who + '-shield-bar-fill');
+  const lbl  = document.getElementById(who + '-shield-lbl');
+  if (!wrap) return;
+  wrap.style.display = shield > 0 ? 'block' : 'none';
+  if (fill) fill.style.width = Math.min(100, Math.round(shield/maxHP*100)) + '%';
+  if (lbl)  lbl.textContent  = '🛡️' + Math.ceil(shield);
+}
+
+function damageWithShield(dmg, isPlayer) {
+  if (isPlayer) {
+    if (playerShield > 0) {
+      const absorbed = Math.min(playerShield, dmg);
+      playerShield -= absorbed;
+      dmg -= absorbed;
+      updateShieldBar('player');
+      if (absorbed > 0) {
+        const pos = getPlayerCardPos();
+        showFloatingDmg(absorbed, pos.x, pos.y - 20, '#4499ff', '🛡️-');
+      }
+    }
+    if (dmg > 0) {
+      playerHP = Math.max(0, playerHP - dmg);
+      const pos = getPlayerCardPos();
+      showFloatingDmg(dmg, pos.x, pos.y, '#ff4444', '-');
+    }
+  } else {
+    if (enemyShield > 0) {
+      const absorbed = Math.min(enemyShield, dmg);
+      enemyShield -= absorbed;
+      dmg -= absorbed;
+      updateShieldBar('enemy');
+      if (absorbed > 0) {
+        const pos = getEnemyCardPos();
+        showFloatingDmg(absorbed, pos.x, pos.y - 20, '#4499ff', '🛡️-');
+      }
+    }
+    if (dmg > 0) {
+      enemyHP = Math.max(0, enemyHP - dmg);
+      const pos = getEnemyCardPos();
+      showFloatingDmg(dmg, pos.x, pos.y, '#ffcc00', '-');
+    }
+  }
+}
+
+function resetShields() {
+  playerShield = 0;
+  enemyShield = 0;
+  updateShieldBar('player');
+  updateShieldBar('enemy');
 }
 
 init();
