@@ -138,10 +138,9 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 .cc{border-radius:10px;overflow:visible;border:2px solid var(--bord);background:rgba(255,255,255,.04);display:flex;flex-direction:column;position:relative;cursor:pointer;transition:transform .15s}
 .cc:active{transform:scale(.95)}
 
-/* COLLECTION screen fixed layout — no scroll */
-#screen-collection{overflow:hidden!important;padding:0 12px 80px!important;justify-content:flex-start}
-#screen-collection .coll-grid{flex:1;min-height:0}
-#screen-collection .coll-pagination{flex-shrink:0;margin-top:10px}
+body.tab-collection #profile-bar,
+body.tab-collection #site-title{display:none!important}
+#screen-collection{overflow:hidden!important;padding:6px 16px 80px!important}
 
 /* Duplicate stack shadows */
 .cc-stack-shadow{position:absolute;inset:0;border-radius:10px;border:2px solid;pointer-events:none}
@@ -588,14 +587,14 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
   </div>
 
   <!-- COLLECTION -->
-  <div class="screen" id="screen-collection" style="display:none;flex-direction:column;padding:8px 12px 80px">
+  <div class="screen" id="screen-collection">
     <div id="hs-display" style="display:none"></div>
     <div id="s-unique" style="display:none"></div>
     <div id="s-total" style="display:none"></div>
     <div id="s-pct" style="display:none"></div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:3px;color:var(--gold);text-align:center;padding:6px 0 8px;flex-shrink:0">Ma Collection</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:var(--gold);text-align:center;padding:4px 0 8px;width:100%;flex-shrink:0">Ma Collection</div>
     <div class="coll-grid" id="coll-grid" style="flex:1;align-content:start"></div>
-    <div class="coll-pagination" id="coll-pagination" style="display:none;flex-shrink:0">
+    <div class="coll-pagination" id="coll-pagination" style="display:none;flex-shrink:0;margin-top:10px">
       <button class="page-btn" id="page-prev" onclick="changePage(-1)">◀</button>
       <span class="page-info" id="page-info">Page 1 / 1</span>
       <button class="page-btn" id="page-next" onclick="changePage(1)">▶</button>
