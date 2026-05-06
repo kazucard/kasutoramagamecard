@@ -2396,7 +2396,6 @@ let currentBattleShop=null,currentBattleStage=null,currentBattleStageNum=0;
 let selectedCard=null;
 
 function openBattleScreen(shop,stageNum,stage,enemies){
-  startHealButtons();
   currentBattleShop=shop;currentBattleStage=stage;currentBattleStageNum=stageNum;
   battleEnemies=enemies;battleIdx=0;
   // Pick player card - use highest ATK card in collection
@@ -2472,6 +2471,7 @@ function launchBattle(){
 }
 
 function startBattleUI(){
+  initComboSystem();
   const enemy=battleEnemies[battleIdx];
   playerMaxHP=getCardMaxHP(selectedCard);
   const savedHP=getCardCurrentHP(selectedCard);
@@ -2527,11 +2527,11 @@ function startBattleUI(){
       <div style="font-size:10px;color:rgba(255,255,255,.35)">⚔️ ${selectedCard.atk||0} · 🛡️ ${selectedCard.def||0}</div>
     </div>
     <div id="battle-log" style="font-size:12px;color:rgba(255,255,255,.5);text-align:center;min-height:20px;animation:blinkCTA 1s ease-in-out infinite">Tape sur ta carte pour attaquer !</div>
-    <div id="combo-bar-wrap" style="display:none;width:100%;margin:6px 0;padding:0 8px">
+    <div id="combo-bar-wrap" style="display:none;width:100%;margin:6px 0;padding:0 4px">
       <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.4);margin-bottom:2px"><span>COMBO</span><span id="combo-count-lbl">0/50</span></div>
-      <div id="combo-bar-bg" style="height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden"><div id="combo-bar-fill" style="height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#666,#999);transition:width .1s"></div></div>
-      <div id="combo-label" style="font-size:9px;text-align:center;color:rgba(255,255,255,.4);margin-top:2px">⚡15=x1.5 ⚡⚡30=x3 ⚡⚡⚡50=x5</div>
-      <div id="combo-ready" style="display:none;font-size:11px;text-align:center;font-weight:700;color:#ffcc00;margin-top:2px">▲ SWIPE VERS LE HAUT ▲</div>
+      <div style="height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden"><div id="combo-bar-fill" style="height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#666,#999);transition:width .15s"></div></div>
+      <div id="combo-label" style="font-size:9px;text-align:center;color:rgba(255,255,255,.4);margin-top:2px">⚡15=x1.5 &nbsp; ⚡⚡30=x3 &nbsp; ⚡⚡⚡50=x5</div>
+      <div id="combo-ready" style="display:none;font-size:10px;text-align:center;font-weight:700;color:#ffcc00;margin-top:2px">▲ SWIPE VERS LE HAUT ▲</div>
     </div>
     <button onclick="surrenderBattle()" style="padding:8px 20px;background:rgba(255,255,255,.06);border:1px solid var(--bord);border-radius:8px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Abandonner</button>`;
   document.body.appendChild(ov);
@@ -2558,6 +2558,7 @@ function tapAttack(){
   const enemy=battleEnemies[battleIdx];
   const tapDmg=Math.max(1,Math.floor((selectedCard.atk||50)/20));
   enemyHP=Math.max(0,enemyHP-tapDmg);
+  addCombo();
   const log=document.getElementById('battle-log');
   if(log){log.textContent='⚔️ +'+tapDmg+' dégâts !';setTimeout(()=>{if(log)log.textContent='Tape sur ta carte pour attaquer !';},600);}
   updateBattleUI();
@@ -2600,7 +2601,7 @@ async function enemyDefeated(){
 }
 
 async function stageCleared(){
-  stopHealButtons();
+  stopComboSystem();
   const bs=document.getElementById('battle-screen');if(bs)bs.remove();
   clearInterval(battleInterval);battleInterval=null;
   const stage=currentBattleStage;
@@ -5823,51 +5824,74 @@ async function raidVictory() {
 }
 
 
-// ── HP HEAL BUTTONS ───────────────────────────────────────────────────────────
-let healButtonTimer = null;
+// ── COMBO SYSTEM ──────────────────────────────────────────────────────────────
+let comboCount = 0;
+let comboSwipeStartY = 0;
 
-function startHealButtons() {
-  stopHealButtons();
-  scheduleNextHealButton();
+function initComboSystem() {
+  comboCount = 0;
+  const wrap = document.getElementById('combo-bar-wrap');
+  if (wrap) wrap.style.display = 'block';
+  updateComboBar();
 }
 
-function stopHealButtons() {
-  if (healButtonTimer) { clearTimeout(healButtonTimer); healButtonTimer = null; }
-  document.getElementById('heal-btn-container')?.remove();
+function addCombo() {
+  comboCount++;
+  updateComboBar();
 }
 
-function scheduleNextHealButton() {
-  const delay = 8000 + Math.random() * 12000;
-  healButtonTimer = setTimeout(showHealButton, delay);
+function updateComboBar() {
+  const fill = document.getElementById('combo-bar-fill');
+  const lbl = document.getElementById('combo-count-lbl');
+  const ready = document.getElementById('combo-ready');
+  const clbl = document.getElementById('combo-label');
+  if (!fill) return;
+  const pct = Math.min(100, (comboCount / 50) * 100);
+  fill.style.width = pct + '%';
+  if (comboCount >= 50) fill.style.background = 'linear-gradient(90deg,#ff2200,#ff6600)';
+  else if (comboCount >= 30) fill.style.background = 'linear-gradient(90deg,#ff6600,#ff9900)';
+  else if (comboCount >= 15) fill.style.background = 'linear-gradient(90deg,#ff9900,#ffcc00)';
+  else fill.style.background = 'linear-gradient(90deg,#666,#999)';
+  if (lbl) lbl.textContent = comboCount + '/50';
+  if (ready) ready.style.display = comboCount >= 15 ? 'block' : 'none';
+  if (clbl) {
+    if (comboCount >= 50) clbl.textContent = '⚡⚡⚡ MAX — SWIPE !';
+    else if (comboCount >= 30) clbl.textContent = '⚡⚡ x3 prêt — continue pour x5';
+    else if (comboCount >= 15) clbl.textContent = '⚡ x1.5 prêt — continue pour x3';
+    else clbl.textContent = '⚡15=x1.5  ⚡⚡30=x3  ⚡⚡⚡50=x5';
+  }
 }
 
-function showHealButton() {
+function triggerSuperAttack() {
+  if (comboCount < 15) return;
+  let mult, label;
+  if (comboCount >= 50) { mult = 5; label = '⚡⚡⚡ SUPER x5 !'; }
+  else if (comboCount >= 30) { mult = 3; label = '⚡⚡ SUPER x3 !'; }
+  else { mult = 1.5; label = '⚡ SUPER x1.5 !'; }
+
+  const baseDmg = Math.max(1, Math.floor((selectedCard?.atk || 50) / 20));
+  const superDmg = Math.floor(baseDmg * mult * 25);
+  enemyHP = Math.max(0, enemyHP - superDmg);
+
+  // Flash effect
+  const lo = document.getElementById('lightning-overlay');
+  if (lo) { lo.style.display = 'block'; setTimeout(() => { lo.style.display = 'none'; }, 500); }
+
+  // Screen shake
   const bs = document.getElementById('battle-screen');
-  if (!bs || !document.body.contains(bs)) { return; }
-  document.getElementById('heal-btn-container')?.remove();
-  const container = document.createElement('div');
-  container.id = 'heal-btn-container';
-  container.style.cssText = 'position:fixed;z-index:600;left:'+(15+Math.random()*55)+'%;top:'+(25+Math.random()*40)+'%;transform:translate(-50%,-50%)';
-  const icons = ['💊','🍎','💉','🔋','⚡','🌟'];
-  const icon = icons[Math.floor(Math.random()*icons.length)];
-  container.innerHTML = '<button onclick="claimHealButton()" style="background:#000;border:3px solid #6ddb9a;color:#6ddb9a;padding:10px 16px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:8px;box-shadow:0 0 12px rgba(109,219,154,.4)">' + icon + ' +15% PV</button>';
-  document.body.appendChild(container);
-  setTimeout(() => { container.remove(); scheduleNextHealButton(); }, 4000);
+  if (bs) { bs.style.transform = 'translateX(-6px)'; setTimeout(() => { bs.style.transform = 'translateX(6px)'; setTimeout(() => { bs.style.transform = ''; }, 100); }, 100); }
+
+  showToast(label + ' -' + superDmg + ' dégâts !', '#ffcc00', '⚡', 3000);
+  comboCount = 0;
+  updateComboBar();
+  updateBattleUI();
+  if (enemyHP <= 0) { clearInterval(battleInterval); battleInterval = null; nextEnemy(); }
 }
 
-function claimHealButton() {
-  document.getElementById('heal-btn-container')?.remove();
-  if (!selectedCard) { scheduleNextHealButton(); return; }
-  const maxHP = playerMaxHP || getCardMaxHP(selectedCard);
-  const heal = Math.floor(maxHP * 0.15);
-  playerHP = Math.min(maxHP, playerHP + heal);
-  const pct = Math.round(playerHP / maxHP * 100);
-  const bar = document.getElementById('player-hp-bar');
-  if (bar) bar.style.width = pct + '%';
-  const lbl = document.getElementById('player-hp-txt');
-  if (lbl) lbl.textContent = Math.ceil(playerHP) + '/' + maxHP;
-  showToast('💊 +' + heal + ' PV récupérés !', '#6ddb9a', '💊', 2500);
-  scheduleNextHealButton();
+function stopComboSystem() {
+  comboCount = 0;
+  const wrap = document.getElementById('combo-bar-wrap');
+  if (wrap) wrap.style.display = 'none';
 }
 
 init();
