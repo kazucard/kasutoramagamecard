@@ -134,9 +134,15 @@ html,body{background:linear-gradient(180deg,#0d0d1a 0%,#002a5c 100%);background-
 .stat-val{font-size:20px;font-weight:600;color:#fff}
 .stat-lbl{font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 #points-bar{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--gold);background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:4px 14px;margin-bottom:8px;align-self:center}
-.coll-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
-.cc{border-radius:10px;overflow:visible;border:2px solid var(--bord);background:rgba(255,255,255,.04);display:flex;flex-direction:column;position:relative;cursor:pointer;transition:transform .15s}
+.coll-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:420px;margin:0 auto}
+.cc{border-radius:12px;overflow:visible;border:2px solid var(--bord);background:rgba(255,255,255,.04);display:flex;flex-direction:column;position:relative;cursor:pointer;transition:transform .15s}
 .cc:active{transform:scale(.95)}
+.cc img,.cc-ph{width:100%;height:130px;object-fit:cover;display:block;border-radius:10px 10px 0 0}
+.cc-ph{display:flex;align-items:center;justify-content:center;font-size:28px;background:#111;height:130px;border-radius:10px 10px 0 0}
+
+/* Rarity filter badges */
+.rar-filter-btn{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1.5px solid;background:rgba(0,0,0,.3);cursor:pointer;transition:all .15s;opacity:.55}
+.rar-filter-btn.active{opacity:1;transform:scale(1.08);box-shadow:0 2px 10px rgba(0,0,0,.4)}
 
 body.tab-collection #profile-bar,
 body.tab-collection #site-title{display:none!important}
@@ -162,8 +168,6 @@ body.tab-collection #site-title{display:none!important}
 .cc.r-superrarealt{animation:borderPulseP 2.5s ease-in-out infinite}
 @keyframes borderPulse{0%,100%{box-shadow:0 0 6px rgba(255,180,0,.2)}50%{box-shadow:0 0 18px rgba(255,180,0,.6),0 0 30px rgba(255,180,0,.2)}}
 @keyframes borderPulseP{0%,100%{box-shadow:0 0 6px rgba(180,100,255,.2)}50%{box-shadow:0 0 18px rgba(180,100,255,.6),0 0 30px rgba(180,100,255,.2)}}
-.cc img,.cc-ph{width:100%;height:100px;object-fit:cover;display:block;border-radius:8px 8px 0 0}
-.cc-ph{display:flex;align-items:center;justify-content:center;font-size:28px;background:#111;height:100px;border-radius:8px 8px 0 0}
 /* dead card overlay */
 .cc.dead::after{content:'💀';position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;font-size:28px;border-radius:8px;filter:grayscale(1)}
 .cc.dead{filter:grayscale(.8)}
@@ -589,14 +593,14 @@ body.tab-collection #site-title{display:none!important}
   </div>
 
   <!-- COLLECTION -->
-  <div class="screen" id="screen-collection" style="flex-direction:column">
+  <div class="screen" id="screen-collection" style="flex-direction:column;align-items:center">
     <div id="hs-display" style="display:none"></div>
     <div id="s-unique" style="display:none"></div>
     <div id="s-total" style="display:none"></div>
     <div id="s-pct" style="display:none"></div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:var(--gold);text-align:center;padding:4px 0 6px;width:100%;flex-shrink:0">Ma Collection &nbsp;<span id="coll-dust-count" style="font-size:0.95rem;letter-spacing:1px;color:rgba(255,220,120,.8)">🐀 0</span></div>
-    <div id="coll-rarity-stats" style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;width:100%;margin-bottom:8px;flex-shrink:0"></div>
-    <div class="coll-grid" id="coll-grid" style="flex:0 0 auto;align-content:start;margin:0 auto"></div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:var(--gold);text-align:center;padding:6px 0 4px;width:100%;flex-shrink:0">Ma Collection &nbsp;<span id="coll-dust-count" style="font-size:0.95rem;letter-spacing:1px;color:rgba(255,220,120,.8)">🐀 0</span></div>
+    <div id="coll-rarity-stats" style="display:flex;justify-content:center;gap:5px;flex-wrap:wrap;width:100%;margin-bottom:10px;flex-shrink:0"></div>
+    <div class="coll-grid" id="coll-grid"></div>
     <div class="coll-pagination" id="coll-pagination" style="display:none;flex-shrink:0;margin-top:auto;padding-top:10px">
       <button class="page-btn" id="page-prev" onclick="changePage(-1)">◀</button>
       <span class="page-info" id="page-info">Page 1 / 1</span>
@@ -1670,6 +1674,7 @@ function finishReveal(){document.getElementById('reveal-screen').classList.remov
 const CARDS_PER_PAGE=9;
 let collPage=0;
 let collFiltered=[];
+let collRarFilter='all';
 
 function renderColl(){
   const ids=Object.keys(coll).filter(id=>coll[id]>0);
@@ -1688,15 +1693,38 @@ function renderColl(){
     const r=c.rarity||'common';
     rarCount[r]=(rarCount[r]||0)+coll[id];
   });
-  const rarOrder=[{k:'common',l:'C',col:'rgba(200,196,185,.8)'},{k:'uncommon',l:'UC',col:'rgba(100,200,100,.9)'},{k:'rare',l:'R',col:'#85c5ff'},{k:'superrare',l:'SR',col:'#d490ff'},{k:'raralt',l:'R Alt',col:'#60b0ff'},{k:'superrarealt',l:'SR Alt',col:'#c060ff'},{k:'sec',l:'SEC',col:'#ffd060'},{k:'secalt',l:'SEC Alt',col:'#ffb040'}];
+  const rarOrder=[
+    {k:'all',l:'TOUT',col:'#ffffff'},
+    {k:'common',l:'C',col:'rgba(200,196,185,1)'},
+    {k:'uncommon',l:'UC',col:'rgba(100,200,100,1)'},
+    {k:'rare',l:'R',col:'#85c5ff'},
+    {k:'superrare',l:'SR',col:'#d490ff'},
+    {k:'raralt',l:'R Alt',col:'#60b0ff'},
+    {k:'superrarealt',l:'SR Alt',col:'#c060ff'},
+    {k:'sec',l:'SEC',col:'#ffd060'},
+    {k:'secalt',l:'SEC Alt',col:'#ffb040'}
+  ];
   const statsEl=document.getElementById('coll-rarity-stats');
   if(statsEl){
-    statsEl.innerHTML=rarOrder.filter(r=>rarCount[r.k]).map(r=>`<span style="font-size:11px;font-weight:700;color:${r.col};background:rgba(0,0,0,.3);padding:2px 8px;border-radius:20px;border:1px solid ${r.col}40">${rarCount[r.k]} ${r.l}</span>`).join('');
+    statsEl.innerHTML=rarOrder.filter(r=>r.k==='all'||rarCount[r.k]).map(r=>{
+      const count=r.k==='all'?tot:(rarCount[r.k]||0);
+      const isActive=collRarFilter===r.k;
+      return `<span class="rar-filter-btn${isActive?' active':''}" onclick="setCollRarFilter('${r.k}')" style="color:${r.col};border-color:${r.col}">${count} ${r.l}</span>`;
+    }).join('');
   }
 
-  collFiltered=ids;
+  // Apply rarity filter
+  collFiltered=collRarFilter==='all'?ids:ids.filter(id=>{
+    const c=pool.find(p=>p.id===id);
+    return c&&(c.rarity||'common')===collRarFilter;
+  });
   collPage=0;
   renderCollPage();
+}
+
+function setCollRarFilter(rar){
+  collRarFilter=rar;
+  renderColl();
 }
 
 function renderCollPage(){
